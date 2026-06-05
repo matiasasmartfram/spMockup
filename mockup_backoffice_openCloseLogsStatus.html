@@ -88,6 +88,31 @@
   .btn-secondary { padding: 5px 14px; background: #6c757d; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
   .btn-secondary:hover { background: #5c636a; }
 
+  /* Multi-select dropdown */
+  .ms-wrap { position: relative; display: inline-block; }
+  .ms-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 8px; font-size: 12px; border: 1px solid #ced4da;
+    border-radius: 4px; background: #fff; color: #212529; height: 28px;
+    cursor: pointer; user-select: none; gap: 6px;
+  }
+  .ms-trigger:focus { outline: none; border-color: #86b7fe; box-shadow: 0 0 0 2px rgba(13,110,253,0.15); }
+  .ms-trigger-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-caret { font-size: 9px; color: #6c757d; flex-shrink: 0; }
+  .ms-dropdown {
+    display: none; position: absolute; top: calc(100% + 3px); left: 0;
+    background: #fff; border: 1px solid #ced4da; border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 999;
+    min-width: 100%; max-height: 200px; overflow-y: auto;
+  }
+  .ms-dropdown.open { display: block; }
+  .ms-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; cursor: pointer; font-size: 12px; color: #212529;
+  }
+  .ms-option:hover { background: #f1f3f5; }
+  .ms-option input[type="checkbox"] { cursor: pointer; accent-color: #1a5fc8; }
+
   /* Paginación */
   .pagination { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 14px; }
   .page-btn { padding: 4px 10px; font-size: 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff; color: #495057; cursor: pointer; }
@@ -236,26 +261,36 @@
           <span class="date-group-label">Hasta *</span>
           <input type="date" class="f-date" value="2026-06-05" id="f-hasta">
         </div>
-        <select class="f-md" id="f-pais">
-          <option value="">Todos los Países</option>
-          <option>Argentina</option>
-          <option>Uruguay</option>
-          <option>Chile</option>
-          <option>Paraguay</option>
-        </select>
+        <div class="ms-wrap f-md" id="ms-pais-wrap">
+          <div class="ms-trigger" tabindex="0" onclick="toggleMs('pais')" onkeydown="if(event.key==='Enter'||event.key===' ')toggleMs('pais')">
+            <span class="ms-trigger-label" id="ms-pais-label">Todos los Países</span>
+            <span class="ms-caret">▾</span>
+          </div>
+          <div class="ms-dropdown" id="ms-pais-dropdown">
+            <label class="ms-option"><input type="checkbox" value="Argentina" onchange="updateMs('pais')"> Argentina</label>
+            <label class="ms-option"><input type="checkbox" value="Uruguay" onchange="updateMs('pais')"> Uruguay</label>
+            <label class="ms-option"><input type="checkbox" value="Chile" onchange="updateMs('pais')"> Chile</label>
+            <label class="ms-option"><input type="checkbox" value="Paraguay" onchange="updateMs('pais')"> Paraguay</label>
+          </div>
+        </div>
         <select class="f-md" id="f-cadena">
           <option value="">Todas las Cadenas</option>
           <option>Grido</option>
-          <option>Freddo</option>
+          <option>Weiss</option>
         </select>
         <input type="text" class="f-md" placeholder="N° Sucursal" id="f-suc">
-        <select class="f-lg" id="f-plataforma">
-          <option value="">Todas las Plataformas</option>
-          <option>PedidosYa</option>
-          <option>Rappi</option>
-          <option>UberEats</option>
-          <option>PediGrido</option>
-        </select>
+        <div class="ms-wrap f-lg" id="ms-plat-wrap">
+          <div class="ms-trigger" tabindex="0" onclick="toggleMs('plat')" onkeydown="if(event.key==='Enter'||event.key===' ')toggleMs('plat')">
+            <span class="ms-trigger-label" id="ms-plat-label">Todas las Plataformas</span>
+            <span class="ms-caret">▾</span>
+          </div>
+          <div class="ms-dropdown" id="ms-plat-dropdown">
+            <label class="ms-option"><input type="checkbox" value="PedidosYa" onchange="updateMs('plat')"> PedidosYa</label>
+            <label class="ms-option"><input type="checkbox" value="Rappi" onchange="updateMs('plat')"> Rappi</label>
+            <label class="ms-option"><input type="checkbox" value="UberEats" onchange="updateMs('plat')"> UberEats</label>
+            <label class="ms-option"><input type="checkbox" value="PediGrido" onchange="updateMs('plat')"> PediGrido</label>
+          </div>
+        </div>
       </div>
 
       <!-- FILA 2: Tipo · Acción · Resultado · Ident -->
@@ -275,14 +310,12 @@
           <option value="true">Aprobado</option>
           <option value="false">Falló</option>
         </select>
-        <input type="text" class="f-md" placeholder="Ident (ej: PedidosYaCRON Uruguay…)" id="f-ident">
+        <input type="text" class="f-md" placeholder="Identificacion" id="f-ident">
       </div>
 
-      <!-- Botones: Limpiar · Exportar Excel · Buscar -->
+      <!-- Botón: Actualizar -->
       <div class="actions-row">
-        <button class="btn-secondary" onclick="limpiar()">&#x21BA; Limpiar</button>
-        <button class="btn-success"   onclick="exportar()">&#x25A3; Exportar Excel</button>
-        <button class="btn-primary"   onclick="applyFilters()">&#x27F3; Buscar</button>
+        <button class="btn-primary" onclick="applyFilters()">&#x27F3; Actualizar</button>
       </div>
 
       <!-- Tabla -->
@@ -296,7 +329,7 @@
               <th>N° Sucursal</th>
               <th>Fecha/Hora</th>
               <th>Tipo</th>
-              <th>Identif. CRON</th>
+              <th>Identificacion</th>
               <th>Acción</th>
               <th>Resultado</th>
               <th>Referencia</th>
@@ -370,27 +403,27 @@ function renderTable(data) {
 }
 
 function applyFilters() {
-  const pais      = document.getElementById('f-pais').value;
+  const paisVals  = Array.from(document.querySelectorAll('#ms-pais-dropdown input:checked')).map(c => c.value);
+  const platVals  = Array.from(document.querySelectorAll('#ms-plat-dropdown input:checked')).map(c => c.value);
   const cadena    = document.getElementById('f-cadena').value;
   const suc       = document.getElementById('f-suc').value.trim().toLowerCase();
-  const plat      = document.getElementById('f-plataforma').value;
   const tipo      = document.getElementById('f-tipo').value;
   const accion    = document.getElementById('f-accion').value;
   const resultado = document.getElementById('f-resultado').value;
   const ident     = document.getElementById('f-ident').value.trim().toLowerCase();
 
   const filtered = logsData.filter(function(row) {
-    if (pais    && row.pais       !== pais)                   return false;
-    if (cadena  && row.cadena     !== cadena)                 return false;
-    if (suc     && !row.suc.toLowerCase().includes(suc))      return false;
-    if (plat    && row.plataforma !== plat)                   return false;
-    if (tipo === 'Special' && row.tipo !== 'Open/Close')      return false;
-    if (tipo === 'CRON'    && row.tipo !== 'Check-in')        return false;
-    if (accion  === 'open'   && row.accion !== 'Open')        return false;
-    if (accion  === 'closed' && row.accion !== 'Closed')      return false;
-    if (resultado === 'true'  && !row.resultado)              return false;
-    if (resultado === 'false' &&  row.resultado)              return false;
-    if (ident   && !row.ident.toLowerCase().includes(ident))  return false;
+    if (paisVals.length && !paisVals.includes(row.pais))           return false;
+    if (cadena  && row.cadena     !== cadena)                      return false;
+    if (suc     && !row.suc.toLowerCase().includes(suc))           return false;
+    if (platVals.length && !platVals.includes(row.plataforma))     return false;
+    if (tipo === 'Special' && row.tipo !== 'Open/Close')           return false;
+    if (tipo === 'CRON'    && row.tipo !== 'Check-in')             return false;
+    if (accion  === 'open'   && row.accion !== 'Open')             return false;
+    if (accion  === 'closed' && row.accion !== 'Closed')           return false;
+    if (resultado === 'true'  && !row.resultado)                   return false;
+    if (resultado === 'false' &&  row.resultado)                   return false;
+    if (ident   && !row.ident.toLowerCase().includes(ident))       return false;
     return true;
   });
 
@@ -404,16 +437,18 @@ function applyFilters() {
 }
 
 function limpiar() {
-  document.getElementById('f-desde').value      = '2026-05-29';
-  document.getElementById('f-hasta').value      = '2026-06-05';
-  document.getElementById('f-pais').value       = '';
-  document.getElementById('f-cadena').value     = '';
-  document.getElementById('f-suc').value        = '';
-  document.getElementById('f-plataforma').value = '';
-  document.getElementById('f-tipo').value       = '';
-  document.getElementById('f-accion').value     = '';
-  document.getElementById('f-resultado').value  = '';
-  document.getElementById('f-ident').value      = '';
+  document.getElementById('f-desde').value  = '2026-05-29';
+  document.getElementById('f-hasta').value  = '2026-06-05';
+  document.getElementById('f-cadena').value = '';
+  document.getElementById('f-suc').value    = '';
+  document.getElementById('f-tipo').value   = '';
+  document.getElementById('f-accion').value = '';
+  document.getElementById('f-resultado').value = '';
+  document.getElementById('f-ident').value  = '';
+  document.querySelectorAll('#ms-pais-dropdown input[type="checkbox"]').forEach(c => c.checked = false);
+  document.getElementById('ms-pais-label').textContent = 'Todos los Países';
+  document.querySelectorAll('#ms-plat-dropdown input[type="checkbox"]').forEach(c => c.checked = false);
+  document.getElementById('ms-plat-label').textContent = 'Todas las Plataformas';
   renderTable(logsData);
 }
 
@@ -430,6 +465,30 @@ function refreshStats() {
 }
 
 renderTable(logsData);
+
+// --- Multi-select helpers ---
+const msPlaceholders = { pais: 'Todos los Países', plat: 'Todas las Plataformas' };
+
+function toggleMs(id) {
+  document.getElementById('ms-' + id + '-dropdown').classList.toggle('open');
+}
+
+function updateMs(id) {
+  const checked = document.querySelectorAll('#ms-' + id + '-dropdown input[type="checkbox"]:checked');
+  const label   = document.getElementById('ms-' + id + '-label');
+  if (checked.length === 0)      label.textContent = msPlaceholders[id];
+  else if (checked.length === 1) label.textContent = checked[0].value;
+  else                           label.textContent = checked.length + ' seleccionados';
+}
+
+document.addEventListener('click', function(e) {
+  ['pais', 'plat'].forEach(function(id) {
+    const wrap = document.getElementById('ms-' + id + '-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('ms-' + id + '-dropdown').classList.remove('open');
+    }
+  });
+});
 </script>
 </body>
 </html>
