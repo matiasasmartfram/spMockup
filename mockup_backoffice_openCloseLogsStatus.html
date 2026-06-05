@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFran - Open/Closed Logs</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; color: #212529; background: #f4f6f9; display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 110px; min-height: 100vh; background: #fff; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; overflow-y: auto; }
+  .logo { padding: 12px 10px 14px; border-bottom: 1px solid #dee2e6; }
+  .logo-brand { font-size: 17px; font-weight: 700; line-height: 1.15; }
+  .logo-brand .brace { color: #1a5fc8; }
+  .logo-brand .text { color: #212529; }
+  .logo-ver { font-size: 10px; color: #6c757d; margin-top: 2px; }
+  .nav-group { padding: 10px 0 2px; }
+  .nav-group-title { font-size: 9.5px; font-weight: 600; color: #adb5bd; text-transform: uppercase; letter-spacing: 0.6px; padding: 0 10px 4px; }
+  .nav-item { display: block; padding: 4px 10px; font-size: 12px; color: #6c757d; cursor: pointer; border-radius: 3px; margin: 1px 4px; text-decoration: none; }
+  .nav-item:hover { background: #f1f3f5; color: #212529; }
+  .nav-item.active { color: #1a5fc8; background: #e8f0fb; }
+
+  /* Main */
+  .main { margin-left: 110px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn { width: 28px; height: 28px; border-radius: 50%; background: #f1f3f5; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6c757d; font-size: 14px; }
+  .topbar-title { font-size: 16px; font-weight: 500; }
+  .topbar-user { font-size: 13px; color: #6c757d; cursor: pointer; }
+  .content { padding: 16px 20px; flex: 1; }
+
+  /* Top row */
+  .top-row { display: grid; grid-template-columns: 310px 1fr; gap: 14px; margin-bottom: 14px; }
+  .panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
+
+  /* Filter panel */
+  .filter-group { margin-bottom: 10px; }
+  .filter-label { font-size: 11px; color: #6c757d; margin-bottom: 3px; }
+  select, input[type="text"], input[type="date"] {
+    padding: 4px 8px; font-size: 12px; border: 1px solid #ced4da;
+    border-radius: 4px; background: #fff; color: #212529; height: 28px; outline: none;
+  }
+  .filter-group select,
+  .filter-group input[type="text"],
+  .filter-group input[type="date"] { width: 100%; }
+  select:focus, input:focus { border-color: #86b7fe; box-shadow: 0 0 0 2px rgba(13,110,253,0.15); }
+
+  /* Stats panel */
+  .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .stats-header-title { font-size: 13px; font-weight: 500; }
+  .stats-controls { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #6c757d; }
+  .stats-controls select { width: auto; height: 24px; font-size: 11px; padding: 2px 4px; }
+  .interval-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: #6c757d; padding: 0 2px; }
+  .interval-btn:hover { color: #212529; }
+  .stats-body { text-align: center; padding: 16px 0 10px; }
+  .stats-big { font-size: 52px; font-weight: 300; color: #212529; line-height: 1; }
+  .stats-big-label { font-size: 12px; color: #6c757d; margin-top: 6px; }
+  .stats-sub { display: flex; justify-content: center; gap: 36px; margin-top: 16px; }
+  .stat-mini-n { font-size: 22px; font-weight: 400; color: #212529; }
+  .stat-mini-l { font-size: 11px; color: #6c757d; }
+  .stats-updated { font-size: 10px; color: #adb5bd; text-align: right; margin-top: 10px; }
+
+  /* Orders panel */
+  .orders-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
+  .orders-title { font-size: 13px; font-weight: 500; margin-bottom: 12px; }
+  .filters-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 7px; align-items: end; }
+  .filter-input-wrap { position: relative; }
+  .filter-search-icon { position: absolute; left: 7px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #adb5bd; }
+  .filter-input-wrap input { padding-left: 26px; }
+  .f-sm { width: 130px; }
+  .f-md { width: 160px; }
+  .f-lg { width: 200px; }
+  .f-xl { width: 220px; }
+  .f-xs { width: 90px; }
+  .f-date { width: 150px; }
+  .actions-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  /* Grupo con mini-label arriba (Desde / Hasta) */
+  .date-group { display: flex; flex-direction: column; gap: 2px; }
+  .date-group-label { font-size: 10px; color: #6c757d; }
+
+  /* Botones de acción */
+  .btn-primary   { padding: 5px 14px; background: #1a5fc8; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-primary:hover   { background: #1550a8; }
+  .btn-success   { padding: 5px 14px; background: #198754; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-success:hover   { background: #157347; }
+  .btn-secondary { padding: 5px 14px; background: #6c757d; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-secondary:hover { background: #5c636a; }
+
+  /* Paginación */
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 14px; }
+  .page-btn { padding: 4px 10px; font-size: 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff; color: #495057; cursor: pointer; }
+  .page-btn:hover { background: #f1f3f5; }
+  .page-btn.active { background: #1a5fc8; color: #fff; border-color: #1a5fc8; }
+  .page-btn.disabled { color: #adb5bd; cursor: default; pointer-events: none; }
+  .page-info { font-size: 11px; color: #6c757d; }
+
+  /* Timestamp */
+  .updated-label { font-size: 10px; color: #adb5bd; text-align: right; margin-top: 10px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+  th { text-align: left; padding: 8px 8px; font-weight: 500; font-size: 11px; color: #6c757d; border-bottom: 1px solid #dee2e6; white-space: nowrap; }
+  td { padding: 7px 8px; border-bottom: 1px solid #f1f3f5; white-space: nowrap; }
+  tbody tr:hover td { background: #f8f9fa; }
+  tbody tr.selected td { background: #e8f0fb; }
+  .badge { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; display: inline-block; }
+  .badge-aprobado { background: #d4edda; color: #155724; }
+  .badge-fallo    { background: #f8d7da; color: #721c24; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-brand">
+      <span class="brace">{smart</span><br><span class="text">fran}</span>
+    </div>
+    <div class="logo-ver">V7.1.2</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Gestión</div>
+    <a class="nav-item" href="#">Usuarios</a>
+    <a class="nav-item" href="#">Plataformas</a>
+    <a class="nav-item" href="#">Courier</a>
+    <a class="nav-item" href="#">Cadenas</a>
+    <a class="nav-item" href="#">Clientes</a>
+    <a class="nav-item" href="#">Sucursales</a>
+    <a class="nav-item" href="#">Regiones</a>
+    <a class="nav-item" href="#">Países</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Dashboard</div>
+    <a class="nav-item" href="#">Status</a>
+    <a class="nav-item" href="#">Reporting</a>
+    <a class="nav-item" href="#">Releases</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Swagger</div>
+    <a class="nav-item" href="#">Platform</a>
+    <a class="nav-item" href="#">Concentrador</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Monitorización</div>
+    <a class="nav-item" href="#">DeadLetter</a>
+    <a class="nav-item" href="#">Latencias</a>
+    <a class="nav-item active" href="#">Open/Closed Logs</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn">&#8592;</button>
+      <span class="topbar-title">Open/Closed Logs</span>
+    </div>
+    <div class="topbar-user">Hola Matias! ▾</div>
+  </div>
+
+  <div class="content">
+    <div class="top-row">
+
+      <!-- Filter panel -->
+      <div class="panel">
+        <div class="filter-group">
+          <div class="filter-label">País</div>
+          <select><option>Todos los Países</option><option>Argentina</option><option>Uruguay</option><option>Chile</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Provincia</div>
+          <select><option>Todas las Provincias</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Ciudad</div>
+          <select><option>Todas las Ciudades</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Cadenas</div>
+          <select><option>Todos las Cadenas</option><option>Grido</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Regiones</div>
+          <select><option>Todos las Regiones</option></select>
+        </div>
+      </div>
+
+      <!-- Estado de Conexiones -->
+      <div class="panel">
+        <div class="stats-header">
+          <div class="stats-header-title">Estado de Conexiones</div>
+          <div class="stats-controls">
+            Últimos:
+            <select id="interval-sel">
+              <option value="1m">1m</option>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="30m">30m</option>
+            </select>
+            <button class="interval-btn" onclick="refreshStats()" title="Actualizar">&#x27F3;</button>
+          </div>
+        </div>
+        <div style="font-size: 12px; color: #6c757d; margin-bottom: 6px;">Sucursales</div>
+        <div class="stats-body">
+          <div class="stats-big" id="stat-total">2312</div>
+          <div class="stats-big-label">Sucursales Registradas</div>
+          <div class="stats-sub">
+            <div>
+              <div class="stat-mini-n" id="stat-online">1976</div>
+              <div class="stat-mini-l">Online</div>
+            </div>
+            <div>
+              <div class="stat-mini-n" id="stat-offline">336</div>
+              <div class="stat-mini-l">Offline</div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-updated" id="stats-time">Actualizado: 14:55:47</div>
+      </div>
+    </div>
+
+    <!-- Open/Closed Logs -->
+    <div class="orders-panel">
+      <div class="orders-title">Open/Closed Logs</div>
+
+      <!-- FILA 1: Desde · Hasta · País · Cadena · N°Suc · Plataforma -->
+      <div class="filters-row">
+        <div class="date-group">
+          <span class="date-group-label">Desde *</span>
+          <input type="date" class="f-date" value="2026-05-29" id="f-desde">
+        </div>
+        <div class="date-group">
+          <span class="date-group-label">Hasta *</span>
+          <input type="date" class="f-date" value="2026-06-05" id="f-hasta">
+        </div>
+        <select class="f-md" id="f-pais">
+          <option value="">Todos los Países</option>
+          <option>Argentina</option>
+          <option>Uruguay</option>
+          <option>Chile</option>
+          <option>Paraguay</option>
+        </select>
+        <select class="f-md" id="f-cadena">
+          <option value="">Todas las Cadenas</option>
+          <option>Grido</option>
+          <option>Freddo</option>
+        </select>
+        <input type="text" class="f-md" placeholder="N° Sucursal" id="f-suc">
+        <select class="f-lg" id="f-plataforma">
+          <option value="">Todas las Plataformas</option>
+          <option>PedidosYa</option>
+          <option>Rappi</option>
+          <option>UberEats</option>
+          <option>PediGrido</option>
+        </select>
+      </div>
+
+      <!-- FILA 2: Tipo · Acción · Resultado · Ident -->
+      <div class="filters-row">
+        <select class="f-md" id="f-tipo">
+          <option value="">Todos los Tipos</option>
+          <option value="Special">Open/Close</option>
+          <option value="CRON">Check-in</option>
+        </select>
+        <select class="f-md" id="f-accion">
+          <option value="">Todas las Acciones</option>
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select class="f-md" id="f-resultado">
+          <option value="">Todos los Resultados</option>
+          <option value="true">Aprobado</option>
+          <option value="false">Falló</option>
+        </select>
+        <input type="text" class="f-md" placeholder="Ident (ej: PedidosYaCRON Uruguay…)" id="f-ident">
+      </div>
+
+      <!-- Botones: Limpiar · Exportar Excel · Buscar -->
+      <div class="actions-row">
+        <button class="btn-secondary" onclick="limpiar()">&#x21BA; Limpiar</button>
+        <button class="btn-success"   onclick="exportar()">&#x25A3; Exportar Excel</button>
+        <button class="btn-primary"   onclick="applyFilters()">&#x27F3; Buscar</button>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-wrap">
+        <table id="logs-table">
+          <thead>
+            <tr>
+              <th>Cadena</th>
+              <th>País</th>
+              <th>Plataforma</th>
+              <th>N° Sucursal</th>
+              <th>Fecha/Hora</th>
+              <th>Tipo</th>
+              <th>Identif. CRON</th>
+              <th>Acción</th>
+              <th>Resultado</th>
+              <th>Referencia</th>
+            </tr>
+          </thead>
+          <tbody id="logs-body">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination">
+        <button class="page-btn disabled">«</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn disabled">…</button>
+        <button class="page-btn">21</button>
+        <button class="page-btn">»</button>
+      </div>
+      <div style="text-align:center;margin-top:4px;">
+        <span class="page-info">Mostrando 1–12 de 248 registros</span>
+      </div>
+
+      <div class="updated-label" id="logs-updated">Actualizado: 11:53:04</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const logsData = [
+  { cadena:'Grido', pais:'Uruguay',   plataforma:'PedidosYa', suc:'4602', fecha:'13/05/2026 11:53', tipo:'Open/Close', ident:'PedidosYa',             accion:'Open',   resultado:false, ref:'UY-GRIDO-HERRERA-LA-BLANQUEADA' },
+  { cadena:'Grido', pais:'Uruguay',   plataforma:'Rappi',     suc:'4602', fecha:'13/05/2026 11:16', tipo:'Check-in',   ident:'RappiCRON Uruguay',       accion:'Closed', resultado:true,  ref:'Rappi:114650' },
+  { cadena:'Grido', pais:'Uruguay',   plataforma:'PedidosYa', suc:'4602', fecha:'13/05/2026 17:01', tipo:'Check-in',   ident:'PedidosYaCRON Uruguay',   accion:'Open',   resultado:true,  ref:'UY-GRIDO-HERRERA-LA-BLANQUEADA' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', suc:'21',   fecha:'05/06/2026 11:05', tipo:'Open/Close', ident:'PedidosYa',               accion:'Open',   resultado:true,  ref:'AR-GRIDO-CORDOBA-CENTRO' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'Rappi',     suc:'21',   fecha:'05/06/2026 10:58', tipo:'Check-in',   ident:'RappiCRON Argentina',     accion:'Open',   resultado:true,  ref:'Rappi:229841' },
+  { cadena:'Grido', pais:'Chile',     plataforma:'UberEats',  suc:'32',   fecha:'05/06/2026 08:22', tipo:'Open/Close', ident:'PedidosYa',               accion:'Closed', resultado:false, ref:'CL-GRIDO-SANTIAGO-PROVIDENCIA' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PediGrido', suc:'60',   fecha:'04/06/2026 23:45', tipo:'Check-in',   ident:'PediGrido',               accion:'Closed', resultado:true,  ref:'POS Simulator' },
+  { cadena:'Grido', pais:'Uruguay',   plataforma:'UberEats',  suc:'4603', fecha:'04/06/2026 22:30', tipo:'Open/Close', ident:'PedidosYa',               accion:'Open',   resultado:false, ref:'UY-GRIDO-MONTEVIDEO-POCITOS' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', suc:'18',   fecha:'04/06/2026 15:23', tipo:'Check-in',   ident:'PedidosYaCRON Argentina', accion:'Closed', resultado:true,  ref:'AR-GRIDO-JOEL-OCAMPO' },
+  { cadena:'Grido', pais:'Chile',     plataforma:'PedidosYa', suc:'32',   fecha:'03/06/2026 19:10', tipo:'Open/Close', ident:'PedidosYa',               accion:'Open',   resultado:true,  ref:'CL-GRIDO-CLOUD' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'Rappi',     suc:'28',   fecha:'03/06/2026 17:00', tipo:'Check-in',   ident:'RappiCRON Argentina',     accion:'Open',   resultado:false, ref:'Rappi:334912' },
+  { cadena:'Grido', pais:'Argentina', plataforma:'UberEats',  suc:'28',   fecha:'03/06/2026 16:21', tipo:'Open/Close', ident:'PedidosYa',               accion:'Closed', resultado:true,  ref:'AR-GRIDO-TEST-PEDIDOS' },
+];
+
+function renderTable(data) {
+  const tbody = document.getElementById('logs-body');
+  tbody.innerHTML = '';
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#adb5bd;padding:20px;">Sin datos para los filtros seleccionados.</td></tr>';
+    return;
+  }
+  data.forEach(function(row) {
+    const tr = document.createElement('tr');
+    const badgeCls = row.resultado ? 'badge-aprobado' : 'badge-fallo';
+    const badgeTxt = row.resultado ? 'Aprobado'       : 'Falló';
+    tr.innerHTML = `
+      <td>${row.cadena}</td>
+      <td>${row.pais}</td>
+      <td>${row.plataforma}</td>
+      <td>${row.suc}</td>
+      <td>${row.fecha}</td>
+      <td>${row.tipo}</td>
+      <td>${row.ident}</td>
+      <td>${row.accion}</td>
+      <td><span class="badge ${badgeCls}">${badgeTxt}</span></td>
+      <td title="${row.ref}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${row.ref}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilters() {
+  const pais      = document.getElementById('f-pais').value;
+  const cadena    = document.getElementById('f-cadena').value;
+  const suc       = document.getElementById('f-suc').value.trim().toLowerCase();
+  const plat      = document.getElementById('f-plataforma').value;
+  const tipo      = document.getElementById('f-tipo').value;
+  const accion    = document.getElementById('f-accion').value;
+  const resultado = document.getElementById('f-resultado').value;
+  const ident     = document.getElementById('f-ident').value.trim().toLowerCase();
+
+  const filtered = logsData.filter(function(row) {
+    if (pais    && row.pais       !== pais)                   return false;
+    if (cadena  && row.cadena     !== cadena)                 return false;
+    if (suc     && !row.suc.toLowerCase().includes(suc))      return false;
+    if (plat    && row.plataforma !== plat)                   return false;
+    if (tipo === 'Special' && row.tipo !== 'Open/Close')      return false;
+    if (tipo === 'CRON'    && row.tipo !== 'Check-in')        return false;
+    if (accion  === 'open'   && row.accion !== 'Open')        return false;
+    if (accion  === 'closed' && row.accion !== 'Closed')      return false;
+    if (resultado === 'true'  && !row.resultado)              return false;
+    if (resultado === 'false' &&  row.resultado)              return false;
+    if (ident   && !row.ident.toLowerCase().includes(ident))  return false;
+    return true;
+  });
+
+  renderTable(filtered);
+
+  const now = new Date();
+  document.getElementById('logs-updated').textContent =
+    'Actualizado: ' + String(now.getHours()).padStart(2,'0') + ':' +
+    String(now.getMinutes()).padStart(2,'0') + ':' +
+    String(now.getSeconds()).padStart(2,'0');
+}
+
+function limpiar() {
+  document.getElementById('f-desde').value      = '2026-05-29';
+  document.getElementById('f-hasta').value      = '2026-06-05';
+  document.getElementById('f-pais').value       = '';
+  document.getElementById('f-cadena').value     = '';
+  document.getElementById('f-suc').value        = '';
+  document.getElementById('f-plataforma').value = '';
+  document.getElementById('f-tipo').value       = '';
+  document.getElementById('f-accion').value     = '';
+  document.getElementById('f-resultado').value  = '';
+  document.getElementById('f-ident').value      = '';
+  renderTable(logsData);
+}
+
+function exportar() {
+  alert('Exportar: en producción dispara POST /openClosedLogs/export → descarga XLSX con los filtros aplicados.');
+}
+
+function refreshStats() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('stats-time').textContent = 'Actualizado: ' + h + ':' + m + ':' + s;
+}
+
+renderTable(logsData);
+</script>
+</body>
+</html>
