@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFran - Status</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; color: #212529; background: #f4f6f9; display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 110px; min-height: 100vh; background: #fff; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; overflow-y: auto; }
+  .logo { padding: 12px 10px 14px; border-bottom: 1px solid #dee2e6; }
+  .logo-brand { font-size: 17px; font-weight: 700; line-height: 1.15; }
+  .logo-brand .brace { color: #1a5fc8; }
+  .logo-brand .text { color: #212529; }
+  .logo-ver { font-size: 10px; color: #6c757d; margin-top: 2px; }
+  .nav-group { padding: 10px 0 2px; }
+  .nav-group-title { font-size: 9.5px; font-weight: 600; color: #adb5bd; text-transform: uppercase; letter-spacing: 0.6px; padding: 0 10px 4px; }
+  .nav-item { display: block; padding: 4px 10px; font-size: 12px; color: #6c757d; cursor: pointer; border-radius: 3px; margin: 1px 4px; text-decoration: none; }
+  .nav-item:hover { background: #f1f3f5; color: #212529; }
+  .nav-item.active { color: #1a5fc8; background: #e8f0fb; }
+
+  /* Main */
+  .main { margin-left: 110px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn { width: 28px; height: 28px; border-radius: 50%; background: #f1f3f5; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6c757d; font-size: 14px; }
+  .topbar-title { font-size: 16px; font-weight: 500; }
+  .topbar-user { font-size: 13px; color: #6c757d; cursor: pointer; }
+  .content { padding: 16px 20px; flex: 1; }
+
+  /* Top row */
+  .top-row { display: grid; grid-template-columns: 310px 1fr; gap: 14px; margin-bottom: 14px; }
+  .panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
+
+  /* Filter panel */
+  .filter-group { margin-bottom: 10px; }
+  .filter-label { font-size: 11px; color: #6c757d; margin-bottom: 3px; }
+  select, input[type="text"], input[type="date"] {
+    width: 100%; padding: 4px 8px; font-size: 12px; border: 1px solid #ced4da;
+    border-radius: 4px; background: #fff; color: #212529; height: 28px; outline: none;
+  }
+  select:focus, input:focus { border-color: #86b7fe; box-shadow: 0 0 0 2px rgba(13,110,253,0.15); }
+
+  /* Stats panel */
+  .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .stats-header-title { font-size: 13px; font-weight: 500; }
+  .stats-controls { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #6c757d; }
+  .stats-controls select { width: auto; height: 24px; font-size: 11px; padding: 2px 4px; }
+  .interval-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: #6c757d; padding: 0 2px; }
+  .interval-btn:hover { color: #212529; }
+  .stats-body { text-align: center; padding: 16px 0 10px; }
+  .stats-big { font-size: 52px; font-weight: 300; color: #212529; line-height: 1; }
+  .stats-big-label { font-size: 12px; color: #6c757d; margin-top: 6px; }
+  .stats-sub { display: flex; justify-content: center; gap: 36px; margin-top: 16px; }
+  .stat-mini-n { font-size: 22px; font-weight: 400; color: #212529; }
+  .stat-mini-l { font-size: 11px; color: #6c757d; }
+  .stats-updated { font-size: 10px; color: #adb5bd; text-align: right; margin-top: 10px; }
+
+  /* Orders panel */
+  .orders-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
+  .orders-title { font-size: 13px; font-weight: 500; margin-bottom: 12px; }
+  .filters-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 7px; align-items: end; }
+  .filter-input-wrap { position: relative; }
+  .filter-search-icon { position: absolute; left: 7px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #adb5bd; }
+  .filter-input-wrap input { padding-left: 26px; }
+  .f-sm { width: 130px; }
+  .f-md { width: 160px; }
+  .f-lg { width: 200px; }
+  .f-xl { width: 220px; }
+  .f-xs { width: 90px; }
+  .f-date { width: 150px; }
+  .actions-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .btn-update { padding: 5px 14px; background: #1a5fc8; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .btn-update:hover { background: #1550a8; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+  th { text-align: left; padding: 8px 8px; font-weight: 500; font-size: 11px; color: #6c757d; border-bottom: 1px solid #dee2e6; white-space: nowrap; }
+  td { padding: 7px 8px; border-bottom: 1px solid #f1f3f5; white-space: nowrap; }
+  tbody tr:hover td { background: #f8f9fa; }
+  tbody tr.selected td { background: #e8f0fb; }
+  .badge { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; display: inline-block; }
+  .badge-pendiente { background: #fff3cd; color: #856404; }
+  .badge-recibida { background: #d1ecf1; color: #0c5460; }
+  .badge-confirmada { background: #d4edda; color: #155724; }
+  .btn-ver { padding: 3px 10px; font-size: 11px; border: 1px solid #dee2e6; border-radius: 3px; background: #fff; color: #495057; cursor: pointer; }
+  .btn-ver:hover { background: #f1f3f5; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-brand">
+      <span class="brace">{smart</span><br><span class="text">fran}</span>
+    </div>
+    <div class="logo-ver">V7.1.2</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Gestión</div>
+    <a class="nav-item" href="#">Usuarios</a>
+    <a class="nav-item" href="#">Plataformas</a>
+    <a class="nav-item" href="#">Courier</a>
+    <a class="nav-item" href="#">Cadenas</a>
+    <a class="nav-item" href="#">Clientes</a>
+    <a class="nav-item" href="#">Sucursales</a>
+    <a class="nav-item" href="#">Regiones</a>
+    <a class="nav-item" href="#">Países</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Dashboard</div>
+    <a class="nav-item active" href="#">Status</a>
+    <a class="nav-item" href="#">Reporting</a>
+    <a class="nav-item" href="#">Releases</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Swagger</div>
+    <a class="nav-item" href="#">Platform</a>
+    <a class="nav-item" href="#">Concentrador</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Monitorización</div>
+    <a class="nav-item" href="#">DeadLetter</a>
+    <a class="nav-item" href="#">Latencias</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn">&#8592;</button>
+      <span class="topbar-title">Status</span>
+    </div>
+    <div class="topbar-user">Hola Matias! ▾</div>
+  </div>
+
+  <div class="content">
+    <div class="top-row">
+
+      <!-- Filter panel -->
+      <div class="panel">
+        <div class="filter-group">
+          <div class="filter-label">País</div>
+          <select><option>Todos los Países</option><option>Argentina</option><option>Uruguay</option><option>Chile</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Provincia</div>
+          <select><option>Todas las Provincias</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Ciudad</div>
+          <select><option>Todas las Ciudades</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Cadenas</div>
+          <select><option>Todos las Cadenas</option><option>Grido</option></select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Regiones</div>
+          <select><option>Todos las Regiones</option></select>
+        </div>
+      </div>
+
+      <!-- Estado de Conexiones -->
+      <div class="panel">
+        <div class="stats-header">
+          <div class="stats-header-title">Estado de Conexiones</div>
+          <div class="stats-controls">
+            Últimos:
+            <select id="interval-sel">
+              <option value="1m">1m</option>
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="30m">30m</option>
+            </select>
+            <button class="interval-btn" onclick="refreshStats()" title="Actualizar">&#x27F3;</button>
+          </div>
+        </div>
+        <div style="font-size: 12px; color: #6c757d; margin-bottom: 6px;">Sucursales</div>
+        <div class="stats-body">
+          <div class="stats-big" id="stat-total">2312</div>
+          <div class="stats-big-label">Sucursales Registradas</div>
+          <div class="stats-sub">
+            <div>
+              <div class="stat-mini-n" id="stat-online">1976</div>
+              <div class="stat-mini-l">Online</div>
+            </div>
+            <div>
+              <div class="stat-mini-n" id="stat-offline">336</div>
+              <div class="stat-mini-l">Offline</div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-updated" id="stats-time">Actualizado: 14:55:47</div>
+      </div>
+    </div>
+
+    <!-- Pedidos Entrantes -->
+    <div class="orders-panel">
+      <div class="orders-title">Pedidos Entrantes</div>
+
+      <div class="filters-row">
+        <div class="filter-input-wrap f-md">
+          <i class="ti ti-search filter-search-icon"></i>
+          <input type="text" placeholder="Nº Orden" id="search-orden">
+        </div>
+        <input type="text" class="f-sm" placeholder="Nº Sucursal" id="search-suc">
+        <input type="text" class="f-xs" placeholder="SKU" id="search-sku">
+        <select class="f-md" id="filter-estado">
+          <option value="">Todos los Estados</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Recibida">Recibida</option>
+          <option value="Confirmada">Confirmada</option>
+        </select>
+        <select class="f-lg" id="filter-motivo">
+          <option>Todos los Motivos de Rechazo</option>
+        </select>
+        <select class="f-lg" id="filter-plataforma">
+          <option value="">Todas las Plataformas</option>
+          <option value="PedidosYa">PedidosYa</option>
+          <option value="PediGrido">PediGrido</option>
+        </select>
+        <select class="f-md" id="filter-pais">
+          <option value="">Todos los Países</option>
+          <option value="Argentina">Argentina</option>
+          <option value="Uruguay">Uruguay</option>
+        </select>
+      </div>
+
+      <div class="filters-row">
+        <input type="date" class="f-date" id="filter-fecha">
+        <select class="f-md">
+          <option>Más nuevo primero</option>
+          <option>Más antiguo primero</option>
+        </select>
+        <select class="f-md">
+          <option>Cloud/No Cloud</option>
+          <option>Cloud</option>
+          <option>No Cloud</option>
+        </select>
+        <select class="f-md">
+          <option>Turbo/No Turbo</option>
+          <option>Turbo</option>
+          <option>No Turbo</option>
+        </select>
+        <select class="f-lg">
+          <option>Todas las Cadenas</option>
+          <option>Grido</option>
+        </select>
+        <select class="f-md">
+          <option>Canje/Sin Canje</option>
+          <option>Canje</option>
+          <option>Sin Canje</option>
+        </select>
+      </div>
+
+      <div class="filters-row">
+        <select class="f-md">
+          <option>S/No PickedUp</option>
+          <option>PickedUp</option>
+          <option>No PickedUp</option>
+        </select>
+        <select class="f-lg">
+          <option>Todos los deliveries</option>
+        </select>
+        <input type="text" class="f-xs" value="0">
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-update" onclick="applyFilters()">&#x27F3; Actualizar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="orders-table">
+          <thead>
+            <tr>
+              <th>Cadena</th>
+              <th>País</th>
+              <th>Plataforma</th>
+              <th>Nº Sucursal</th>
+              <th>Sucursal</th>
+              <th>Orden</th>
+              <th>Estado</th>
+              <th>Motivo</th>
+              <th>Creado</th>
+              <th>Actualizado</th>
+              <th>Monto</th>
+              <th>Detalles</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ordersData = [
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4591', sucursal:'SAN LUIS XII', orden:'2032894877', estado:'Pendiente', motivo:'', creado:'05/06/2026 14:55:51', actualizado:'05/06/2026 14:55:51', monto:'$12800', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PediGrido', sucId:'3476', sucursal:'PILAR III', orden:'4999960', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:51', actualizado:'05/06/2026 14:55:51', monto:'$15000', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PediGrido', sucId:'4731', sucursal:'CORRIENTES (GDOR GELABER)', orden:'4999958', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:50', actualizado:'05/06/2026 14:55:51', monto:'$14950', selected:true },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'5362', sucursal:'Estacion Ballestero', orden:'2032894879', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:48', actualizado:'05/06/2026 14:55:49', monto:'$20700', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4887', sucursal:'VILLA BALLESTER II', orden:'2032894843', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:48', actualizado:'05/06/2026 14:55:49', monto:'$5000', selected:false },
+  { cadena:'Grido', pais:'Uruguay', plataforma:'PedidosYa', sucId:'4289', sucursal:'EL PINAR', orden:'2032908772', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:34', actualizado:'05/06/2026 14:55:34', monto:'$205', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'3256', sucursal:'SANTA LUCIA II', orden:'2032881652', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:30', actualizado:'05/06/2026 14:55:35', monto:'$33630', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4339', sucursal:'SAN MARTIN - BS AS', orden:'2032881973', estado:'Confirmada', motivo:'', creado:'05/06/2026 14:55:28', actualizado:'05/06/2026 14:55:44', monto:'$12800', selected:false },
+  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'5666', sucursal:'Plaza Belgrano II', orden:'2032881908', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:27', actualizado:'05/06/2026 14:55:28', monto:'$8850', selected:false },
+];
+
+function badgeClass(estado) {
+  if (estado === 'Pendiente') return 'badge-pendiente';
+  if (estado === 'Recibida') return 'badge-recibida';
+  if (estado === 'Confirmada') return 'badge-confirmada';
+  return '';
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('orders-body');
+  tbody.innerHTML = '';
+  data.forEach(function(row, i) {
+    const tr = document.createElement('tr');
+    if (row.selected) tr.classList.add('selected');
+    tr.innerHTML = `
+      <td>${row.cadena}</td>
+      <td>${row.pais}</td>
+      <td>${row.plataforma}</td>
+      <td>${row.sucId}</td>
+      <td>${row.sucursal}</td>
+      <td>${row.orden}</td>
+      <td><span class="badge ${badgeClass(row.estado)}">${row.estado}</span></td>
+      <td>${row.motivo}</td>
+      <td>${row.creado}</td>
+      <td>${row.actualizado}</td>
+      <td>${row.monto}</td>
+      <td><button class="btn-ver" onclick="verDetalle('${row.orden}')">Ver Más</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function applyFilters() {
+  const searchOrden = document.getElementById('search-orden').value.toLowerCase();
+  const searchSuc = document.getElementById('search-suc').value.toLowerCase();
+  const filterEstado = document.getElementById('filter-estado').value;
+  const filterPlataforma = document.getElementById('filter-plataforma').value;
+  const filterPais = document.getElementById('filter-pais').value;
+
+  const filtered = ordersData.filter(function(row) {
+    if (searchOrden && !row.orden.toLowerCase().includes(searchOrden)) return false;
+    if (searchSuc && !row.sucId.includes(searchSuc)) return false;
+    if (filterEstado && row.estado !== filterEstado) return false;
+    if (filterPlataforma && row.plataforma !== filterPlataforma) return false;
+    if (filterPais && row.pais !== filterPais) return false;
+    return true;
+  });
+  renderTable(filtered);
+}
+
+function refreshStats() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('stats-time').textContent = 'Actualizado: ' + h + ':' + m + ':' + s;
+}
+
+function verDetalle(orden) {
+  alert('Ver detalles de la orden: ' + orden);
+}
+
+renderTable(ordersData);
+</script>
+</body>
+</html>
