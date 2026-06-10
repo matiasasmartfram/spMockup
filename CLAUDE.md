@@ -170,6 +170,7 @@ Las secciones (`<details>`) se ordenan **alfabéticamente** de arriba a abajo.
 - `mockup_mercadoPagoDeliveryCloudv1.html` → Delivery Cloud v1
 
 ### MockUps POS
+- `mockup_pos_pedidos_autofinalizacion.html` → Pedidos Autofinalización
 - `mockup_pos_rejectedMessages.html` → Rejected Messages por Estado
 
 ### MockUps Promociones
