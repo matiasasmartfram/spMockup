@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFran POS - Delivery (AutoDelivered)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --col-new-head: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+            --col-new-bg: #ffe5e5;
+            --col-new-border: #ffb3b3;
+            --col-prep-head: linear-gradient(135deg, #4dabf7 0%, #74c0fc 100%);
+            --col-prep-bg: #e7f5ff;
+            --col-prep-border: #a5d8ff;
+            --col-ready-head: linear-gradient(135deg, #ffd43b 0%, #ffe066 100%);
+            --col-ready-bg: #fff9db;
+            --col-ready-border: #ffe066;
+            --col-done-head: linear-gradient(135deg, #51cf66 0%, #69db7c 100%);
+            --col-done-bg: #d3f9d8;
+            --col-done-border: #8ce99a;
+            --auto: #6e59ee;
+            --auto-soft: #efeaff;
+            --auto-border: #d6ccff;
+            --radius: 12px;
+            --shadow-card: 0 2px 8px rgba(0, 0, 0, .08);
+            --shadow-card-hover: 0 6px 20px rgba(0, 0, 0, .14);
+            --shadow-panel: 0 4px 24px rgba(0, 0, 0, .12);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f1f3f5;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            height: 56px;
+            background: #0f0035;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .4);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .topbar .brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: .5px;
+        }
+
+        .topbar .brand span {
+            color: #6e59ee;
+        }
+
+        /* ── DEMO CONTROL (solo para la demostración) ── */
+        .btn-demo {
+            background: #6e59ee;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-family: inherit;
+            font-size: .75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s;
+        }
+
+        .btn-demo:hover {
+            background: #5040d0;
+        }
+
+        .badge-red {
+            background: #e53935;
+            color: #fff;
+            font-size: .65rem;
+            font-weight: 700;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: -8px;
+            margin-top: -14px;
+        }
+
+        /* ── BACK BUTTON ── */
+        .btn-back {
+            position: fixed;
+            top: 68px;
+            left: 20px;
+            z-index: 50;
+            background: #6e59ee;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 16px;
+            font-family: inherit;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s;
+        }
+
+        .btn-back:hover {
+            background: #5040d0;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .main {
+            padding-top: 72px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
+            height: 100vh;
+            display: flex;
+            gap: 14px;
+        }
+
+        /* ── KANBAN AREA ── */
+        .kanban-area {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .kanban-col {
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius);
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .col-head {
+            padding: 12px 16px;
+            color: #fff;
+            font-weight: 700;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .col-head svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .col-head .count {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .3);
+            border-radius: 20px;
+            padding: 2px 9px;
+            font-size: .7rem;
+        }
+
+        .col-head-new {
+            background: var(--col-new-head);
+        }
+
+        .col-head-prep {
+            background: var(--col-prep-head);
+        }
+
+        .col-head-ready {
+            background: var(--col-ready-head);
+            color: #333;
+        }
+
+        .col-head-ready svg {
+            color: #333;
+        }
+
+        .col-head-done {
+            background: var(--col-done-head);
+        }
+
+        .drop-zone {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border: 2px dashed transparent;
+            transition: border-color .2s, background .2s;
+            border-radius: 0 0 var(--radius) var(--radius);
+            scrollbar-width: thin;
+        }
+
+        .drop-zone::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .drop-zone::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, .15);
+            border-radius: 4px;
+        }
+
+        .drop-zone-new {
+            background: var(--col-new-bg);
+        }
+
+        .drop-zone-prep {
+            background: var(--col-prep-bg);
+        }
+
+        .drop-zone-ready {
+            background: var(--col-ready-bg);
+        }
+
+        .drop-zone-done {
+            background: var(--col-done-bg);
+        }
+
+        .drop-zone.drag-over {
+            border-color: rgba(0, 0, 0, .3);
+            filter: brightness(.97);
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            opacity: .5;
+            gap: 10px;
+        }
+
+        .empty-state svg {
+            width: 38px;
+            height: 38px;
+        }
+
+        .empty-state p {
+            font-size: .78rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        /* ── PEDIDO CARD ── */
+        .pedido-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-card);
+            cursor: grab;
+            border: 2px solid transparent;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+            user-select: none;
+            position: relative;
+        }
+
+        .pedido-card:hover {
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .pedido-card.active {
+            border: 2.5px solid #4dabf7 !important;
+            box-shadow: 0 6px 20px rgba(77, 171, 247, .35) !important;
+            background: linear-gradient(135deg, #fff 0%, #e7f5ff 100%) !important;
+            transform: scale(1.02);
+        }
+
+        .pedido-card.rejected {
+            opacity: .55;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffcdd2 100%);
+        }
+
+        .pedido-card.dragging {
+            opacity: .4;
+            transform: rotate(2deg);
+        }
+
+        /* ── AUTODELIVERED CARD (I+D) ── */
+        .pedido-card.auto {
+            border-left: 4px solid var(--auto);
+            cursor: pointer;
+        }
+
+        @keyframes arrive {
+            0% {
+                box-shadow: 0 0 0 0 rgba(110, 89, 238, .5);
+            }
+
+            100% {
+                box-shadow: 0 0 0 16px rgba(110, 89, 238, 0);
+            }
+        }
+
+        .pedido-card.just-arrived {
+            animation: arrive 1.3s ease-out 1;
+        }
+
+        .auto-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: auto;
+            background: var(--auto-soft);
+            color: var(--auto);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: .6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            white-space: nowrap;
+        }
+
+        .auto-banner {
+            display: flex;
+            gap: 9px;
+            align-items: flex-start;
+            background: var(--auto-soft);
+            border: 1px solid var(--auto-border);
+            color: #5040d0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: .74rem;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 14px;
+        }
+
+        .auto-banner svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--auto);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .auto-banner b {
+            color: var(--auto);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .platform-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: #e53935;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: .65rem;
+            flex-shrink: 0;
+        }
+
+        .order-num {
+            font-weight: 700;
+            font-size: .82rem;
+            color: #333;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #4dabf7;
+            font-size: .85rem;
+            margin-bottom: 8px;
+        }
+
+        .card-time {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #888;
+            font-size: .75rem;
+        }
+
+        .card-time svg {
+            width: 13px;
+            height: 13px;
+            fill: #888;
+        }
+
+        /* ── DETAIL PANEL ── */
+        .detail-panel {
+            width: 300px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: opacity .25s, transform .25s;
+        }
+
+        .detail-panel.empty-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #dee2e6;
+            box-shadow: none;
+            background: #f8f9fa;
+        }
+
+        .empty-panel-msg {
+            text-align: center;
+            color: #adb5bd;
+            padding: 24px;
+        }
+
+        .empty-panel-msg svg {
+            width: 40px;
+            height: 40px;
+            fill: #dee2e6;
+            margin-bottom: 10px;
+        }
+
+        .empty-panel-msg p {
+            font-size: .8rem;
+            font-weight: 500;
+        }
+
+        /* leyenda en panel vacío */
+        .panel-legend {
+            margin-top: 18px;
+            text-align: left;
+            border-top: 1px solid #e9ecef;
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-legend .leg {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: .72rem;
+            line-height: 1.35;
+            color: #868e96;
+        }
+
+        .panel-legend .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .detail-head {
+            background: linear-gradient(135deg, #4dabf7 0%, #74c0fc 100%);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .detail-head.auto-head {
+            background: linear-gradient(135deg, #6e59ee 0%, #9b8cff 100%);
+        }
+
+        .detail-head h3 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .btn-close-detail {
+            background: rgba(255, 255, 255, .2);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .2s;
+        }
+
+        .btn-close-detail:hover {
+            background: rgba(255, 255, 255, .35);
+        }
+
+        .btn-close-detail svg {
+            width: 14px;
+            height: 14px;
+            fill: #fff;
+        }
+
+        .detail-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+            scrollbar-width: thin;
+        }
+
+        .detail-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detail-body::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: .8rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .detail-val {
+            color: #333;
+            text-align: right;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e9ecef;
+            margin: 12px 0;
+        }
+
+        .items-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 14px;
+            margin: 10px 0;
+        }
+
+        .items-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: .75rem;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .8rem;
+            padding: 6px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .item-price {
+            font-weight: 600;
+        }
+
+        .totals-box {
+            background: #e7f5ff;
+            border-radius: 8px;
+            padding: 14px;
+            margin: 10px 0;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .8rem;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        .total-row.grand {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #1971c2;
+            border-top: 1px solid #a5d8ff;
+            padding-top: 10px;
+            margin-top: 6px;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+        }
+
+        .chip-success {
+            background: #d3f9d8;
+            color: #2f9e44;
+        }
+
+        .chip-warning {
+            background: #fff3cd;
+            color: #d08700;
+        }
+
+        .chip-auto {
+            background: var(--auto-soft);
+            color: var(--auto);
+        }
+
+        .detail-footer {
+            padding: 14px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 10px 0;
+            background: #2f9e44;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: .8rem;
+            cursor: pointer;
+            transition: background .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-confirm:hover {
+            background: #276639;
+        }
+
+        .btn-confirm svg {
+            width: 14px;
+            height: 14px;
+            fill: #fff;
+        }
+
+        .btn-reject {
+            flex: 1;
+            padding: 10px 0;
+            background: #e53935;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: .8rem;
+            cursor: pointer;
+            transition: background .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-reject:hover {
+            background: #c62828;
+        }
+
+        .btn-reject svg {
+            width: 14px;
+            height: 14px;
+            fill: #fff;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--auto);
+            font-family: inherit;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            color: #5040d0;
+        }
+
+        /* ── BILLING OVERLAY ── */
+        .billing-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, .92);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        .billing-spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid #e9ecef;
+            border-top-color: #2f9e44;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .billing-label {
+            font-size: .85rem;
+            font-weight: 600;
+            color: #2f9e44;
+            letter-spacing: .3px;
+        }
+
+        /* ── FINALIZED STATE ── */
+        .btn-confirm:disabled,
+        .btn-reject:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .finalized-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #d3f9d8;
+            color: #2f9e44;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: .8rem;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        .finalized-badge svg {
+            width: 16px;
+            height: 16px;
+            fill: #2f9e44;
+        }
+
+        /* ── BILLING OVERLAY ── */
+        .billing-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, .92);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        .billing-overlay p {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e9ecef;
+            border-top-color: #4dabf7;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pedido-card {
+            position: relative;
+        }
+
+        /* ── BILLED STATE ── */
+        .btn-confirm:disabled,
+        .btn-reject:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .billed-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #d3f9d8;
+            color: #2f9e44;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+
+        .billed-badge svg {
+            width: 13px;
+            height: 13px;
+            fill: #2f9e44;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: transform .3s, opacity .3s;
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #2f9e44;
+        }
+
+        .toast.danger {
+            background: #e53935;
+        }
+
+        .toast.auto {
+            background: #6e59ee;
+        }
+
+        /* ── HISTORY POPUP ── */
+        .history-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .history-overlay.show {
+            display: flex;
+        }
+
+        /* el historial de traces siempre por encima del popup de acción rápida I+D */
+        #history-overlay {
+            z-index: 1100;
+        }
+
+        .history-popup {
+            background: #fff;
+            border-radius: 4px;
+            width: 650px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            font-family: inherit;
+            border: 1px solid #dee2e6;
+        }
+
+        .history-header {
+            background: #fdfdfd;
+            padding: 10px 15px;
+            font-size: 0.82rem;
+            color: #495057;
+            border: 1px solid #a5d8ff;
+            border-radius: 4px;
+            margin: 15px;
+            position: relative;
+        }
+
+        .btn-close-history {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #adb5bd;
+        }
+
+        .btn-close-history:hover {
+            color: #495057;
+        }
+
+        .history-tabs {
+            display: flex;
+            padding: 0 15px;
+            border-bottom: 1px solid #e9ecef;
+            gap: 20px;
+        }
+
+        .history-tab {
+            padding: 10px 5px;
+            font-size: 0.8rem;
+            color: #868e96;
+            cursor: pointer;
+        }
+
+        .history-tab.active {
+            color: #495057;
+        }
+
+        .history-content {
+            padding: 20px 20px 30px 20px;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 10px 0;
+            color: #333;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 700;
+        }
+
+        .history-table td {
+            padding: 10px 0;
+            color: #495057;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            width: 14px;
+            height: 14px;
+            fill: #333;
+            vertical-align: middle;
+        }
+
+        .auto-pill {
+            display: inline-block;
+            background: var(--auto-soft);
+            color: var(--auto);
+            font-size: .62rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 1px 7px;
+            margin-left: 6px;
+            text-transform: uppercase;
+        }
+
+        /* ── AUTODELIVERED POPUP (acción rápida I+D) ──
+           Popup centrado EXCLUSIVO para pedidos I+D (auto-entrega). Reemplaza el movimiento
+           del mouse hacia el panel derecho: muestra los datos + Facturar/Rechazar juntos.
+           NOTA DE DISEÑO: se agranda un poco respecto del panel lateral (300px → 440px) sólo
+           para los pedidos I+D, para que el detalle se vea cómodo. Se mantiene EXACTAMENTE el
+           mismo formato visual (mismas clases .detail-head / .detail-body / .detail-footer):
+           únicamente cambia el ancho del contenedor y el alto máximo del cuerpo. */
+        .auto-popup {
+            width: 440px;
+            max-width: 94vw;
+            max-height: 90vh;
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .32);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: popIn .18s ease-out;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auto-popup .detail-body {
+            max-height: 66vh;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <div class="brand">Smart<span>Fran</span> POS</div>
+        <button class="btn-demo" onclick="ingresarPedidoID()" title="Simula que I+D envía un nuevo pedido a NUEVOS">
+            <svg viewBox="0 0 24 24" fill="white" width="14" height="14">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" />
+            </svg>
+            Ingresar pedido I+D
+        </button>
+        <div style="flex:1"></div>
+        <div style="color:#ccc; font-size:.75rem; line-height:1.4;">
+            <div>Tienda: Franquicia Arguello</div>
+            <div>Punto de Venta: POS Peya</div>
+        </div>
+        <div style="color:#aaa; font-size:.75rem; line-height:1.4; margin-left:16px;">
+            <div>Matias Avila</div>
+            <div>06/03/2026 10:35</div>
+        </div>
+    </header>
+
+    <button class="btn-back">
+        <svg viewBox="0 0 24 24" fill="white" width="14" height="14">
+            <path d="M21 11H6.83l3.58-3.59L9 6l-6 6 6 6 1.41-1.41L6.83 13H21z" />
+        </svg>
+        Volver
+    </button>
+
+    <!-- MAIN -->
+    <div class="main" style="padding-top: 64px;">
+
+        <!-- KANBAN -->
+        <div class="kanban-area">
+
+            <!-- NUEVOS -->
+            <div class="kanban-col">
+                <div class="col-head col-head-new">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z" />
+                    </svg>
+                    NUEVOS
+                    <span class="count" id="count-new">0</span>
+                </div>
+                <div class="drop-zone drop-zone-new" id="zone-new" ondragover="onDragOver(event)"
+                    ondrop="onDrop(event,'new')" ondragleave="onDragLeave(event)"></div>
+            </div>
+
+            <!-- PREPARACIÓN -->
+            <div class="kanban-col">
+                <div class="col-head col-head-prep">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" />
+                    </svg>
+                    PREPARACIÓN
+                    <span class="count" id="count-prep">0</span>
+                </div>
+                <div class="drop-zone drop-zone-prep" id="zone-prep" ondragover="onDragOver(event)"
+                    ondrop="onDrop(event,'prep')" ondragleave="onDragLeave(event)">
+                    <div class="empty-state" id="empty-prep">
+                        <svg viewBox="0 0 24 24" fill="#4dabf7">
+                            <path
+                                d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" />
+                        </svg>
+                        <p>No hay pedidos en preparación</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LISTOS -->
+            <div class="kanban-col">
+                <div class="col-head col-head-ready">
+                    <svg viewBox="0 0 24 24" fill="#333">
+                        <path
+                            d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                    </svg>
+                    LISTOS PARA ENTREGA
+                    <span class="count" id="count-ready">0</span>
+                </div>
+                <div class="drop-zone drop-zone-ready" id="zone-ready" ondragover="onDragOver(event)"
+                    ondrop="onDrop(event,'ready')" ondragleave="onDragLeave(event)">
+                    <div class="empty-state" id="empty-ready">
+                        <svg viewBox="0 0 24 24" fill="#ffd43b">
+                            <path
+                                d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                        </svg>
+                        <p>No hay pedidos listos para entrega</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINALIZADOS -->
+            <div class="kanban-col">
+                <div class="col-head col-head-done">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    FINALIZADOS
+                    <span class="count" id="count-done">0</span>
+                </div>
+                <div class="drop-zone drop-zone-done" id="zone-done" ondragover="onDragOver(event)"
+                    ondrop="onDrop(event,'done')" ondragleave="onDragLeave(event)">
+                    <div class="empty-state" id="empty-done">
+                        <svg viewBox="0 0 24 24" fill="#51cf66">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                        </svg>
+                        <p>No hay pedidos finalizados</p>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /kanban-area -->
+
+        <!-- DETAIL PANEL -->
+        <div class="detail-panel empty-panel" id="detail-panel">
+            <div class="empty-panel-msg">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                </svg>
+                <p>Seleccioná un pedido para ver los detalles</p>
+                <div class="panel-legend">
+                    <div class="leg"><span class="dot" style="background:#6e59ee"></span><span><b style="color:#6e59ee">Pedidos I+D (auto-entrega):</b> se resuelven en 1 paso — Facturar o Rechazar — y van directo a Finalizados.</span></div>
+                    <div class="leg"><span class="dot" style="background:#ff8787"></span><span><b style="color:#e07a7a">Resto de pedidos:</b> flujo normal por columnas (Confirmar paso a paso / arrastrar).</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main -->
+
+    <!-- AUTODELIVERED POPUP (acción rápida para pedidos I+D) -->
+    <div class="history-overlay" id="auto-popup-overlay" onclick="onAutoPopupBackdrop(event)">
+        <div class="auto-popup" id="auto-popup"></div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- HISTORY POPUP -->
+    <div class="history-overlay" id="history-overlay">
+        <div class="history-popup">
+            <div class="history-header">
+                Historial de estados
+                <button class="btn-close-history" onclick="closeHistoryPopup()">&times;</button>
+            </div>
+            <div class="history-tabs">
+                <div class="history-tab active">Plataforma</div>
+                <div class="history-tab">Courier</div>
+            </div>
+            <div class="history-content">
+                <h4 class="history-title">Estado de ordenes</h4>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Componente</th>
+                            <th>Estado</th>
+                            <th>Respuesta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <!-- inyectado via js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- FACTURACIÓN POPUP -->
+    <div class="history-overlay" id="facturacion-overlay">
+        <div class="history-popup" style="width: 400px; text-align: center;">
+            <div class="history-header">
+                Información de Facturación
+                <button class="btn-close-history" onclick="closeFacturacionPopup()">&times;</button>
+            </div>
+            <div class="history-content" style="padding: 40px 20px;">
+                <svg viewBox="0 0 24 24" fill="#2f9e44" style="width: 48px; height: 48px; margin-bottom: 15px;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h3 style="color: #2f9e44; font-size: 1.2rem; font-weight: 700; margin-bottom: 10px;">PEDIDO FACTURADO</h3>
+                <p style="font-size: 0.85rem; color: #495057;">El pedido se ha facturado correctamente.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ════════════════════════════════════════════════════════════════════════════════
+           MOCKUP FUNCIONAL — POS SmartFran · Funcionalidad AUTODELIVERED (I+D / SmartPedidos)
+           ────────────────────────────────────────────────────────────────────────────────
+           Este prototipo demuestra el COMPORTAMIENTO esperado en pantalla. Sirve como base
+           para redactar el requerimiento, por eso el código está comentado en detalle.
+
+           OBJETIVO
+           Convivir, en el MISMO tablero y con el MISMO formato, dos tipos de pedido:
+             • Pedidos NORMALES (autoDelivered:false): flujo actual SIN cambios
+               (Nuevos → Preparación → Listos → Finalizados, paso a paso / drag & drop).
+             • Pedidos I+D (autoDelivered:true): se resuelven en UN solo paso.
+
+           REGLAS DE LOS PEDIDOS I+D (auto-entrega)
+             R1. Identificación: se marcan visualmente (ícono "ID" violeta + badge "Auto-entrega"
+                 + borde izquierdo violeta) para que el colaborador los reconozca al instante.
+                 No se arrastran (drag deshabilitado): su único camino es Facturar o Rechazar.
+             R2. Acción en 2 clicks: (1) click en el ticket → abre POPUP centrado con los datos
+                 y los botones; (2) click en FACTURAR o RECHAZAR. Se evita el "movimiento perdido"
+                 de llevar el mouse al panel derecho.
+             R3. Resolución única: TANTO Facturar COMO Rechazar mandan el pedido SIEMPRE a
+                 FINALIZADOS (saltea Preparación y Listos). Facturar → "FACTURADO";
+                 Rechazar → "PEDIDO RECHAZADO".
+             R4. Popup: se cierra con la (X) o tocando fuera del popup; en ambos casos se
+                 REINICIA (se deselecciona y se vuelve al estado inicial del tablero).
+             R5. Trazabilidad: una vez facturado, el popup ofrece "Ver historial de estados"
+                 con los 6 traces (receive → view → confirm → ready → dispatch → delivery),
+                 que en el backend se generan de forma simulada para la orden I+D.
+
+           REGLA DE ORDENAMIENTO (aplica a todos)
+             R6. En FINALIZADOS, el ÚLTIMO pedido gestionado queda ARRIBA de la lista
+                 (ver renderCard → insertBefore en la columna 'done').
+
+           NO afecta a los pedidos normales: toda la lógica I+D está aislada por la bandera
+           order.autoDelivered. Si es false, el comportamiento es idéntico al POS actual.
+           ════════════════════════════════════════════════════════════════════════════════ */
+
+        // ── DATA ──
+        // autoDelivered:true  → pedido I+D (SmartPedidos, internalCode 12, pago online): resolución en 2 clicks.
+        // autoDelivered:false → pedido normal: flujo por columnas SIN cambios respecto al POS actual.
+        const orders = [
+            {
+                id: 'ord1',
+                number: '1926323771',
+                client: 'Matias Avila',
+                phone: '+543517573331',
+                address: 'Av. Rafael Núñez 4200',
+                note: '#425 | Medio de pago: Mercado Pago',
+                time: '11:12',
+                platform: 'P',
+                platformColor: '#e53935',
+                deliveryType: 'Delivery de Plataforma',
+                paymentMethod: 'Online',
+                items: [
+                    { name: '1 Kilo de Helado', qty: 1, price: 10000 },
+                ],
+                discount: 0,
+                shipping: 500,
+                status: 'new',
+                rejected: false,
+                autoDelivered: false,
+            },
+            {
+                id: 'ord2',
+                number: '1926341122',
+                client: 'Laura García',
+                phone: '+543513334455',
+                address: 'Av. Colón 1234, Córdoba',
+                note: '#426 | Medio de pago: Efectivo',
+                time: '11:28',
+                platform: 'P',
+                platformColor: '#e53935',
+                deliveryType: 'Delivery Propio Del Restaurante',
+                paymentMethod: 'Efectivo',
+                items: [
+                    { name: '1/2 Kilo de Helado', qty: 2, price: 6000 },
+                ],
+                discount: 1000,
+                shipping: 0,
+                status: 'new',
+                rejected: false,
+                billed: false,
+                billing: false,
+                autoDelivered: false,
+            },
+            {
+                id: 'ord3',
+                number: '1200045871',
+                client: 'Jorge Pérez',
+                phone: '+543514455667',
+                address: 'Bv. San Juan 567',
+                note: '#427 | I+D · Pago online (MercadoPago)',
+                time: '11:31',
+                platform: 'ID',
+                platformColor: '#6e59ee',
+                deliveryType: 'Delivery de Plataforma',
+                paymentMethod: 'Online',
+                items: [
+                    { name: '1 Kilo de Helado', qty: 1, price: 10000 },
+                    { name: 'Cucuruchos', qty: 2, price: 800 },
+                ],
+                discount: 0,
+                shipping: 0,
+                status: 'new',
+                rejected: false,
+                autoDelivered: true,
+            },
+            {
+                id: 'ord4',
+                number: '1200045902',
+                client: 'Sofía Romero',
+                phone: '+543517788990',
+                address: 'Av. Vélez Sarsfield 33',
+                note: '#428 | I+D · Pago online (MercadoPago)',
+                time: '11:34',
+                platform: 'ID',
+                platformColor: '#6e59ee',
+                deliveryType: 'Delivery de Plataforma',
+                paymentMethod: 'Online',
+                items: [
+                    { name: 'Postre Familiar', qty: 1, price: 9500 },
+                ],
+                discount: 0,
+                shipping: 0,
+                status: 'new',
+                rejected: false,
+                autoDelivered: true,
+            }
+        ];
+
+        let selectedOrderId = null;
+        let draggedOrderId = null;
+        let injectSeq = 5;
+        let autoPopupOrderId = null;
+
+        // ── INIT ──
+        function init() {
+            orders.forEach(o => renderCard(o));
+            updateCounts();
+        }
+
+        function renderCard(order) {
+            const zone = document.getElementById('zone-' + order.status);
+            if (!zone) return;
+
+            // remove old card if exists
+            const old = document.getElementById('card-' + order.id);
+            if (old) old.remove();
+
+            const card = document.createElement('div');
+            card.className = 'pedido-card'
+                + (order.autoDelivered ? ' auto' : '')
+                + (order.rejected ? ' rejected' : '')
+                + (selectedOrderId === order.id ? ' active' : '');
+            card.id = 'card-' + order.id;
+            // Los pedidos I+D no se arrastran: su flujo es de 1 paso (Facturar / Rechazar).
+            card.draggable = !order.autoDelivered;
+            card.setAttribute('aria-label', 'Tarjeta de pedido');
+
+            const autoBadge = order.autoDelivered
+                ? `<span class="auto-badge">Auto-entrega</span>`
+                : '';
+
+            card.innerHTML = `
+    <div class="card-header">
+      <div class="platform-icon" style="background:${order.platformColor}">${order.platform}</div>
+      <span class="order-num">N°${order.number}</span>
+      ${autoBadge}
+    </div>
+    <div class="client-name">${order.client}</div>
+    <div class="card-time">
+      <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+      ${order.time}
+    </div>
+  `;
+
+            card.addEventListener('click', () => selectOrder(order.id));
+            card.addEventListener('dragstart', () => { draggedOrderId = order.id; setTimeout(() => card.classList.add('dragging'), 0); });
+            card.addEventListener('dragend', () => { card.classList.remove('dragging'); draggedOrderId = null; });
+
+            // ── ORDEN DE APILADO EN LAS COLUMNAS ──
+            // REGLA: en FINALIZADOS, el último pedido gestionado (facturado o rechazado) debe
+            // quedar ARRIBA de todo. Es decir, el más reciente encabeza la lista para que el
+            // colaborador vea primero lo último que resolvió.
+            // Implementación: en la columna 'done' insertamos la tarjeta al principio (prepend);
+            // en el resto de las columnas se mantiene el comportamiento original (se agrega al final).
+            if (order.status === 'done') {
+                zone.insertBefore(card, zone.firstChild);
+            } else {
+                zone.appendChild(card);
+            }
+            updateEmpty(order.status);
+        }
+
+        function selectOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+
+            // toggle: si vuelvo a tocar el mismo, deselecciono
+            if (selectedOrderId === id) {
+                deselect();
+                return;
+            }
+
+            // deselect previous
+            if (selectedOrderId) {
+                const prevCard = document.getElementById('card-' + selectedOrderId);
+                if (prevCard) prevCard.classList.remove('active');
+            }
+
+            selectedOrderId = id;
+            const card = document.getElementById('card-' + id);
+            if (card) card.classList.add('active');
+
+            if (order.autoDelivered) {
+                // Acción rápida: popup centrado con los datos + Facturar/Rechazar (sin mover el mouse a la derecha)
+                showEmptyPanel();
+                openAutoPopup(order);
+            } else {
+                // Flujo normal: panel lateral derecho (sin cambios)
+                hideAutoPopup();
+                showDetailPanel(order);
+            }
+        }
+
+        // Deselecciona todo y vuelve al inicio (cierra popup + limpia panel)
+        function deselect() {
+            if (selectedOrderId) {
+                const c = document.getElementById('card-' + selectedOrderId);
+                if (c) c.classList.remove('active');
+            }
+            selectedOrderId = null;
+            hideAutoPopup();
+            showEmptyPanel();
+        }
+
+        // ── POPUP I+D ──
+        function openAutoPopup(order) {
+            autoPopupOrderId = order.id;
+            renderAutoPopup(order);
+            document.getElementById('auto-popup-overlay').classList.add('show');
+        }
+
+        function hideAutoPopup() {
+            document.getElementById('auto-popup-overlay').classList.remove('show');
+            autoPopupOrderId = null;
+        }
+
+        // X o click fuera → cierra y reinicia
+        function closeAutoPopup() {
+            deselect();
+        }
+
+        function onAutoPopupBackdrop(e) {
+            if (e.target.id === 'auto-popup-overlay') closeAutoPopup();
+        }
+
+        // Construye el contenido del popup I+D según el estado del pedido (R2/R3/R5):
+        //  • status 'new'      → botones FACTURAR / RECHAZAR
+        //  • billing/rejecting → spinner de proceso
+        //  • billed            → badge FACTURADO + link "Ver historial (6 traces)"
+        //  • finalRejected     → badge PEDIDO RECHAZADO
+        // Reutiliza las MISMAS clases visuales del panel lateral para mantener idéntico formato.
+        function renderAutoPopup(order) {
+            const popup = document.getElementById('auto-popup');
+
+            const subtotal = order.items.reduce((s, i) => s + i.qty * i.price, 0);
+            const total = subtotal - order.discount + order.shipping;
+            const itemsHtml = order.items.map(i => `
+        <div class="item-row">
+          <span class="item-name">${i.qty} x ${i.name}</span>
+          <span class="item-price">$ ${(i.qty * i.price).toLocaleString('es-AR')}</span>
+        </div>`).join('');
+
+            const banner = (order.status === 'new' && !order.billing && !order.rejecting)
+                ? `<div class="auto-banner">
+                     <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                     <span><b>Pedido I+D · Auto-entrega.</b> Resolvé en un paso: <b>Facturar</b> o <b>Rechazar</b>. En ambos casos el pedido va directo a <b>Finalizados</b>.</span>
+                   </div>`
+                : '';
+
+            let footer;
+            if (order.billing) {
+                footer = `<div class="detail-footer" style="justify-content:center; gap:10px;">
+            <div class="spinner"></div>
+            <span style="font-size:.82rem; font-weight:600; color:#495057;">Facturando pedido...</span>
+           </div>`;
+            } else if (order.rejecting) {
+                footer = `<div class="detail-footer" style="justify-content:center; gap:10px;">
+            <div class="spinner" style="border-top-color:#e53935;"></div>
+            <span style="font-size:.82rem; font-weight:600; color:#e53935;">Rechazando pedido...</span>
+           </div>`;
+            } else if (order.billed) {
+                footer = `<div class="detail-footer" style="flex-direction:column; align-items:center; gap:8px;">
+            <div class="billed-badge">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              FACTURADO
+            </div>
+            <button class="btn-link" onclick="showHistoryPopup('done')">Ver historial de estados (6 traces)</button>
+           </div>`;
+            } else if (order.finalRejected) {
+                footer = `<div class="detail-footer" style="justify-content:center;">
+            <div class="billed-badge" style="color:#e53935; background:#ffcdd2;">
+              <svg viewBox="0 0 24 24" fill="#e53935"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+              PEDIDO RECHAZADO
+            </div>
+           </div>`;
+            } else {
+                footer = `<div class="detail-footer">
+            <button class="btn-confirm" onclick="resolveAutoDelivered('${order.id}','factura')">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              FACTURAR
+            </button>
+            <button class="btn-reject" onclick="resolveAutoDelivered('${order.id}','reject')">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+              RECHAZAR
+            </button>
+           </div>`;
+            }
+
+            popup.innerHTML = `
+        <div class="detail-head auto-head">
+          <h3>Detalles del Pedido <span class="auto-pill">I+D</span></h3>
+          <button class="btn-close-detail" onclick="closeAutoPopup()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <div class="detail-body">
+          ${banner}
+          <div class="detail-row"><span class="detail-label">Tipo Entrega:</span><span class="detail-val">${order.deliveryType}</span></div>
+          <hr class="divider">
+          <div class="detail-row"><span class="detail-label">Nro Pedido:</span><span class="detail-val" style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${order.number}</span></div>
+          <div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-val">${order.client}</span></div>
+          <div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-val">${order.phone}</span></div>
+          <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-val">${order.address}</span></div>
+          <div class="detail-row"><span class="detail-label">Nota Pedido:</span><span class="detail-val" style="font-size:.74rem">${order.note}</span></div>
+          <div class="items-box">
+            <div class="items-header"><span>ITEM</span><span>PRECIO</span></div>
+            ${itemsHtml}
+          </div>
+          <div class="totals-box">
+            <div class="total-row"><span>Subtotal:</span><span>$ ${subtotal.toLocaleString('es-AR')}</span></div>
+            <div class="total-row"><span>Descuento:</span><span>$ ${order.discount.toLocaleString('es-AR')}</span></div>
+            <div class="total-row"><span>Envío:</span><span>$ ${order.shipping.toLocaleString('es-AR')}</span></div>
+            <div class="total-row grand"><span>TOTAL:</span><span>$ ${total.toLocaleString('es-AR')}</span></div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Forma Pago:</span>
+            <span class="chip chip-auto">${order.paymentMethod}</span>
+          </div>
+        </div>
+        ${footer}`;
+        }
+
+        function showEmptyPanel() {
+            const panel = document.getElementById('detail-panel');
+            panel.className = 'detail-panel empty-panel';
+            panel.innerHTML = `
+    <div class="empty-panel-msg">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <p>Seleccioná un pedido para ver los detalles</p>
+      <div class="panel-legend">
+        <div class="leg"><span class="dot" style="background:#6e59ee"></span><span><b style="color:#6e59ee">Pedidos I+D (auto-entrega):</b> se resuelven en 1 paso — Facturar o Rechazar — y van directo a Finalizados.</span></div>
+        <div class="leg"><span class="dot" style="background:#ff8787"></span><span><b style="color:#e07a7a">Resto de pedidos:</b> flujo normal por columnas (Confirmar paso a paso / arrastrar).</span></div>
+      </div>
+    </div>`;
+        }
+
+        function showDetailPanel(order) {
+            const panel = document.getElementById('detail-panel');
+            panel.className = 'detail-panel';
+
+            const subtotal = order.items.reduce((s, i) => s + i.qty * i.price, 0);
+            const total = subtotal - order.discount + order.shipping;
+
+            const itemsHtml = order.items.map(i => `
+    <div class="item-row">
+      <span class="item-name">${i.qty} x ${i.name}</span>
+      <span class="item-price">$ ${(i.qty * i.price).toLocaleString('es-AR')}</span>
+    </div>
+  `).join('');
+
+            const isPlatformDone = order.deliveryType === 'Delivery de Plataforma' && order.status === 'done';
+
+            // Banner explicativo solo para pedidos I+D pendientes de resolver
+            const autoBannerHtml = (order.autoDelivered && order.status === 'new' && !order.billing && !order.rejecting)
+                ? `<div class="auto-banner">
+                     <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                     <span><b>Pedido I+D · Auto-entrega.</b> Resolvé en un paso: <b>Facturar</b> o <b>Rechazar</b>. En ambos casos el pedido va directo a <b>Finalizados</b>.</span>
+                   </div>`
+                : '';
+
+            // ── FOOTER ──
+            // Precedencia: estados en curso/resueltos primero; luego la resolución I+D (1 paso);
+            // y por último el flujo normal sin cambios.
+            let footerHtml;
+            if (order.billing) {
+                footerHtml = `<div class="detail-footer" style="justify-content:center; gap:10px;">
+        <div class="spinner"></div>
+        <span style="font-size:.82rem; font-weight:600; color:#495057;">Facturando pedido...</span>
+       </div>`;
+            } else if (order.rejecting) {
+                footerHtml = `<div class="detail-footer" style="justify-content:center; gap:10px;">
+        <div class="spinner" style="border-top-color: #e53935;"></div>
+        <span style="font-size:.82rem; font-weight:600; color:#e53935;">Rechazando pedido...</span>
+       </div>`;
+            } else if (order.billed) {
+                footerHtml = `<div class="detail-footer" style="flex-direction:column; align-items:center; gap:8px;">
+        <div class="billed-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          FACTURADO
+        </div>
+        ${order.autoDelivered ? `<button class="btn-link" onclick="showHistoryPopup('done')">Ver historial de estados (6 traces)</button>` : ''}
+       </div>`;
+            } else if (order.finalRejected) {
+                footerHtml = `<div class="detail-footer" style="justify-content:center;">
+        <div class="billed-badge" style="color: #e53935; background: #ffcdd2;">
+          <svg viewBox="0 0 24 24" fill="#e53935"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+          PEDIDO RECHAZADO
+        </div>
+       </div>`;
+            } else if (order.autoDelivered && order.status === 'new') {
+                // Resolución I+D en un solo paso → ambos botones llevan a Finalizados.
+                footerHtml = `<div class="detail-footer">
+        <button class="btn-confirm" onclick="resolveAutoDelivered('${order.id}','factura')">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          FACTURAR
+        </button>
+        <button class="btn-reject" onclick="resolveAutoDelivered('${order.id}','reject')">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+          RECHAZAR
+        </button>
+       </div>`;
+            } else if (order.status === 'done' && order.deliveryType === 'Delivery Propio Del Restaurante') {
+                footerHtml = `<div class="detail-footer">
+                                <button class="btn-confirm" onclick="facturarOrder('${order.id}')">
+                                  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                  FACTURAR
+                                </button>
+                                <button class="btn-reject" onclick="processRejectOrder('${order.id}')">
+                                  <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                                  RECHAZAR
+                                </button>
+                               </div>`;
+            } else {
+                footerHtml = `<div class="detail-footer">
+        <button class="btn-confirm" onclick="confirmOrder('${order.id}')" ${isPlatformDone ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          Confirmar
+        </button>
+        <button class="btn-reject" onclick="rejectOrder('${order.id}')" ${isPlatformDone ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+          Rechazar
+        </button>
+       </div>`;
+            }
+
+            const paymentChipClass = order.autoDelivered ? 'chip-auto' : 'chip-success';
+
+            panel.innerHTML = `
+    <div class="detail-head ${order.autoDelivered ? 'auto-head' : ''}">
+      <h3>Detalles del Pedido${order.autoDelivered ? ' <span class="auto-pill">I+D</span>' : ''}</h3>
+      <button class="btn-close-detail" onclick="closeDetail()">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="detail-body">
+      ${autoBannerHtml}
+      <div class="detail-row"><span class="detail-label">Tipo Entrega:</span><span class="detail-val">${order.deliveryType}</span></div>
+      <hr class="divider">
+      <div class="detail-row"><span class="detail-label">Nro Pedido:</span><span class="detail-val" style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${order.number}</span></div>
+      <div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-val">${order.client}</span></div>
+      <div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-val">${order.phone}</span></div>
+      <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-val">${order.address}</span></div>
+      <div class="detail-row"><span class="detail-label">Nota Pedido:</span><span class="detail-val" style="font-size:.74rem">${order.note}</span></div>
+      <div class="items-box">
+        <div class="items-header"><span>ITEM</span><span>PRECIO</span></div>
+        ${itemsHtml}
+      </div>
+      <div class="totals-box">
+        <div class="total-row"><span>Subtotal:</span><span>$ ${subtotal.toLocaleString('es-AR')}</span></div>
+        <div class="total-row"><span>Descuento:</span><span>$ ${order.discount.toLocaleString('es-AR')}</span></div>
+        <div class="total-row"><span>Envío:</span><span>$ ${order.shipping.toLocaleString('es-AR')}</span></div>
+        <div class="total-row grand"><span>TOTAL:</span><span>$ ${total.toLocaleString('es-AR')}</span></div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Forma Pago:</span>
+        <span class="chip ${paymentChipClass}">${order.paymentMethod}</span>
+      </div>
+    </div>
+    ${footerHtml}
+  `;
+        }
+
+        function closeDetail() {
+            if (selectedOrderId) {
+                const card = document.getElementById('card-' + selectedOrderId);
+                if (card) card.classList.remove('active');
+            }
+            selectedOrderId = null;
+            showEmptyPanel();
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  AUTODELIVERED (I+D) — resolución en un solo paso
+        //  Facturar o Rechazar → ambos mueven el pedido a FINALIZADOS.
+        //  No toca el flujo de los pedidos normales.
+        // ════════════════════════════════════════════════════════════════
+        function resolveAutoDelivered(id, action) {
+            const order = orders.find(o => o.id === id);
+            if (!order || order.billing || order.rejecting || order.billed || order.finalRejected) return;
+
+            const isReject = action === 'reject';
+            if (isReject) order.rejecting = true; else order.billing = true;
+            if (autoPopupOrderId === order.id) renderAutoPopup(order); // spinner dentro del popup
+
+            // overlay sobre la tarjeta
+            const card = document.getElementById('card-' + order.id);
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'billing-overlay';
+                overlay.id = 'res-overlay-' + order.id;
+                overlay.innerHTML = isReject
+                    ? `<div class="spinner" style="border-top-color:#e53935"></div><p style="color:#e53935">Rechazando...</p>`
+                    : `<div class="spinner"></div><p>Facturando...</p>`;
+                card.appendChild(overlay);
+            }
+
+            setTimeout(() => {
+                const ov = document.getElementById('res-overlay-' + order.id);
+                if (ov) ov.remove();
+
+                if (isReject) {
+                    order.rejecting = false;
+                    order.finalRejected = true;
+                    order.rejected = true;
+                } else {
+                    order.billing = false;
+                    order.billed = true;
+                }
+
+                // Cierra el popup y vuelve al inicio (la tarjeta ya queda resuelta en Finalizados)
+                hideAutoPopup();
+                if (selectedOrderId) {
+                    const c = document.getElementById('card-' + selectedOrderId);
+                    if (c) c.classList.remove('active');
+                }
+                selectedOrderId = null;
+
+                const prevStatus = order.status;
+                order.status = 'done';            // ← siempre a FINALIZADOS
+                moveCard(order, prevStatus);
+                showEmptyPanel();
+                showToast(
+                    isReject ? 'Pedido I+D rechazado → Finalizados' : 'Pedido I+D facturado → Finalizados',
+                    isReject ? 'danger' : 'success'
+                );
+            }, 1100);
+        }
+
+        // Simula el ingreso de un nuevo pedido I+D a la columna NUEVOS
+        function ingresarPedidoID() {
+            const n = injectSeq++;
+            const clientes = ['Diego Luna', 'Camila Ruiz', 'Tomás Vega', 'Paula Díaz', 'Nicolás Sosa'];
+            const productos = [
+                [{ name: '1 Kilo de Helado', qty: 1, price: 10000 }],
+                [{ name: '1/4 Kilo de Helado', qty: 1, price: 3500 }, { name: 'Conos', qty: 3, price: 600 }],
+                [{ name: 'Postre Familiar', qty: 1, price: 9500 }],
+            ];
+            const now = new Date();
+            const order = {
+                id: 'ord' + n,
+                number: '12000' + (45900 + n * 17),
+                client: clientes[n % clientes.length],
+                phone: '+5435100' + (10000 + n),
+                address: 'Domicilio cliente I+D',
+                note: '#' + (424 + n) + ' | I+D · Pago online (MercadoPago)',
+                time: now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+                platform: 'ID',
+                platformColor: '#6e59ee',
+                deliveryType: 'Delivery de Plataforma',
+                paymentMethod: 'Online',
+                items: productos[n % productos.length],
+                discount: 0,
+                shipping: 0,
+                status: 'new',
+                rejected: false,
+                autoDelivered: true,
+            };
+            orders.push(order);
+            renderCard(order);
+            updateEmpty('new');
+            updateCounts();
+
+            const card = document.getElementById('card-' + order.id);
+            if (card) {
+                card.classList.add('just-arrived');
+                setTimeout(() => card.classList.remove('just-arrived'), 1400);
+            }
+            showToast('Nuevo pedido I+D en NUEVOS', 'auto');
+        }
+
+        // ── PEDIDOS NORMALES (flujo original, sin cambios) ──
+        function facturarOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order || order.billing || order.billed || order.rejecting || order.finalRejected) return;
+
+            order.billing = true;
+            showDetailPanel(order); // shows loading state
+
+            // show overlay on the card too
+            const card = document.getElementById('card-' + order.id);
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'billing-overlay';
+                overlay.id = 'billing-overlay-' + order.id;
+                overlay.innerHTML = `<div class="spinner"></div><p>Facturando...</p>`;
+                card.appendChild(overlay);
+            }
+
+            setTimeout(() => {
+                order.billing = false;
+                order.billed = true;
+                const ov = document.getElementById('billing-overlay-' + order.id);
+                if (ov) ov.remove();
+                showDetailPanel(order);
+                showToast('Pedido facturado ✓', 'success');
+            }, 1000);
+        }
+
+        function processRejectOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order || order.billing || order.billed || order.rejecting || order.finalRejected) return;
+
+            order.rejecting = true;
+            if (selectedOrderId === order.id) showDetailPanel(order); // shows loading state
+
+            // show overlay on the card too
+            const card = document.getElementById('card-' + order.id);
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'billing-overlay';
+                overlay.id = 'reject-overlay-' + order.id;
+                overlay.innerHTML = `<div class="spinner" style="border-top-color: #e53935;"></div><p style="color: #e53935;">Rechazando...</p>`;
+                card.appendChild(overlay);
+            }
+
+            setTimeout(() => {
+                order.rejecting = false;
+                order.finalRejected = true;
+                order.rejected = true;
+
+                const c = document.getElementById('card-' + order.id);
+                if (c) c.classList.add('rejected');
+
+                const ov = document.getElementById('reject-overlay-' + order.id);
+                if (ov) ov.remove();
+
+                if (selectedOrderId === order.id) showDetailPanel(order);
+                showToast('Pedido rechazado ✓', 'danger');
+            }, 1000);
+        }
+
+        function processPlatformBilling(order, prevStatus) {
+            order.billing = true;
+            order.status = 'done';
+            moveCard(order, prevStatus);
+            if (selectedOrderId === order.id) showDetailPanel(order); // shows loading state
+
+            // show overlay on the card too
+            const card = document.getElementById('card-' + order.id);
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'billing-overlay';
+                overlay.id = 'billing-overlay-' + order.id;
+                overlay.innerHTML = `<div class="spinner"></div><p>Facturando...</p>`;
+                card.appendChild(overlay);
+            }
+
+            setTimeout(() => {
+                order.billing = false;
+                order.billed = true;
+                const ov = document.getElementById('billing-overlay-' + order.id);
+                if (ov) ov.remove();
+                if (selectedOrderId === order.id) showDetailPanel(order);
+                showToast('Pedido facturado y finalizado ✓', 'success');
+
+                if (order.client === 'Laura García') {
+                    if (document.getElementById('history-overlay').classList.contains('show')) {
+                        window.pendingFacturacionPopup = true;
+                    } else {
+                        showFacturacionPopup();
+                    }
+                }
+            }, 1000);
+        }
+
+        function confirmOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order || order.billing || (order.billed && order.deliveryType === 'Delivery de Plataforma')) return;
+
+            const isPlatform = order.deliveryType === 'Delivery de Plataforma';
+            const nextStatus = { new: 'prep', prep: 'ready', ready: 'done', done: 'done' };
+            const prevStatus = order.status;
+            const nextSt = nextStatus[order.status];
+
+            // If platform delivery AND moving to done → billing simulation
+            if (isPlatform && nextSt === 'done' && prevStatus !== 'done') {
+                processPlatformBilling(order, prevStatus);
+                return;
+            }
+
+            order.status = nextSt;
+            moveCard(order, prevStatus);
+            showToast('Pedido confirmado ✓', 'success');
+            showDetailPanel(order);
+        }
+
+        function rejectOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+            order.rejected = !order.rejected;
+            const card = document.getElementById('card-' + id);
+            if (card) card.classList.toggle('rejected', order.rejected);
+            showToast(order.rejected ? 'Pedido rechazado' : 'Rechazo deshecho', order.rejected ? 'danger' : '');
+        }
+
+        // ── DRAG & DROP ──
+        function onDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+        function onDrop(e, targetStatus) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!draggedOrderId) return;
+            const order = orders.find(o => o.id === draggedOrderId);
+            if (!order || order.status === targetStatus) return;
+            // Los pedidos I+D no se mueven por drag & drop: se resuelven con Facturar / Rechazar.
+            if (order.autoDelivered) { showToast('Los pedidos I+D se resuelven con Facturar o Rechazar', 'auto'); return; }
+            const prevStatus = order.status;
+
+            if (order.deliveryType === 'Delivery de Plataforma' && targetStatus === 'done') {
+                processPlatformBilling(order, prevStatus);
+                return;
+            }
+
+            order.status = targetStatus;
+            moveCard(order, prevStatus);
+            if (selectedOrderId === order.id) showDetailPanel(order);
+            showToast('Pedido movido a ' + colName(targetStatus));
+        }
+
+        function moveCard(order, prevStatus) {
+            const card = document.getElementById('card-' + order.id);
+            if (card) card.remove();
+            renderCard(order);
+            updateEmpty(prevStatus);
+            updateEmpty(order.status);
+            updateCounts();
+
+            // Los popups de historial automático aplican solo a pedidos normales.
+            // Para I+D el historial (6 traces) se consulta a demanda desde el panel.
+            if (!order.autoDelivered && order.status !== 'new' && order.status !== prevStatus) {
+                if (order.deliveryType === 'Delivery de Plataforma') {
+                    showHistoryPopup(order.status);
+                } else if (order.deliveryType === 'Delivery Propio Del Restaurante' && order.status === 'done') {
+                    showHistoryPopup('despatched');
+                } else if (order.deliveryType === 'Delivery Propio Del Restaurante') {
+                    showHistoryPopup(order.status);
+                }
+            }
+        }
+
+        function colName(s) {
+            return { new: 'Nuevos', prep: 'Preparación', ready: 'Listos', done: 'Finalizados' }[s] || s;
+        }
+
+        // ── HELPERS ──
+        function updateEmpty(status) {
+            const empties = { new: 'empty-new', prep: 'empty-prep', ready: 'empty-ready', done: 'empty-done' };
+            const zone = document.getElementById('zone-' + status);
+            if (!zone) return;
+            const emptyId = empties[status];
+            let emptyEl = document.getElementById(emptyId);
+            const cards = zone.querySelectorAll('.pedido-card');
+            if (cards.length === 0) {
+                if (!emptyEl) {
+                    emptyEl = buildEmpty(status, emptyId);
+                    zone.appendChild(emptyEl);
+                }
+                emptyEl.style.display = 'flex';
+            } else {
+                if (emptyEl) emptyEl.style.display = 'none';
+            }
+        }
+
+        function buildEmpty(status, id) {
+            const cfg = {
+                new: { color: '#ff6b6b', path: 'M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z', label: 'No hay nuevos pedidos' },
+                prep: { color: '#4dabf7', path: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z', label: 'No hay pedidos en preparación' },
+                ready: { color: '#ffd43b', path: 'M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z', label: 'No hay pedidos listos' },
+                done: { color: '#51cf66', path: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z', label: 'No hay pedidos finalizados' }
+            };
+            const c = cfg[status];
+            const div = document.createElement('div');
+            div.className = 'empty-state';
+            div.id = id;
+            div.innerHTML = `<svg viewBox="0 0 24 24" fill="${c.color}"><path d="${c.path}"/></svg><p>${c.label}</p>`;
+            return div;
+        }
+
+        function updateCounts() {
+            ['new', 'prep', 'ready', 'done'].forEach(s => {
+                const zone = document.getElementById('zone-' + s);
+                const cnt = zone ? zone.querySelectorAll('.pedido-card').length : 0;
+                const el = document.getElementById('count-' + s);
+                if (el) el.textContent = cnt;
+            });
+        }
+
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (type ? ' ' + type : '');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.className = 'toast'; }, 2800);
+        }
+
+        function showHistoryPopup(status) {
+            const tbody = document.getElementById('history-tbody');
+            let rowsHtml = '';
+
+            const states = [
+                { f: '10/03/2026', h: '09:19:17', c: 'PLATAFORMA', e: 'Pendiente', r: false },
+                { f: '10/03/2026', h: '09:19:18', c: 'POS', e: 'Recibida', r: true },
+                { f: '10/03/2026', h: '09:21:53', c: 'POS', e: 'Vista', r: true },
+                { f: '10/03/2026', h: '09:21:53', c: 'POS', e: 'Confirmada', r: false },
+                { f: '10/03/2026', h: '09:21:53', c: 'POS', e: 'Lista', r: false },
+                { f: '10/03/2026', h: '09:26:23', c: 'POS', e: 'Despachada', r: true },
+                { f: '10/03/2026', h: '09:26:23', c: 'POS', e: 'Entregada', r: true }
+            ];
+
+            let rowCount = 0;
+            if (status === 'prep') rowCount = 4;
+            else if (status === 'ready') rowCount = 5;
+            else if (status === 'despatched') rowCount = 6;
+            else if (status === 'done' || status === 'delivered') rowCount = 7;
+
+            for (let i = 0; i < rowCount; i++) {
+                const s = states[i];
+                const check = s.r ? '<svg class="check-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : '';
+                const displayTime = (status === 'done' || status === 'delivered') ? '09:19:17' : s.h;
+                rowsHtml += `<tr>
+                    <td>${s.f}</td>
+                    <td>${displayTime}</td>
+                    <td>${s.c}</td>
+                    <td>${s.e}</td>
+                    <td>${check}</td>
+                </tr>`;
+            }
+
+            tbody.innerHTML = rowsHtml;
+            document.getElementById('history-overlay').classList.add('show');
+        }
+
+        function closeHistoryPopup() {
+            document.getElementById('history-overlay').classList.remove('show');
+            if (window.pendingFacturacionPopup) {
+                window.pendingFacturacionPopup = false;
+                showFacturacionPopup();
+            }
+        }
+
+        function showFacturacionPopup() {
+            document.getElementById('facturacion-overlay').classList.add('show');
+        }
+
+        function closeFacturacionPopup() {
+            document.getElementById('facturacion-overlay').classList.remove('show');
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -55,6 +55,7 @@ Cada módulo (segundo segmento del nombre de archivo) se mapea a una sección de
 
 | Prefijo de archivo | Nombre de sección en index |
 |--------------------|---------------------------|
+| `mockup_autodelivered_` | MockUps AutoDelivered |
 | `mockup_backoffice_` | MockUps Backoffice |
 | `mockup_canal_` | MockUps Canal |
 | `mockup_catalog_` | MockUps Catálogo |
@@ -128,6 +129,11 @@ Las secciones (`<details>`) se ordenan **alfabéticamente** de arriba a abajo.
 - `documentacion_catalog_v2.html` → Catálogo v2
 - `documentacion_comanda_weiss.html` → Comanda Weiss
 - `documentacion_formato_pedidos.html` → Formato de Pedidos
+
+### MockUps AutoDelivered
+- `mockup_autodelivered_pos_cloud_2pasos.html` → Pos Cloud 2 Pasos
+- `mockup_autodelivered_pos_cloud_automatico.html` → Pos Cloud Automatico
+- `mockup_autodelivered_pos_onpremise_2pasos.html` → Pos Onpremise 2 Pasos
 
 ### MockUps Backoffice
 - `mockup_backoffice_checkin-schedule.html` → Check-in Schedule
