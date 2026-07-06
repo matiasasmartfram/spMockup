@@ -152,7 +152,8 @@
         }
         .badge-grido span { color: #004b93; }
 
-        /* Badge violeta para plataforma I+D (SmartPedidos · auto-entrega) */
+        /* Badge de plataforma para pedidos I+D (SmartPedidos). Es el logo/label
+           normal de la plataforma en la columna Servicio — sin distinción visual. */
         .badge-id {
             display: inline-block;
             color: var(--auto);
@@ -161,19 +162,20 @@
             font-size: 14px;
             letter-spacing: .5px;
         }
-        .badge-id::after {
-            content: 'AUTO';
+
+        /* Badge "AUTO-ENTREGA" en la columna H. Entrega — identifica los pedidos
+           con autoBillingDelivered = true. Es la MARCA VISUAL principal de la fila. */
+        .badge-auto-entrega {
             display: inline-block;
-            background: var(--auto-soft);
-            color: var(--auto);
-            font-style: normal;
-            font-size: 9px;
+            background: var(--auto);
+            color: #fff;
+            font-size: 10px;
             font-weight: bold;
-            padding: 1px 4px;
+            padding: 2px 6px;
             border-radius: 8px;
-            margin-left: 4px;
-            vertical-align: middle;
-            letter-spacing: .3px;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         /* fila I+D con un sutil tinte violeta para diferenciarlas a primera vista */
@@ -401,6 +403,423 @@
         .toast.success { background: #2f9e44; }
         .toast.danger { background: #c0392b; }
         .toast.auto { background: var(--auto); }
+
+        /* ══════════════════════════════════════════════════════════════════
+           OVERLAY GENÉRICO (para diálogos modales de SKU y Cobro en efectivo)
+           Ambos comparten el mismo backdrop; se distinguen por el contenido.
+           ══════════════════════════════════════════════════════════════════ */
+        .win-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .win-overlay.show { display: flex; }
+
+        .win-dialog {
+            background-color: var(--bg-main);
+            border: 3px solid #6b9cde;
+            border-radius: 4px;
+            box-shadow: 4px 4px 16px rgba(0, 0, 0, .4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .win-dialog-header {
+            background: linear-gradient(to bottom, #0058e6, #3a93ff);
+            color: white;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .win-dialog-header .win-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .win-dialog-header .win-title::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle at 30% 30%, #a0d8ff 0%, #3a93ff 60%, #0058e6 100%);
+            border-radius: 50%;
+        }
+
+        .win-dialog-controls {
+            display: flex;
+            gap: 3px;
+        }
+
+        .win-dialog-controls button {
+            background: #d4d4d4;
+            color: #000;
+            border: 1px solid #6b9cde;
+            padding: 0 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+            min-width: 20px;
+        }
+
+        .win-dialog-controls button.close {
+            background: #e04343;
+            color: white;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════
+           DIÁLOGO "ASOCIAR ARTÍCULOS" (SKU desconocido)
+           Réplica del diálogo del POS on-premise. Se abre al presionar Facturar
+           sobre un pedido I+D con ítems que no matchean la lista de precios.
+           ══════════════════════════════════════════════════════════════════ */
+        .sku-dialog { width: 900px; max-width: 96vw; }
+
+        .sku-topbar {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-main);
+        }
+
+        .sku-topbar .label { font-weight: bold; }
+
+        .sku-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 6px;
+        }
+
+        .sku-check-box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #666;
+            background: #fff;
+            vertical-align: middle;
+        }
+
+        .sku-check.active .sku-check-box {
+            background: var(--orange-solic);
+            border-color: var(--orange-solic);
+        }
+
+        .sku-indef-btn {
+            margin-left: auto;
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-panel);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .sku-table-wrap {
+            padding: 6px 10px;
+            background: var(--bg-main);
+        }
+
+        .sku-main-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid var(--border-color);
+        }
+
+        .sku-main-table th {
+            background: var(--bg-main);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 4px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .sku-main-table td {
+            padding: 6px 4px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .sku-main-table tr.sku-row-selected td {
+            background: #dcebff;
+        }
+
+        .sku-main-table tr.sku-row-selected td:first-child {
+            border-left: 3px solid var(--blue-selected);
+        }
+
+        .sku-main-table tr.sku-row-promo td {
+            background: #ffe6cc;
+        }
+
+        .sku-verified {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #666;
+            background: #fff;
+            display: inline-block;
+            text-align: center;
+            line-height: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .sku-verified.checked { background: #cfe9d1; }
+
+        .sku-form {
+            padding: 8px 10px;
+            background: var(--bg-main);
+            display: grid;
+            grid-template-columns: 70px 1fr;
+            gap: 4px 8px;
+            align-items: center;
+        }
+
+        .sku-form label { font-weight: bold; }
+        .sku-form input {
+            width: 100%;
+            padding: 3px 6px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .sku-search-bar {
+            background: #b3f0f0;
+            padding: 5px 6px;
+            border: 1px solid var(--border-color);
+            margin: 0 10px 8px 10px;
+        }
+
+        .sku-search-bar input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .sku-results-wrap {
+            padding: 0 10px 6px 10px;
+            background: var(--bg-main);
+        }
+
+        .sku-results {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            min-height: 100px;
+        }
+
+        .sku-results th,
+        .sku-results td {
+            padding: 5px 6px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+        }
+
+        .sku-results th {
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+        }
+
+        .sku-results tr.sku-result-row:hover td { background: #f7f9fc; }
+        .sku-results tr.sku-result-row.selected td { background: #dcebff; }
+
+        .sku-footer-hint {
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #333;
+            background: var(--bg-main);
+        }
+
+        .sku-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 10px 10px 10px;
+            background: var(--bg-main);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .sku-actions .spacer { flex: 1; }
+
+        .win-btn {
+            padding: 8px 18px;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, #f5f5ee 0%, #d8d8cf 100%);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .win-btn:hover { background: linear-gradient(to bottom, #fdfdf5 0%, #e3e3d8 100%); }
+        .win-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+        .win-btn .icon-round {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #666;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .win-btn.win-btn-exit .icon-round { background: #c0392b; }
+
+        /* ══════════════════════════════════════════════════════════════════
+           DIÁLOGO "VUELTO" (Cobro en efectivo)
+           Réplica del DialogPay del POS on-premise. Formulario a la izquierda
+           con importe/paga con/vuelto + teclado numérico a la derecha.
+           ══════════════════════════════════════════════════════════════════ */
+        .cash-dialog { width: 620px; max-width: 96vw; }
+
+        .cash-topheader {
+            background: #333;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+
+        .cash-body {
+            display: grid;
+            grid-template-columns: 1fr 260px;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-main);
+        }
+
+        .cash-form {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 6px 8px;
+            align-items: center;
+        }
+
+        .cash-form label {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .cash-form .field {
+            display: block;
+            padding: 4px 6px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            text-align: right;
+            min-height: 22px;
+        }
+
+        .cash-form .field.select {
+            background: linear-gradient(to right, #fff 0%, #fff 92%, #d4d4d4 92%);
+            background-repeat: no-repeat;
+            font-weight: bold;
+            text-align: left;
+            padding-right: 20px;
+        }
+
+        .cash-form .field.select.efectivo {
+            background: linear-gradient(to right, var(--blue-selected) 0%, var(--blue-selected) 92%, #d4d4d4 92%);
+            color: #fff;
+        }
+
+        .cash-form .field.negative { color: #c0392b; }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            align-content: start;
+        }
+
+        .numpad-key {
+            padding: 12px 0;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, #f5f5ee 0%, #d8d8cf 100%);
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .numpad-key:hover { background: linear-gradient(to bottom, #fdfdf5 0%, #e3e3d8 100%); }
+        .numpad-key.back { color: #c0392b; font-size: 14px; }
+        .numpad-key.check {
+            grid-column: 1 / -1;
+            background: linear-gradient(to bottom, #eefaf1 0%, #cfe9d1 100%);
+            color: #2f9e44;
+            font-size: 14px;
+        }
+
+        .cash-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 8px 12px 12px 12px;
+            background: var(--bg-main);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .cash-boleta-btn {
+            padding: 10px 6px;
+            border: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, #f5f5ee 0%, #d8d8cf 100%);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.15;
+        }
+
+        .cash-boleta-btn:hover:not(:disabled) { background: linear-gradient(to bottom, #fdfdf5 0%, #e3e3d8 100%); }
+        .cash-boleta-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .cash-boleta-btn.highlight { border: 2px solid #2f9e44; background: linear-gradient(to bottom, #eefaf1 0%, #cfe9d1 100%); }
+
+        .cash-boleta-btn .icon {
+            font-size: 18px;
+        }
+
+        .cash-boleta-btn.cancel {
+            color: #c0392b;
+        }
+
+        .cash-boleta-btn.cancel .icon {
+            color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -490,6 +909,22 @@
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     DIÁLOGO "ASOCIAR ARTÍCULOS" — SKU desconocido
+     Se abre al presionar Facturar sobre un pedido I+D con items sin mapear.
+     ══════════════════════════════════════════════════════════════════ -->
+<div class="win-overlay" id="sku-overlay">
+    <div class="win-dialog sku-dialog" id="sku-dialog"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     DIÁLOGO "VUELTO" — Cobro en efectivo
+     Se abre al presionar Facturar sobre un pedido I+D en efectivo.
+     ══════════════════════════════════════════════════════════════════ -->
+<div class="win-overlay" id="cash-overlay">
+    <div class="win-dialog cash-dialog" id="cash-dialog"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -561,6 +996,7 @@
             estadoFinal: null
         },
         {
+            // Caso feliz — I+D · pago ONLINE · SKUs OK → Facturar factura directo.
             id: 'ord3',
             servicio: 'I+D',
             platformId: 'ID',
@@ -579,10 +1015,15 @@
             ],
             subtotal: 11600,
             autoDelivered: true,
+            paymentMethod: 'Online',
+            unknownSku: false,
             estado: 'SOLIC',
             estadoFinal: null
         },
         {
+            // Caso SKU desconocido — I+D · pago ONLINE · un ítem sin mapear en la lista de precios.
+            // Al presionar Facturar se abre el diálogo "Asociar artículos". Al confirmar la asociación
+            // avanza la facturación.
             id: 'ord4',
             servicio: 'I+D',
             platformId: 'ID',
@@ -596,10 +1037,38 @@
             tipoEntrega: 'Delivery de SmartPedidos (I+D)',
             nota: 'Pago online: MercadoPago | Sin timbre, llamar al llegar',
             items: [
-                { qty: '1', name: 'Postre Familiar', detalle: 'Op: Tres leches con frutos rojos', precio: 9500 }
+                { qty: '1', name: '2 Cuartos por $5000', detalle: 'Op: (sin mapear en lista)', precio: 5000, undefined: true }
             ],
-            subtotal: 9500,
+            subtotal: 5000,
             autoDelivered: true,
+            paymentMethod: 'Online',
+            unknownSku: true,
+            estado: 'SOLIC',
+            estadoFinal: null
+        },
+        {
+            // Caso efectivo — I+D · pago EFECTIVO · SKUs OK → Facturar abre el diálogo "Vuelto"
+            // (importe / paga con / vuelto) antes de finalizar la venta.
+            id: 'ord5',
+            servicio: 'I+D',
+            platformId: 'ID',
+            pedidoNro: '1200046014',
+            cliente: 'Andrés López',
+            clienteId: '41220987',
+            telefono: '3516611223',
+            direccion: 'Bv. Illia 890 - Córdoba',
+            fecha: '24-06-2026 10:57',
+            repartidor: 'Auto-asignado (Plataforma)',
+            tipoEntrega: 'Delivery de SmartPedidos (I+D)',
+            nota: 'Pago EFECTIVO al retirar | Cobrar $15.500',
+            items: [
+                { qty: '1 KILO', name: '', detalle: 'Op: Frutilla al Agua Marroc Menta Granizada', precio: 14000 },
+                { qty: '1', name: 'Cucurucho doble', detalle: '', precio: 1500 }
+            ],
+            subtotal: 15500,
+            autoDelivered: true,
+            paymentMethod: 'Efectivo',
+            unknownSku: false,
             estado: 'SOLIC',
             estadoFinal: null
         }
@@ -618,6 +1087,8 @@
         tbody.innerHTML = orders.map(o => {
             const rowClass = (o.autoDelivered ? 'row-auto' : '')
                 + (selectedOrderId === o.id ? ' row-selected' : '');
+            // La columna Servicio muestra el badge de la plataforma que corresponda.
+            // Para pedidos I+D es el label "I+D" plano, sin marca de auto-entrega.
             const servicioHtml = o.autoDelivered
                 ? `<span class="badge-id">I+D</span>`
                 : `<span class="badge-grido">gri<span>do</span></span>`;
@@ -625,13 +1096,18 @@
             if (o.estadoFinal === 'FACTURADO') estadoHtml = `<span class="status-facturado">FACT</span>`;
             else if (o.estadoFinal === 'RECHAZADO') estadoHtml = `<span class="status-rechazado">RECH</span>`;
             else estadoHtml = `<span class="status-solic">SOLIC</span>`;
+            // La MARCA visual de auto-entrega vive en la columna H. Entrega: badge violeta
+            // "AUTO-ENTREGA" cuando el pedido tiene autoBillingDelivered = true.
+            const hEntregaHtml = o.autoDelivered
+                ? `<span class="badge-auto-entrega">Auto-Entrega</span>`
+                : '';
             return `
                 <tr class="${rowClass}" onclick="selectOrder('${o.id}')">
                     <td>${servicioHtml}</td>
                     <td>${estadoHtml}</td>
                     <td>${o.cliente}</td>
                     <td>${o.pedidoNro}</td>
-                    <td></td>
+                    <td>${hEntregaHtml}</td>
                     <td style="text-align: center;">:</td>
                 </tr>
             `;
@@ -795,8 +1271,27 @@ ${pad('Sub-Total:', '$' + order.subtotal.toLocaleString('es-AR'))}`;
     }
 
     // ── ACCIONES ──
+    // facturarPedido encadena:
+    //   1) Si hay SKU desconocido → abre "Asociar artículos".
+    //   2) Si el pago es en efectivo → abre "Vuelto" (DialogPay).
+    //   3) Recién ahí finaliza (FACTURADO).
     function facturarPedido(id) {
         const o = orders.find(x => x.id === id);
+        if (!o || o.estadoFinal) return;
+
+        if (o.autoDelivered && o.unknownSku) {
+            openSkuDialog(o);
+            return;
+        }
+        if (o.autoDelivered && o.paymentMethod === 'Efectivo') {
+            openCashDialog(o);
+            return;
+        }
+        proceedFacturarPedido(o);
+    }
+
+    // Finalización real de la facturación (usada por facturarPedido y por los diálogos).
+    function proceedFacturarPedido(o) {
         if (!o || o.estadoFinal) return;
         o.estadoFinal = 'FACTURADO';
         renderRows();
@@ -847,6 +1342,303 @@ ${pad('Sub-Total:', '$' + order.subtotal.toLocaleString('es-AR'))}`;
         t.className = 'toast show' + (type ? ' ' + type : '');
         clearTimeout(t._timer);
         t._timer = setTimeout(() => { t.className = 'toast'; }, 2500);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  DIÁLOGO "ASOCIAR ARTÍCULOS" (SKU desconocido)
+    //  Replica el diálogo del POS on-premise:
+    //    - Fila del ítem sin mapear (resaltada en azul).
+    //    - Filas "Sabores Helado 1/4 Kg" (Cabecera promo) ya verificadas.
+    //    - Formulario Artículo/Opcion/Nota abajo, cyan search bar, resultados.
+    //    - Footer con Teclado / Asociar / Confirmar / Salir.
+    //  Reglas del mockup:
+    //    - Salir       → cierra sin cambios (equivale a CANCELAR).
+    //    - Asociar     → si el operador tipeó algo en la búsqueda, marca la fila
+    //                    como verificada. Habilita Confirmar.
+    //    - Confirmar   → cierra y continúa la facturación (si es efectivo,
+    //                    abre "Vuelto"; sino, finaliza).
+    // ══════════════════════════════════════════════════════════════════
+    let skuDialogOrderId = null;
+    let skuState = { searchText: '', associated: false };
+
+    function openSkuDialog(order) {
+        skuDialogOrderId = order.id;
+        skuState = { searchText: '', associated: false };
+        renderSkuDialog(order);
+        document.getElementById('sku-overlay').classList.add('show');
+    }
+
+    function closeSkuDialog() {
+        document.getElementById('sku-overlay').classList.remove('show');
+        skuDialogOrderId = null;
+    }
+
+    function renderSkuDialog(order) {
+        const dlg = document.getElementById('sku-dialog');
+        const target = order.items.find(i => i.undefined) || order.items[0];
+        const rowsHtml = `
+            <tr class="sku-row-selected">
+                <td><strong>${target.name || target.qty}</strong></td>
+                <td></td>
+                <td></td>
+                <td>${skuState.associated ? '1/4 KILO' : ''}</td>
+                <td style="text-align:center;"><span class="sku-verified ${skuState.associated ? 'checked' : ''}">${skuState.associated ? '✓' : ''}</span></td>
+            </tr>
+            <tr class="sku-row-promo">
+                <td>Sabores Helado 1/4 Kg</td>
+                <td>Chocolate, Limón</td>
+                <td></td>
+                <td>1/4 KILO</td>
+                <td style="text-align:center;"><span class="sku-verified checked">✓</span></td>
+            </tr>
+            <tr class="sku-row-promo">
+                <td>Sabores Helado 1/4 Kg</td>
+                <td>Menta Granizada, Sambayón</td>
+                <td></td>
+                <td>1/4 KILO</td>
+                <td style="text-align:center;"><span class="sku-verified checked">✓</span></td>
+            </tr>
+        `;
+
+        const canAssociate = skuState.searchText.trim().length > 0 && !skuState.associated;
+        const canConfirm = skuState.associated;
+
+        dlg.innerHTML = `
+            <div class="win-dialog-header">
+                <div class="win-title">Asociar artículos</div>
+                <div class="win-dialog-controls">
+                    <button>–</button>
+                    <button>▢</button>
+                    <button class="close" onclick="skuCancel()">✕</button>
+                </div>
+            </div>
+
+            <div class="sku-topbar">
+                <span class="label">Artículos no encontrados:</span>
+                <span class="sku-check"><span class="sku-check-box"></span>Articulo individual</span>
+                <span class="sku-check active"><span class="sku-check-box"></span>Cabecera promo</span>
+                <span class="sku-check"><span class="sku-check-box"></span>Detalle promo</span>
+                <button class="sku-indef-btn" onclick="skuAssociateIndef()">Asociar articulo indefinido</button>
+            </div>
+
+            <div class="sku-table-wrap">
+                <table class="sku-main-table">
+                    <thead>
+                        <tr>
+                            <th style="width:26%;">Artículos del pedido</th>
+                            <th style="width:24%;">Opcion</th>
+                            <th style="width:20%;">Nota</th>
+                            <th style="width:20%;">Artículo asociado</th>
+                            <th style="width:10%; text-align:center;">Verificado</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </div>
+
+            <div class="sku-form">
+                <label>Articulo</label><input type="text" value="${target.name || target.qty}" readonly />
+                <label>Opcion</label><input type="text" value="" readonly />
+                <label>Nota</label><input type="text" value="" readonly />
+            </div>
+
+            <div class="sku-search-bar">
+                <input type="text" id="sku-search" placeholder="Buscar artículo..." value="${skuState.searchText}" oninput="onSkuSearchInput(this.value)" />
+            </div>
+
+            <div class="sku-results-wrap">
+                <table class="sku-results">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">Artículo</th>
+                            <th style="width:60%;">Descripción</th>
+                            <th style="width:20%; text-align:right;">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${skuState.searchText.trim().length > 0
+                            ? `<tr class="sku-result-row selected"><td>${skuState.searchText.trim().slice(0,6)}</td><td>1/4 KILO Helado</td><td style="text-align:right;">$ 5.000,00</td></tr>`
+                            : `<tr><td colspan="3" style="height:80px; text-align:center; color:#999;">— sin resultados —</td></tr>`}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sku-footer-hint">ENTER: seleccionar / TAB: Volver a buscar</div>
+
+            <div class="sku-actions">
+                <button class="win-btn"><span class="icon-round">⌨</span>Teclado</button>
+                <div class="spacer"></div>
+                <button class="win-btn" onclick="skuAssociate()" ${canAssociate ? '' : 'disabled'}><span class="icon-round" style="background:#3a93ff;">◉</span>Asociar</button>
+                <button class="win-btn" onclick="skuConfirm()" ${canConfirm ? '' : 'disabled'}><span class="icon-round" style="background:#2f9e44;">◉</span>Confirmar</button>
+                <button class="win-btn win-btn-exit" onclick="skuCancel()"><span class="icon-round">⏻</span>Salir</button>
+            </div>
+        `;
+    }
+
+    function onSkuSearchInput(val) {
+        skuState.searchText = val;
+        const order = orders.find(o => o.id === skuDialogOrderId);
+        if (!order) return;
+        const focusEnd = () => {
+            const inp = document.getElementById('sku-search');
+            if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        };
+        renderSkuDialog(order);
+        focusEnd();
+    }
+
+    function skuAssociate() {
+        if (skuState.searchText.trim().length === 0) return;
+        skuState.associated = true;
+        const order = orders.find(o => o.id === skuDialogOrderId);
+        if (order) renderSkuDialog(order);
+        showToast('Artículo asociado ✓', 'success');
+    }
+
+    // "Asociar artículo indefinido" — atajo: marca la fila como asociada sin buscar.
+    function skuAssociateIndef() {
+        skuState.searchText = 'INDEF';
+        skuState.associated = true;
+        const order = orders.find(o => o.id === skuDialogOrderId);
+        if (order) renderSkuDialog(order);
+        showToast('Artículo marcado como indefinido ✓', 'auto');
+    }
+
+    function skuConfirm() {
+        const order = orders.find(o => o.id === skuDialogOrderId);
+        if (!order) return;
+        // Limpia el flag y marca los items como asociados
+        order.unknownSku = false;
+        order.items.forEach(i => { if (i.undefined) i.undefined = false; });
+        closeSkuDialog();
+        // Encadena al DialogPay si es efectivo; sino, finaliza directo.
+        if (order.paymentMethod === 'Efectivo') {
+            openCashDialog(order);
+        } else {
+            proceedFacturarPedido(order);
+        }
+    }
+
+    function skuCancel() {
+        closeSkuDialog();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  DIÁLOGO "VUELTO" (Cobro en efectivo)
+    //  Replica el DialogPay del POS on-premise. Se abre si el pedido I+D
+    //  viene con paymentMethod = Efectivo.
+    //  Reglas del mockup:
+    //    - Cancelar Venta → cierra sin facturar.
+    //    - Numpad         → carga el "Paga con" (arranca en 0). Calcula vuelto.
+    //    - Boleta Manual/Automática/Electrónica → cierra y finaliza la venta.
+    //      (Se habilitan cuando Paga con >= Total Venta.)
+    // ══════════════════════════════════════════════════════════════════
+    let cashDialogOrderId = null;
+    let cashState = { pagaCon: '' };
+
+    function openCashDialog(order) {
+        cashDialogOrderId = order.id;
+        cashState = { pagaCon: '' };
+        renderCashDialog(order);
+        document.getElementById('cash-overlay').classList.add('show');
+    }
+
+    function closeCashDialog() {
+        document.getElementById('cash-overlay').classList.remove('show');
+        cashDialogOrderId = null;
+    }
+
+    function renderCashDialog(order) {
+        const dlg = document.getElementById('cash-dialog');
+        const importe = order.subtotal;
+        const pagaConNum = parseFloat(cashState.pagaCon) || 0;
+        const totalVenta = importe;
+        const vuelto = Math.max(0, pagaConNum - totalVenta);
+        const canPay = pagaConNum >= totalVenta && pagaConNum > 0;
+        const pedidoCorto = order.pedidoNro.slice(-3);
+        const fmt = n => n.toLocaleString('es-AR');
+
+        dlg.innerHTML = `
+            <div class="win-dialog-header">
+                <div class="win-title">Vuelto</div>
+                <div class="win-dialog-controls">
+                    <button>–</button>
+                    <button>▢</button>
+                    <button class="close" onclick="cashCancel()">✕</button>
+                </div>
+            </div>
+
+            <div class="cash-topheader">Pedido Nº: ${pedidoCorto}</div>
+
+            <div class="cash-body">
+                <div class="cash-form">
+                    <label>Forma Pago</label><span class="field select efectivo">EFECTIVO</span>
+                    <label>Descuento</label><span class="field select">SIN DESCUENTO</span>
+                    <label>Importe</label><span class="field">${fmt(importe)}</span>
+                    <label>Descuento</label><span class="field">0</span>
+                    <label>Recargo</label><span class="field negative">0.00%</span>
+                    <label>Total Venta</label><span class="field">${fmt(totalVenta)}</span>
+                    <label>Paga con</label><span class="field">${cashState.pagaCon === '' ? '0' : fmt(pagaConNum)}</span>
+                    <label>Vuelto</label><span class="field">${fmt(vuelto)}</span>
+                </div>
+
+                <div class="numpad">
+                    <button class="numpad-key" onclick="cashNumpad('7')">7</button>
+                    <button class="numpad-key" onclick="cashNumpad('8')">8</button>
+                    <button class="numpad-key" onclick="cashNumpad('9')">9</button>
+                    <button class="numpad-key" onclick="cashNumpad('4')">4</button>
+                    <button class="numpad-key" onclick="cashNumpad('5')">5</button>
+                    <button class="numpad-key" onclick="cashNumpad('6')">6</button>
+                    <button class="numpad-key" onclick="cashNumpad('1')">1</button>
+                    <button class="numpad-key" onclick="cashNumpad('2')">2</button>
+                    <button class="numpad-key" onclick="cashNumpad('3')">3</button>
+                    <button class="numpad-key" onclick="cashNumpad('0')">0</button>
+                    <button class="numpad-key" onclick="cashNumpad('.')">.</button>
+                    <button class="numpad-key back" onclick="cashNumpad('back')">←</button>
+                    <button class="numpad-key check" onclick="cashPay()" ${canPay ? '' : 'disabled'}>✓</button>
+                </div>
+            </div>
+
+            <div class="cash-actions">
+                <button class="cash-boleta-btn" onclick="cashPay()" ${canPay ? '' : 'disabled'}>
+                    <span class="icon">📄</span>Boleta<br>Manual
+                </button>
+                <button class="cash-boleta-btn" onclick="cashPay()" ${canPay ? '' : 'disabled'}>
+                    <span class="icon">📄</span>Boleta<br>Automática
+                </button>
+                <button class="cash-boleta-btn highlight" onclick="cashPay()" ${canPay ? '' : 'disabled'}>
+                    <span class="icon">📄</span>Boleta<br>Electrónica
+                </button>
+                <button class="cash-boleta-btn cancel" onclick="cashCancel()">
+                    <span class="icon">✕</span>Cancelar<br>Venta
+                </button>
+            </div>
+        `;
+    }
+
+    function cashNumpad(k) {
+        if (k === 'back') {
+            cashState.pagaCon = cashState.pagaCon.slice(0, -1);
+        } else if (k === '.') {
+            if (!cashState.pagaCon.includes('.')) cashState.pagaCon += '.';
+        } else {
+            cashState.pagaCon += k;
+        }
+        const order = orders.find(o => o.id === cashDialogOrderId);
+        if (order) renderCashDialog(order);
+    }
+
+    function cashPay() {
+        const order = orders.find(o => o.id === cashDialogOrderId);
+        if (!order) return;
+        const pagaConNum = parseFloat(cashState.pagaCon) || 0;
+        if (pagaConNum < order.subtotal) return;
+        closeCashDialog();
+        proceedFacturarPedido(order);
+    }
+
+    function cashCancel() {
+        closeCashDialog();
     }
 
     init();

@@ -1067,6 +1067,346 @@
         .auto-popup .detail-body {
             max-height: 66vh;
         }
+
+        /* ── SKU ASOCIAR ARTÍCULOS (validación pre-facturación) ──
+           Se abre cuando se presiona FACTURAR sobre un pedido I+D con ítems que no matchean
+           contra la lista de precios activa (order.unknownSku = true). Reutiliza el patrón
+           del diálogo existente en el POS ("Asociar Artículos"). */
+        #sku-overlay { z-index: 1200; }
+
+        .sku-popup {
+            background: #fff8ec;
+            border-radius: 6px;
+            width: 960px;
+            max-width: 96vw;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .32);
+            font-family: inherit;
+            animation: popIn .18s ease-out;
+            overflow: hidden;
+        }
+
+        .sku-head {
+            padding: 20px 24px 12px 24px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .sku-body {
+            flex: 1;
+            background: #fff;
+            border-top: 1px solid #f1e6cf;
+            padding: 0;
+            overflow-y: auto;
+            min-height: 340px;
+        }
+
+        .sku-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .82rem;
+        }
+
+        .sku-table th {
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            padding: 14px 20px;
+            background: #fdfdfd;
+            border-bottom: 1px solid #f1e6cf;
+            font-size: .8rem;
+        }
+
+        .sku-table th svg {
+            width: 13px;
+            height: 13px;
+            vertical-align: middle;
+            margin-right: 4px;
+            fill: #6c757d;
+        }
+
+        .sku-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            vertical-align: middle;
+            color: #212529;
+        }
+
+        .sku-search {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: #fff;
+        }
+
+        .sku-search input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: .82rem;
+            color: #212529;
+            background: transparent;
+        }
+
+        .sku-search input::placeholder {
+            color: #adb5bd;
+        }
+
+        .sku-search svg {
+            width: 15px;
+            height: 15px;
+            fill: #f79f1f;
+            flex-shrink: 0;
+        }
+
+        .sku-undefined-btn {
+            background: #6e59ee;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: .72rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(110, 89, 238, .25);
+            transition: background .2s;
+        }
+
+        .sku-undefined-btn:hover {
+            background: #5040d0;
+        }
+
+        .sku-footer {
+            padding: 14px 20px;
+            background: #fff8ec;
+            border-top: 1px solid #f1e6cf;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .sku-btn {
+            padding: 9px 18px;
+            border-radius: 6px;
+            border: none;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: .78rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: filter .2s, background .2s;
+        }
+
+        .sku-btn svg { width: 13px; height: 13px; fill: currentColor; }
+
+        .sku-btn-cancel { background: #495057; color: #fff; }
+        .sku-btn-cancel:hover { background: #343a40; }
+        .sku-btn-void { background: #e53935; color: #fff; }
+        .sku-btn-void:hover { background: #c62828; }
+        .sku-btn-associate { background: #ff9500; color: #fff; }
+        .sku-btn-associate:hover { background: #e88500; }
+        .sku-btn-associate:disabled { background: #ffcf99; cursor: not-allowed; }
+
+        /* ── COBRO EN EFECTIVO ──
+           Se abre cuando se presiona FACTURAR sobre un pedido I+D con Payment.Online = false.
+           Replica el DialogPay del POS: importe, formas de pago, monto abonado, vuelto. */
+        #cash-overlay { z-index: 1200; }
+
+        .cash-popup {
+            width: 720px;
+            max-width: 96vw;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .32);
+            display: flex;
+            flex-direction: column;
+            font-family: inherit;
+            animation: popIn .18s ease-out;
+            overflow: hidden;
+        }
+
+        .cash-head {
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .cash-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            padding: 20px 24px;
+            min-height: 260px;
+        }
+
+        .cash-left {
+            padding-right: 24px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .cash-client {
+            font-size: .82rem;
+            margin-bottom: 4px;
+        }
+
+        .cash-client b { font-weight: 600; color: #212529; }
+
+        .cash-client span { color: #adb5bd; }
+
+        .cash-formas-label {
+            font-weight: 600;
+            font-size: .84rem;
+            color: #212529;
+            margin: 18px 0 12px 0;
+        }
+
+        .cash-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .cash-method {
+            padding: 12px 8px;
+            border: 1.5px solid #6e59ee;
+            background: #fff;
+            color: #6e59ee;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: .74rem;
+            letter-spacing: .3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background .18s, color .18s;
+        }
+
+        .cash-method:hover { background: #efeaff; }
+
+        .cash-method.active { background: #6e59ee; color: #fff; }
+
+        .cash-method svg { width: 13px; height: 13px; fill: currentColor; }
+
+        .cash-right { padding-left: 24px; }
+
+        .cash-import-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .88rem;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .cash-import-row b { font-weight: 700; color: #212529; }
+
+        .cash-abono-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: .82rem;
+            padding: 14px 0;
+            color: #495057;
+        }
+
+        .cash-abono-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cash-abono-input .peso {
+            color: #f79f1f;
+            font-weight: 700;
+        }
+
+        .cash-abono-input input {
+            width: 90px;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: .95rem;
+            font-weight: 500;
+            color: #495057;
+            border-bottom: 1px solid #ced4da;
+            text-align: right;
+            padding: 2px 4px;
+        }
+
+        .cash-abono-input .trash {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px;
+            color: #e53935;
+            display: flex;
+            align-items: center;
+        }
+
+        .cash-abono-input .trash svg { width: 15px; height: 15px; fill: currentColor; }
+
+        .cash-subtotal-row {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 0 6px 0;
+            border-top: 1px solid #e9ecef;
+            font-size: .95rem;
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .cash-vuelto-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: .85rem;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .cash-vuelto-row b { font-weight: 700; color: #212529; }
+
+        .cash-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #fff;
+        }
+
+        .cash-btn {
+            padding: 8px 22px;
+            border-radius: 4px;
+            border: 1.5px solid transparent;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: .78rem;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+            letter-spacing: .3px;
+        }
+
+        .cash-btn-cancel { background: #fff; color: #e53935; border-color: #e53935; }
+        .cash-btn-cancel:hover { background: #ffebee; }
+        .cash-btn-pay { background: #2f9e44; color: #fff; }
+        .cash-btn-pay:hover { background: #276639; }
+        .cash-btn-pay:disabled { background: #ced4da; color: #fff; cursor: not-allowed; border-color: #ced4da; }
     </style>
 </head>
 
@@ -1209,6 +1549,16 @@
         <div class="auto-popup" id="auto-popup"></div>
     </div>
 
+    <!-- SKU ASOCIAR ARTÍCULOS (validación pre-facturación para pedidos I+D con SKU desconocido) -->
+    <div class="history-overlay" id="sku-overlay">
+        <div class="sku-popup" id="sku-popup"></div>
+    </div>
+
+    <!-- COBRO EN EFECTIVO (DialogPay reutilizado para pedidos I+D con Payment.Online = false) -->
+    <div class="history-overlay" id="cash-overlay">
+        <div class="cash-popup" id="cash-popup"></div>
+    </div>
+
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
@@ -1346,6 +1696,7 @@
                 autoDelivered: false,
             },
             {
+                // Caso feliz — I+D · pago ONLINE · SKUs OK → Facturar factura directo.
                 id: 'ord3',
                 number: '1200045871',
                 client: 'Jorge Pérez',
@@ -1366,8 +1717,12 @@
                 status: 'new',
                 rejected: false,
                 autoDelivered: true,
+                unknownSku: false,
             },
             {
+                // Caso SKU desconocido — I+D · pago ONLINE · un ítem sin mapear en la lista de precios.
+                // Al presionar FACTURAR se abre el diálogo "Asociar Artículos". Cuando el operador
+                // ingresa un código cualquiera y ASOCIA, el flag se limpia y avanza la facturación.
                 id: 'ord4',
                 number: '1200045902',
                 client: 'Sofía Romero',
@@ -1380,13 +1735,39 @@
                 deliveryType: 'Delivery de Plataforma',
                 paymentMethod: 'Online',
                 items: [
-                    { name: 'Postre Familiar', qty: 1, price: 9500 },
+                    { name: 'Helado pote 1 kg', qty: 1, price: 9500, skuCode: '6444444', undefined: true },
                 ],
                 discount: 0,
                 shipping: 0,
                 status: 'new',
                 rejected: false,
                 autoDelivered: true,
+                unknownSku: true,
+            },
+            {
+                // Caso efectivo — I+D · pago EFECTIVO · SKUs OK → Facturar abre el diálogo de cobro
+                // en efectivo (importe / abonado / vuelto) antes de finalizar la venta.
+                id: 'ord5',
+                number: '1200046014',
+                client: 'Andrés López',
+                phone: '+543516611223',
+                address: 'Bv. Illia 890',
+                note: '#429 | I+D · Pago en efectivo',
+                time: '11:38',
+                platform: 'ID',
+                platformColor: '#6e59ee',
+                deliveryType: 'Delivery Propio Del Restaurante',
+                paymentMethod: 'Efectivo',
+                items: [
+                    { name: '1/2 Kilo de Helado', qty: 1, price: 6000 },
+                    { name: 'Toppings', qty: 1, price: 800 },
+                ],
+                discount: 0,
+                shipping: 500,
+                status: 'new',
+                rejected: false,
+                autoDelivered: true,
+                unknownSku: false,
             }
         ];
 
@@ -1474,12 +1855,13 @@
             const card = document.getElementById('card-' + id);
             if (card) card.classList.add('active');
 
-            if (order.autoDelivered) {
-                // Acción rápida: popup centrado con los datos + Facturar/Rechazar (sin mover el mouse a la derecha)
+            if (order.autoDelivered && order.status === 'new') {
+                // Acción rápida SOLO en NUEVOS: popup centrado con los datos + Facturar/Rechazar.
+                // Una vez en Finalizados, la tarjeta se comporta como cualquier pedido normal.
                 showEmptyPanel();
                 openAutoPopup(order);
             } else {
-                // Flujo normal: panel lateral derecho (sin cambios)
+                // Flujo normal: panel lateral derecho (sin cambios).
                 hideAutoPopup();
                 showDetailPanel(order);
             }
@@ -1767,12 +2149,41 @@
         //  AUTODELIVERED (I+D) — resolución en un solo paso
         //  Facturar o Rechazar → ambos mueven el pedido a FINALIZADOS.
         //  No toca el flujo de los pedidos normales.
+        //
+        //  Al presionar FACTURAR, la secuencia real es:
+        //    1) Si el pedido tiene SKU desconocido (order.unknownSku)
+        //         → abre "Asociar Artículos". El operador asocia (avanza) o anula (rechaza).
+        //    2) Si el pago no es online (paymentMethod === 'Efectivo')
+        //         → abre el diálogo de cobro en efectivo (DialogPay).
+        //    3) Recién ahí se ejecuta la facturación (spinner + move a Finalizados).
+        //  RECHAZAR es directo y no dispara ninguno de esos diálogos.
         // ════════════════════════════════════════════════════════════════
         function resolveAutoDelivered(id, action) {
             const order = orders.find(o => o.id === id);
             if (!order || order.billing || order.rejecting || order.billed || order.finalRejected) return;
 
             const isReject = action === 'reject';
+
+            // Camino FACTURAR — antes del spinner, encadenamos los diálogos que correspondan.
+            if (!isReject) {
+                if (order.unknownSku) {
+                    openSkuDialog(order);
+                    return;
+                }
+                if (order.paymentMethod === 'Efectivo') {
+                    openCashDialog(order);
+                    return;
+                }
+            }
+
+            proceedAutoDeliveredResolution(order, isReject);
+        }
+
+        // Ejecuta la facturación / rechazo real de un pedido I+D (spinner + move a Finalizados).
+        // Se llama directo cuando no hay diálogos previos, o al finalizar cada diálogo (SKU / efectivo).
+        function proceedAutoDeliveredResolution(order, isReject) {
+            if (order.billing || order.rejecting || order.billed || order.finalRejected) return;
+
             if (isReject) order.rejecting = true; else order.billing = true;
             if (autoPopupOrderId === order.id) renderAutoPopup(order); // spinner dentro del popup
 
@@ -2021,18 +2432,6 @@
             updateEmpty(prevStatus);
             updateEmpty(order.status);
             updateCounts();
-
-            // Los popups de historial automático aplican solo a pedidos normales.
-            // Para I+D el historial (6 traces) se consulta a demanda desde el panel.
-            if (!order.autoDelivered && order.status !== 'new' && order.status !== prevStatus) {
-                if (order.deliveryType === 'Delivery de Plataforma') {
-                    showHistoryPopup(order.status);
-                } else if (order.deliveryType === 'Delivery Propio Del Restaurante' && order.status === 'done') {
-                    showHistoryPopup('despatched');
-                } else if (order.deliveryType === 'Delivery Propio Del Restaurante') {
-                    showHistoryPopup(order.status);
-                }
-            }
         }
 
         function colName(s) {
@@ -2141,6 +2540,237 @@
 
         function closeFacturacionPopup() {
             document.getElementById('facturacion-overlay').classList.remove('show');
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  DIÁLOGO "ASOCIAR ARTÍCULOS" (SKU desconocido)
+        //  Se abre cuando el pedido I+D tiene items sin mapear en la lista de precios.
+        //  Reglas:
+        //   • CANCELAR      → cierra y vuelve al popup I+D sin marcar nada.
+        //   • ANULAR ORDEN  → rechaza el pedido (mismo flujo que RECHAZAR).
+        //   • ASOCIAR       → se habilita en cuanto el operador tipea un código en el
+        //                     input de búsqueda. Al asociar, se limpia unknownSku y
+        //                     continúa la cadena (efectivo si aplica, sino factura).
+        // ════════════════════════════════════════════════════════════════
+        let skuDialogOrderId = null;
+
+        function openSkuDialog(order) {
+            skuDialogOrderId = order.id;
+            renderSkuDialog(order);
+            document.getElementById('sku-overlay').classList.add('show');
+        }
+
+        function closeSkuDialog() {
+            document.getElementById('sku-overlay').classList.remove('show');
+            skuDialogOrderId = null;
+        }
+
+        function renderSkuDialog(order) {
+            const popup = document.getElementById('sku-popup');
+            const rowsHtml = order.items.filter(i => i.undefined).map((it, idx) => `
+                <tr>
+                    <td>${it.name}</td>
+                    <td>${it.skuCode || '—'}</td>
+                    <td>
+                        <div class="sku-search">
+                            <input type="text" id="sku-input-${idx}" placeholder="Buscar producto..." oninput="onSkuInputChange()" />
+                            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        </div>
+                    </td>
+                    <td style="text-align:right;">
+                        <button class="sku-undefined-btn" title="Marcar como artículo indefinido">Artículo<br>indefinido</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            popup.innerHTML = `
+                <div class="sku-head">Asociar Artículos</div>
+                <div class="sku-body">
+                    <table class="sku-table">
+                        <thead>
+                            <tr>
+                                <th><svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21L4.27 2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>Producto Pedido</th>
+                                <th><svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h-3v2h3v3h2v-3h3v-2h-3z"/></svg>Cód. en Pedido</th>
+                                <th><svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>Producto List</th>
+                                <th style="text-align:right;"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>Cód. Lista</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+                <div class="sku-footer">
+                    <button class="sku-btn sku-btn-cancel" onclick="skuCancel()">
+                        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                        CANCELAR
+                    </button>
+                    <button class="sku-btn sku-btn-void" onclick="skuVoid()">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                        ANULAR ORDEN
+                    </button>
+                    <button class="sku-btn sku-btn-associate" id="sku-btn-associate" onclick="skuAssociate()" disabled>
+                        ASOCIAR
+                        <svg viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+                    </button>
+                </div>
+            `;
+        }
+
+        // El botón ASOCIAR se habilita cuando el operador tipeó algo en cualquier input de búsqueda.
+        function onSkuInputChange() {
+            const inputs = document.querySelectorAll('#sku-popup input[id^="sku-input-"]');
+            const anyFilled = Array.from(inputs).some(i => i.value.trim().length > 0);
+            const btn = document.getElementById('sku-btn-associate');
+            if (btn) btn.disabled = !anyFilled;
+        }
+
+        function skuCancel() {
+            closeSkuDialog();
+            // Vuelve al popup I+D como si nada hubiese pasado.
+        }
+
+        function skuVoid() {
+            const order = orders.find(o => o.id === skuDialogOrderId);
+            closeSkuDialog();
+            if (order) proceedAutoDeliveredResolution(order, true); // rechaza
+        }
+
+        function skuAssociate() {
+            const order = orders.find(o => o.id === skuDialogOrderId);
+            if (!order) return;
+            order.unknownSku = false;
+            order.items.forEach(i => { if (i.undefined) i.undefined = false; });
+            closeSkuDialog();
+            showToast('Artículos asociados ✓', 'success');
+            // Encadena: si es efectivo va al DialogPay; sino, factura directo.
+            if (order.paymentMethod === 'Efectivo') {
+                openCashDialog(order);
+            } else {
+                proceedAutoDeliveredResolution(order, false);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        //  DIÁLOGO "COBRO EN EFECTIVO" (DialogPay reutilizado)
+        //  Se abre cuando el pedido I+D no es pago online.
+        //  Reglas:
+        //   • Formas de pago: EFECTIVO por defecto (el mockup solo interactúa con esta).
+        //   • Se ingresa el abonado, se calcula el vuelto en vivo.
+        //   • CANCELAR → cierra sin facturar, vuelve al popup I+D.
+        //   • PAGAR    → habilitado cuando abonado ≥ importe. Cierra y factura.
+        // ════════════════════════════════════════════════════════════════
+        let cashDialogOrderId = null;
+
+        function openCashDialog(order) {
+            cashDialogOrderId = order.id;
+            cashState = { method: 'efectivo', abonado: '' };
+            renderCashDialog(order, cashState);
+            document.getElementById('cash-overlay').classList.add('show');
+            setTimeout(() => {
+                const inp = document.getElementById('cash-abono-input');
+                if (inp) inp.focus();
+            }, 60);
+        }
+
+        function closeCashDialog() {
+            document.getElementById('cash-overlay').classList.remove('show');
+            cashDialogOrderId = null;
+        }
+
+        function orderTotal(order) {
+            const subtotal = order.items.reduce((s, i) => s + i.qty * i.price, 0);
+            return subtotal - order.discount + order.shipping;
+        }
+
+        function renderCashDialog(order, state) {
+            const popup = document.getElementById('cash-popup');
+            const total = orderTotal(order);
+            const abonadoNum = parseFloat(state.abonado) || 0;
+            const vuelto = Math.max(0, abonadoNum - total);
+            const canPay = abonadoNum >= total && abonadoNum > 0;
+            const fmt = n => '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const isEfectivo = state.method === 'efectivo';
+            const abonoInputHtml = isEfectivo && state.abonado !== ''
+                ? `<div class="cash-abono-input">
+                       <span class="peso">$</span>
+                       <input type="text" id="cash-abono-input" value="${state.abonado}" oninput="onCashAbonoInput(this.value)" />
+                       <button class="trash" onclick="clearCashAbono()" title="Limpiar">
+                         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                       </button>
+                   </div>`
+                : `<div class="cash-abono-input">
+                       <span class="peso">$</span>
+                       <input type="text" id="cash-abono-input" value="" placeholder="0" oninput="onCashAbonoInput(this.value)" />
+                   </div>`;
+
+            popup.innerHTML = `
+                <div class="cash-head">Pedido N° ${order.number.slice(-1)}</div>
+                <div class="cash-body">
+                    <div class="cash-left">
+                        <div class="cash-client"><b>Cliente:</b> <span>CUIT (once dígitos sin guiones)</span></div>
+                        <div class="cash-formas-label">Formas de Pago:</div>
+                        <div class="cash-methods">
+                            <button class="cash-method ${isEfectivo ? 'active' : ''}" onclick="selectCashMethod('efectivo')">
+                                ${isEfectivo ? '<svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
+                                EFECTIVO
+                            </button>
+                            <button class="cash-method" onclick="showToast('Solo EFECTIVO habilitado en este mockup','auto')">TARJETA DE CRÉDITO</button>
+                            <button class="cash-method" onclick="showToast('Solo EFECTIVO habilitado en este mockup','auto')">TARJETA DE DÉBITO</button>
+                            <button class="cash-method" onclick="showToast('Solo EFECTIVO habilitado en este mockup','auto')">MERCADO PAGO</button>
+                        </div>
+                    </div>
+                    <div class="cash-right">
+                        <div class="cash-import-row"><b>Importe:</b><b>${fmt(total)}</b></div>
+                        <div class="cash-abono-row">
+                            <span>${isEfectivo ? 'Efectivo' : 'Abonado'}</span>
+                            ${abonoInputHtml}
+                        </div>
+                        <div class="cash-subtotal-row">${fmt(abonadoNum)}</div>
+                        <div class="cash-vuelto-row"><span>Vuelto</span><b>${fmt(vuelto)}</b></div>
+                    </div>
+                </div>
+                <div class="cash-footer">
+                    <button class="cash-btn cash-btn-cancel" onclick="cashCancel()">CANCELAR</button>
+                    <button class="cash-btn cash-btn-pay" onclick="cashPay()" ${canPay ? '' : 'disabled'}>PAGAR</button>
+                </div>
+            `;
+        }
+
+        let cashState = { method: 'efectivo', abonado: '' };
+
+        function selectCashMethod(m) {
+            cashState.method = m;
+            const order = orders.find(o => o.id === cashDialogOrderId);
+            if (order) renderCashDialog(order, cashState);
+        }
+
+        function onCashAbonoInput(val) {
+            cashState.abonado = val.replace(/[^\d.]/g, '');
+            const order = orders.find(o => o.id === cashDialogOrderId);
+            if (order) {
+                renderCashDialog(order, cashState);
+                const inp = document.getElementById('cash-abono-input');
+                if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+            }
+        }
+
+        function clearCashAbono() {
+            cashState.abonado = '';
+            const order = orders.find(o => o.id === cashDialogOrderId);
+            if (order) renderCashDialog(order, cashState);
+        }
+
+        function cashCancel() {
+            closeCashDialog();
+            cashState = { method: 'efectivo', abonado: '' };
+        }
+
+        function cashPay() {
+            const order = orders.find(o => o.id === cashDialogOrderId);
+            if (!order) return;
+            closeCashDialog();
+            cashState = { method: 'efectivo', abonado: '' };
+            proceedAutoDeliveredResolution(order, false);
         }
 
         init();
