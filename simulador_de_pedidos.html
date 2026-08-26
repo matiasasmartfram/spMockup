@@ -27,7 +27,7 @@
         }
 
         .container {
-            max-width: 450px;
+            max-width: 520px;
             margin: auto;
             padding: 2rem 2.5rem;
             background-color: var(--container-bg-color);
@@ -116,6 +116,107 @@
             overflow: auto;
             font-family: 'Source Code Pro', monospace;
         }
+
+        /* --- Bloque de Opciones Avanzadas --- */
+        details.advanced {
+            margin-bottom: 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fafbfc;
+        }
+
+        details.advanced>summary {
+            padding: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        details.advanced[open]>summary {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .advanced-body {
+            padding: 1rem 0.75rem;
+        }
+
+        .advanced-hint {
+            font-size: 0.85rem;
+            color: #7a8794;
+            margin: 0 0 1rem;
+        }
+
+        .item-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            background-color: var(--container-bg-color);
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 40px;
+            gap: 0.5rem;
+            align-items: end;
+        }
+
+        .item-full,
+        .item-notes {
+            grid-column: 1 / -1;
+        }
+
+        .item-row label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-row input,
+        .item-row select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-small {
+            width: auto;
+            margin-top: 0;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-remove {
+            width: 100%;
+            margin-top: 0;
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+            line-height: 1;
+            background-color: #e74c3c;
+        }
+
+        .btn-remove:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
+
+        .btn-remove:disabled {
+            background-color: #e8b5af;
+        }
+
+        .total-line {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .total-line small {
+            display: block;
+            font-weight: 400;
+            color: #7a8794;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -164,6 +265,45 @@
                 </select>
             </div>
 
+            <div id="advancedWrapper" hidden>
+                <details id="advancedPedigrido" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (Pedigrido)</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Todo viene precargado con la orden por defecto. Si dejás este bloque
+                            cerrado se envía esa orden tal cual; si lo dejás abierto, se envía lo
+                            que configures acá.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="deliveryMode">Tipo de entrega</label>
+                            <select id="deliveryMode">
+                                <option value="platformDelivery">Delivery a Cargo de la Plataforma</option>
+                                <option value="ownDelivery">Delivery Propio</option>
+                                <option value="customerPickup">Retira Cliente</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentMode">Pago</label>
+                            <select id="paymentMode">
+                                <option value="cash">Efectivo</option>
+                                <option value="online">Online</option>
+                            </select>
+                        </div>
+
+                        <label>Productos</label>
+                        <div id="itemsContainer"></div>
+                        <button type="button" id="addItemButton" class="btn-small">+ Agregar producto</button>
+
+                        <div class="total-line">
+                            Total: <span id="itemsTotal">$0</span>
+                            <small>Se envía en payment.partial y payment.subtotal</small>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
             <button type="submit" id="submitButton">Crear Pedido</button>
         </form>
 
@@ -175,14 +315,17 @@
 
     <script>
         // Para producción:
-        const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
+         const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
         // Para pruebas locales (Wrangler):
-        // const WORKER_URL = 'http://localhost:8787/';
+        //const WORKER_URL = 'http://localhost:8787/';
 
         // --- Lógica de Dependencia Tenant/Plataforma (Bloqueo Visual) ---
         const tenantSelect = document.getElementById('tenant');
         const platformSelect = document.getElementById('platform');
         const pedigridoOption = platformSelect.querySelector('option[value="pedigrido"]');
+
+        const advancedWrapper = document.getElementById('advancedWrapper');
+        const advancedDetails = document.getElementById('advancedPedigrido');
 
         const updatePlatformOptions = () => {
             if (tenantSelect.value === 'weiss') {
@@ -197,11 +340,121 @@
                 pedigridoOption.hidden = false;
                 pedigridoOption.disabled = false;
             }
+
+            // El bloque avanzado por ahora es propio de Pedigrido: cada plataforma
+            // tiene su propia estructura de orden y necesita su propio avanzado.
+            const isPedigrido = platformSelect.value === 'pedigrido';
+            advancedWrapper.hidden = !isPedigrido;
+
+            // Cerrarlo además de ocultarlo. Si queda abierto e invisible, al volver
+            // a Pedigrido se aplicaría sin que el usuario lo esté viendo.
+            if (!isPedigrido) advancedDetails.open = false;
         };
+
+        // --- Catálogo de productos (solo precarga: el worker acepta cualquier SKU) ---
+        const PEDIGRIDO_CATALOG = {
+            '64': { name: 'Helado 1 Kg', unitPrice: 9500, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' },
+            '65': { name: 'Helado 1/2 Kg', unitPrice: 9000, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' },
+            '66': { name: 'Helado 1/4 Kg', unitPrice: 9500, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' }
+        };
+
+        const DEFAULT_SKU = '64';
+        const itemsContainer = document.getElementById('itemsContainer');
+
+        const buildItemCard = (sku) => {
+            const preset = PEDIGRIDO_CATALOG[sku];
+            const options = Object.entries(PEDIGRIDO_CATALOG)
+                .map(([code, p]) => `<option value="${code}">${p.name}</option>`)
+                .join('');
+
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-row">
+                    <div class="item-full">
+                        <label>Producto</label>
+                        <select class="item-product">${options}</select>
+                    </div>
+                    <div>
+                        <label>SKU</label>
+                        <input type="text" class="item-sku" value="${sku}">
+                    </div>
+                    <div>
+                        <label>Precio unitario</label>
+                        <input type="number" class="item-price" min="0" step="1" value="${preset.unitPrice}">
+                    </div>
+                    <div>
+                        <label>Cantidad</label>
+                        <input type="number" class="item-qty" min="1" step="1" value="1">
+                    </div>
+                    <button type="button" class="btn-remove" title="Quitar producto">&times;</button>
+                    <div class="item-notes">
+                        <label>Notas</label>
+                        <input type="text" class="item-notes-input" value="${preset.notes}">
+                    </div>
+                </div>`;
+
+            card.querySelector('.item-product').value = sku;
+            return card;
+        };
+
+        // El 'name' no es editable: sale siempre del producto elegido en el select.
+        const readItems = () => Array.from(itemsContainer.querySelectorAll('.item-card')).map(card => ({
+            name: PEDIGRIDO_CATALOG[card.querySelector('.item-product').value].name,
+            sku: card.querySelector('.item-sku').value.trim(),
+            unitPrice: Number(card.querySelector('.item-price').value),
+            quantity: Number(card.querySelector('.item-qty').value),
+            notes: card.querySelector('.item-notes-input').value
+        }));
+
+        const renderTotal = () => {
+            const total = readItems().reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+            document.getElementById('itemsTotal').textContent = '$' + total.toLocaleString('es-AR');
+        };
+
+        // No se puede quedar sin productos: con una sola fila, el botón se deshabilita.
+        const refreshRemoveButtons = () => {
+            const cards = itemsContainer.querySelectorAll('.item-card');
+            cards.forEach(card => { card.querySelector('.btn-remove').disabled = cards.length === 1; });
+        };
+
+        const addItem = (sku = DEFAULT_SKU) => {
+            itemsContainer.appendChild(buildItemCard(sku));
+            refreshRemoveButtons();
+            renderTotal();
+        };
+
+        itemsContainer.addEventListener('input', renderTotal);
+
+        itemsContainer.addEventListener('change', e => {
+            // Elegir otro producto repuebla SKU, precio y notas de esa fila.
+            // Después de la precarga los tres siguen siendo editables.
+            if (!e.target.classList.contains('item-product')) return;
+
+            const card = e.target.closest('.item-card');
+            const preset = PEDIGRIDO_CATALOG[e.target.value];
+            card.querySelector('.item-sku').value = e.target.value;
+            card.querySelector('.item-price').value = preset.unitPrice;
+            card.querySelector('.item-notes-input').value = preset.notes;
+            renderTotal();
+        });
+
+        itemsContainer.addEventListener('click', e => {
+            if (!e.target.classList.contains('btn-remove')) return;
+            e.target.closest('.item-card').remove();
+            refreshRemoveButtons();
+            renderTotal();
+        });
+
+        document.getElementById('addItemButton').addEventListener('click', () => addItem());
 
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
-        window.addEventListener('DOMContentLoaded', updatePlatformOptions);
+        platformSelect.addEventListener('change', updatePlatformOptions);
+        window.addEventListener('DOMContentLoaded', () => {
+            addItem();
+            updatePlatformOptions();
+        });
 
         document.getElementById('pedidoForm').addEventListener('submit', async e => {
             e.preventDefault();
@@ -241,6 +494,15 @@
                     scenario: "default"
                 }
             };
+
+            // Solo si el usuario desplegó el avanzado. Cerrado = orden por defecto.
+            if (!advancedWrapper.hidden && advancedDetails.open) {
+                payload.data.advanced = {
+                    deliveryMode: document.getElementById('deliveryMode').value,
+                    paymentMode: document.getElementById('paymentMode').value,
+                    items: readItems()
+                };
+            }
 
             try {
                 const res = await fetch(WORKER_URL, {
