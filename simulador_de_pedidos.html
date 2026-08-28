@@ -179,6 +179,75 @@
             font-size: 0.9rem;
         }
 
+        .item-row input:disabled {
+            background-color: #f2f4f6;
+            color: #7a8794;
+        }
+
+        /* --- Tarjeta de promoción --- */
+        .promo-card {
+            border-left: 4px solid #f39c12;
+            background-color: #fffdf7;
+        }
+
+        .promo-badge {
+            grid-column: 1 / -1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #b9770e;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.5rem;
+        }
+
+        .optiongroups-box {
+            grid-column: 1 / -1;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .optiongroups-box>label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .optiongroup-hint {
+            font-size: 0.75rem;
+            color: #7a8794;
+            margin: 0 0 0.75rem;
+        }
+
+        .optiongroup-row {
+            display: grid;
+            grid-template-columns: 1fr 110px 40px;
+            gap: 0.5rem;
+            align-items: end;
+            margin-bottom: 0.5rem;
+        }
+
+        .optiongroup-row .og-notes {
+            grid-column: 1 / -2;
+        }
+
+        .optiongroup-row label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .optiongroup-row input {
+            padding: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .items-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
         .btn-small {
             width: auto;
             margin-top: 0;
@@ -254,6 +323,7 @@
                 <select id="platform" required>
                     <option value="pedigrido">Pedigrido</option>
                     <option value="pedidosya">PedidosYa</option>
+                    <option value="mercadopago">MercadoPago Delivery</option>
                 </select>
             </div>
 
@@ -292,9 +362,12 @@
                             </select>
                         </div>
 
-                        <label>Productos</label>
+                        <label>Productos y promociones</label>
                         <div id="itemsContainer"></div>
-                        <button type="button" id="addItemButton" class="btn-small">+ Agregar producto</button>
+                        <div class="items-buttons">
+                            <button type="button" id="addItemButton" class="btn-small">+ Agregar producto</button>
+                            <button type="button" id="addPromoButton" class="btn-small">+ Agregar Promoción</button>
+                        </div>
 
                         <div class="total-line">
                             Total: <span id="itemsTotal">$0</span>
@@ -314,31 +387,50 @@
     </div>
 
     <script>
-        // Para producción:
-         const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
-        // Para pruebas locales (Wrangler):
-        //const WORKER_URL = 'http://localhost:8787/';
+        /*───────────────────────────────────────────────────────────────────*
+         * URLs de los workers — ÚNICO punto de conmutación LOCAL ↔ CLOUDFLARE
+         *
+         * Son DOS workers distintos y se conmutan por separado, así se puede
+         * tener uno en Cloudflare y el otro en local al mismo tiempo.
+         *───────────────────────────────────────────────────────────────────*/
+
+        // Worker principal — PedidosYa / Pedigrido (worker.js, :8787)
+        // const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
+        const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
+
+        // Worker MercadoPago Delivery (workerMPD.js, :8788)
+        const WORKER_URL_MPD = 'https://smartfranmpd.matiasa.workers.dev/';
+        // const WORKER_URL_MPD = 'http://localhost:8788/';
+
+        // MercadoPago vive en su propio worker porque no es push directo: tiene
+        // que atender además el GET de detalle que Platform hace después.
+        const workerUrlFor = (platform) => platform === 'mercadopago' ? WORKER_URL_MPD : WORKER_URL;
 
         // --- Lógica de Dependencia Tenant/Plataforma (Bloqueo Visual) ---
         const tenantSelect = document.getElementById('tenant');
         const platformSelect = document.getElementById('platform');
-        const pedigridoOption = platformSelect.querySelector('option[value="pedigrido"]');
+
+        // Plataformas que solo operan con Grido. Weiss únicamente usa PedidosYa.
+        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago'];
+        const gridoOnlyOptions = GRIDO_ONLY_PLATFORMS
+            .map(value => platformSelect.querySelector(`option[value="${value}"]`));
 
         const advancedWrapper = document.getElementById('advancedWrapper');
         const advancedDetails = document.getElementById('advancedPedigrido');
 
         const updatePlatformOptions = () => {
-            if (tenantSelect.value === 'weiss') {
-                // Si es Weiss, ocultamos y deshabilitamos Pedigrido
-                pedigridoOption.hidden = true;
-                pedigridoOption.disabled = true;
-                if (platformSelect.value === 'pedigrido') {
-                    platformSelect.value = 'pedidosya';
-                }
-            } else {
-                // Si es Grido, mostramos y habilitamos todo
-                pedigridoOption.hidden = false;
-                pedigridoOption.disabled = false;
+            const isWeiss = tenantSelect.value === 'weiss';
+
+            // Con Weiss se ocultan y deshabilitan las plataformas de Grido; con
+            // Grido se muestran todas.
+            gridoOnlyOptions.forEach(option => {
+                option.hidden = isWeiss;
+                option.disabled = isWeiss;
+            });
+
+            // Si la seleccionada quedó oculta, caemos a la única que le sirve a Weiss.
+            if (isWeiss && GRIDO_ONLY_PLATFORMS.includes(platformSelect.value)) {
+                platformSelect.value = 'pedidosya';
             }
 
             // El bloque avanzado por ahora es propio de Pedigrido: cada plataforma
@@ -358,6 +450,23 @@
             '66': { name: 'Helado 1/4 Kg', unitPrice: 9500, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' }
         };
 
+        // --- Promo de ejemplo (solo precarga: nombre, SKU, precio y componentes son editables) ---
+        // El 'sku' de cabecera es lógico y NO descuenta stock: el stock lo descuentan
+        // los optionGroups. Espeja PEDIGRIDO_DEFAULT_PROMO de worker.js.
+        const PEDIGRIDO_PROMO_DEFAULT = {
+            name: '2 Cuartos por $5000',
+            sku: '12760',
+            unitPrice: 5000,
+            notes: '',
+            optionGroups: [
+                { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: 'Chocolate' },
+                { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: 'Frutilla' }
+            ]
+        };
+
+        // Con qué se precarga un componente nuevo agregado a mano.
+        const PROMO_GROUP_TEMPLATE = { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: '' };
+
         const DEFAULT_SKU = '64';
         const itemsContainer = document.getElementById('itemsContainer');
 
@@ -369,6 +478,7 @@
 
             const card = document.createElement('div');
             card.className = 'item-card';
+            card.dataset.type = 'product';
             card.innerHTML = `
                 <div class="item-row">
                     <div class="item-full">
@@ -387,7 +497,7 @@
                         <label>Cantidad</label>
                         <input type="number" class="item-qty" min="1" step="1" value="1">
                     </div>
-                    <button type="button" class="btn-remove" title="Quitar producto">&times;</button>
+                    <button type="button" class="btn-remove btn-remove-card" title="Quitar producto">&times;</button>
                     <div class="item-notes">
                         <label>Notas</label>
                         <input type="text" class="item-notes-input" value="${preset.notes}">
@@ -398,28 +508,148 @@
             return card;
         };
 
-        // El 'name' no es editable: sale siempre del producto elegido en el select.
-        const readItems = () => Array.from(itemsContainer.querySelectorAll('.item-card')).map(card => ({
-            name: PEDIGRIDO_CATALOG[card.querySelector('.item-product').value].name,
-            sku: card.querySelector('.item-sku').value.trim(),
-            unitPrice: Number(card.querySelector('.item-price').value),
-            quantity: Number(card.querySelector('.item-qty').value),
-            notes: card.querySelector('.item-notes-input').value
-        }));
+        // Un componente de la promo = un optionGroup. Su 'sku' es el que descuenta
+        // stock, y su precio es siempre 0 (el precio de la promo va en la cabecera).
+        // El 'id' no es un input: se deriva del SKU (ver readOptionGroups).
+        const buildOptionGroupRow = (group) => {
+            const row = document.createElement('div');
+            row.className = 'optiongroup-row';
+            row.innerHTML = `
+                <div>
+                    <label>Nombre del grupo</label>
+                    <input type="text" class="og-name" value="${group.name}">
+                </div>
+                <div>
+                    <label>SKU real</label>
+                    <input type="text" class="og-sku" value="${group.sku}">
+                </div>
+                <button type="button" class="btn-remove btn-remove-group" title="Quitar componente">&times;</button>
+                <div class="og-notes">
+                    <label>Notas (sabor / variante)</label>
+                    <input type="text" class="og-notes-input" value="${group.notes}">
+                </div>`;
+            return row;
+        };
+
+        // A diferencia del producto, acá el 'name' es texto libre: no hay catálogo
+        // de promos, se escribe la descripción comercial que se quiera simular.
+        const buildPromoCard = () => {
+            const preset = PEDIGRIDO_PROMO_DEFAULT;
+
+            const card = document.createElement('div');
+            card.className = 'item-card promo-card';
+            card.dataset.type = 'promo';
+            card.innerHTML = `
+                <div class="item-row">
+                    <span class="promo-badge">🎁 Promoción</span>
+                    <div class="item-full">
+                        <label>Nombre de la promo</label>
+                        <input type="text" class="promo-name" value="${preset.name}">
+                    </div>
+                    <div>
+                        <label>SKU promo (no descuenta stock)</label>
+                        <input type="text" class="promo-sku" value="${preset.sku}">
+                    </div>
+                    <div>
+                        <label>Precio</label>
+                        <input type="number" class="promo-price" min="0" step="1" value="${preset.unitPrice}">
+                    </div>
+                    <div>
+                        <label>Cantidad</label>
+                        <input type="number" class="promo-qty" value="1" disabled title="Siempre 1: una promo por tarjeta">
+                    </div>
+                    <button type="button" class="btn-remove btn-remove-card" title="Quitar promoción">&times;</button>
+                    <div class="item-notes">
+                        <label>Notas generales</label>
+                        <input type="text" class="promo-notes-input" value="${preset.notes}">
+                    </div>
+
+                    <div class="optiongroups-box">
+                        <label>Componentes de la promo</label>
+                        <p class="optiongroup-hint">
+                            Son los productos reales que descuentan stock. Su precio siempre
+                            va en 0. Para pedir 2 promos agregá otra tarjeta: cada promo se
+                            envía por separado con cantidad 1.
+                        </p>
+                        <div class="optiongroups-container"></div>
+                        <button type="button" class="btn-small btn-add-group">+ Agregar componente</button>
+                    </div>
+                </div>`;
+
+            const groupsContainer = card.querySelector('.optiongroups-container');
+            preset.optionGroups.forEach(group => groupsContainer.appendChild(buildOptionGroupRow(group)));
+
+            return card;
+        };
+
+        // El 'id' del grupo no se pide en la UI: se manda el mismo valor del SKU.
+        // Si el SKU no es numérico (caso válido: simular uno que el POS no conoce)
+        // no hay número que espejar y se manda 0, que el backend tampoco usa.
+        const groupIdFromSku = (sku) => {
+            const parsed = Number(sku);
+            return Number.isInteger(parsed) ? parsed : 0;
+        };
+
+        const readOptionGroups = (card) =>
+            Array.from(card.querySelectorAll('.optiongroup-row')).map(row => ({
+                id: groupIdFromSku(row.querySelector('.og-sku').value.trim()),
+                name: row.querySelector('.og-name').value.trim(),
+                sku: row.querySelector('.og-sku').value.trim(),
+                unitPrice: 0,
+                notes: row.querySelector('.og-notes-input').value
+            }));
+
+        // En los productos el 'name' no es editable: sale del select del catálogo.
+        // En las promos sí, y además 'quantity' se fuerza a 1 (regla del formato:
+        // dos promos son dos líneas separadas, no una línea con cantidad 2).
+        const readItems = () => Array.from(itemsContainer.querySelectorAll('.item-card')).map(card => {
+            if (card.dataset.type === 'promo') {
+                const notes = card.querySelector('.promo-notes-input').value.trim();
+                return {
+                    promotion: true,
+                    name: card.querySelector('.promo-name').value.trim(),
+                    sku: card.querySelector('.promo-sku').value.trim(),
+                    unitPrice: Number(card.querySelector('.promo-price').value),
+                    quantity: 1,
+                    notes: notes || null,
+                    optionGroups: readOptionGroups(card)
+                };
+            }
+
+            return {
+                name: PEDIGRIDO_CATALOG[card.querySelector('.item-product').value].name,
+                sku: card.querySelector('.item-sku').value.trim(),
+                unitPrice: Number(card.querySelector('.item-price').value),
+                quantity: Number(card.querySelector('.item-qty').value),
+                notes: card.querySelector('.item-notes-input').value
+            };
+        });
 
         const renderTotal = () => {
             const total = readItems().reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
             document.getElementById('itemsTotal').textContent = '$' + total.toLocaleString('es-AR');
         };
 
-        // No se puede quedar sin productos: con una sola fila, el botón se deshabilita.
+        // No se puede quedar sin líneas (productos + promos): con una sola, el botón
+        // se deshabilita. Misma regla adentro de cada promo: mínimo un componente.
         const refreshRemoveButtons = () => {
             const cards = itemsContainer.querySelectorAll('.item-card');
-            cards.forEach(card => { card.querySelector('.btn-remove').disabled = cards.length === 1; });
+            cards.forEach(card => { card.querySelector('.btn-remove-card').disabled = cards.length === 1; });
+
+            itemsContainer.querySelectorAll('[data-type="promo"]').forEach(card => {
+                const groups = card.querySelectorAll('.optiongroup-row');
+                groups.forEach(row => { row.querySelector('.btn-remove-group').disabled = groups.length === 1; });
+            });
         };
 
         const addItem = (sku = DEFAULT_SKU) => {
             itemsContainer.appendChild(buildItemCard(sku));
+            refreshRemoveButtons();
+            renderTotal();
+        };
+
+        const addPromo = () => {
+            itemsContainer.appendChild(buildPromoCard());
             refreshRemoveButtons();
             renderTotal();
         };
@@ -440,13 +670,26 @@
         });
 
         itemsContainer.addEventListener('click', e => {
-            if (!e.target.classList.contains('btn-remove')) return;
-            e.target.closest('.item-card').remove();
+            // Los componentes de la promo se van antes que la tarjeta: el botón de
+            // grupo también lleva 'btn-remove', así que se chequea primero.
+            if (e.target.classList.contains('btn-remove-group')) {
+                e.target.closest('.optiongroup-row').remove();
+            } else if (e.target.classList.contains('btn-add-group')) {
+                e.target.closest('.optiongroups-box')
+                    .querySelector('.optiongroups-container')
+                    .appendChild(buildOptionGroupRow(PROMO_GROUP_TEMPLATE));
+            } else if (e.target.classList.contains('btn-remove-card')) {
+                e.target.closest('.item-card').remove();
+            } else {
+                return;
+            }
+
             refreshRemoveButtons();
             renderTotal();
         });
 
         document.getElementById('addItemButton').addEventListener('click', () => addItem());
+        document.getElementById('addPromoButton').addEventListener('click', () => addPromo());
 
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
@@ -504,8 +747,12 @@
                 };
             }
 
+            // Cada plataforma tiene su worker: con dos, "no responde" es ambiguo,
+            // así que la URL de destino se muestra en la respuesta.
+            const workerUrl = workerUrlFor(platform);
+
             try {
-                const res = await fetch(WORKER_URL, {
+                const res = await fetch(workerUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -521,10 +768,10 @@
                     pretty = text;
                 }
 
-                out.textContent = `Status: ${res.status} ${res.statusText}\n\n${pretty}`;
+                out.textContent = `Worker: ${workerUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
 
             } catch (err) {
-                out.textContent = 'Error de red: ' + err.message;
+                out.textContent = `Error de red contra ${workerUrl}\n\n${err.message}`;
             } finally {
                 // --- UX Mejorada: Restaurar el botón ---
                 button.disabled = false;
