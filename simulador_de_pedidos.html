@@ -147,6 +147,13 @@
             margin: 0 0 1rem;
         }
 
+        .field-hint {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.78rem;
+            color: #7a8794;
+        }
+
         .item-card {
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -300,6 +307,17 @@
                 <input type="number" id="branch" value="" required>
             </div>
 
+            <!-- Solo MercadoPago. Se muestra/oculta en updatePlatformOptions(). -->
+            <div class="form-group" id="userIdGroup" hidden>
+                <label for="userId">MercadoPago User ID</label>
+                <input type="text" id="userId" inputmode="numeric" pattern="[0-9]+" value=""
+                    placeholder="175294506" title="Solo números: es el user_id del merchant en MercadoPago">
+                <small class="field-hint">
+                    Es el merchant al que Platform le va a resolver la orden. Si no coincide con el
+                    de la sucursal, el worker avisa pero igual lo manda.
+                </small>
+            </div>
+
             <div class="form-group">
                 <label for="name">Nombre</label>
                 <input type="text" id="name" value="" required>
@@ -396,9 +414,10 @@
 
         // Worker principal — PedidosYa / Pedigrido (worker.js, :8787)
         // const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
-        const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
+        const WORKER_URL = 'http://localhost:8787/';
 
         // Worker MercadoPago Delivery (workerMPD.js, :8788)
+        // Ojo: en LOCAL el circuito no se cierra — Platform no llega a localhost.
         const WORKER_URL_MPD = 'https://smartfranmpd.matiasa.workers.dev/';
         // const WORKER_URL_MPD = 'http://localhost:8788/';
 
@@ -417,6 +436,10 @@
 
         const advancedWrapper = document.getElementById('advancedWrapper');
         const advancedDetails = document.getElementById('advancedPedigrido');
+
+        // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
+        const userIdGroup = document.getElementById('userIdGroup');
+        const userIdInput = document.getElementById('userId');
 
         const updatePlatformOptions = () => {
             const isWeiss = tenantSelect.value === 'weiss';
@@ -441,6 +464,15 @@
             // Cerrarlo además de ocultarlo. Si queda abierto e invisible, al volver
             // a Pedigrido se aplicaría sin que el usuario lo esté viendo.
             if (!isPedigrido) advancedDetails.open = false;
+
+            // userId: obligatorio con MercadoPago, no existe para el resto.
+            // Se DESHABILITA además de ocultarse, no solo se le saca 'required':
+            // un input oculto que no valida corta el submit con "not focusable",
+            // y el usuario no ve ningún error. Los deshabilitados no se validan.
+            const isMercadoPago = platformSelect.value === 'mercadopago';
+            userIdGroup.hidden = !isMercadoPago;
+            userIdInput.required = isMercadoPago;
+            userIdInput.disabled = !isMercadoPago;
         };
 
         // --- Catálogo de productos (solo precarga: el worker acepta cualquier SKU) ---
@@ -737,6 +769,12 @@
                     scenario: "default"
                 }
             };
+
+            // Solo MercadoPago lo pide. Es el merchant que Platform va a resolver:
+            // ya no se deriva de la sucursal, manda el que se escribe acá.
+            if (platform === 'mercadopago') {
+                payload.data.userId = Number(userIdInput.value.trim());
+            }
 
             // Solo si el usuario desplegó el avanzado. Cerrado = orden por defecto.
             if (!advancedWrapper.hidden && advancedDetails.open) {
