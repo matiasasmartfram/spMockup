@@ -191,20 +191,36 @@
             color: #7a8794;
         }
 
-        /* --- Tarjeta de promoción --- */
+        /* --- Tarjetas compuestas: promoción y canje ---
+           Las dos tienen la misma anatomía (cabecera lógica + componentes que
+           descuentan stock); solo cambia el color para distinguirlas de un
+           vistazo dentro de una orden mixta. */
         .promo-card {
             border-left: 4px solid #f39c12;
             background-color: #fffdf7;
         }
 
-        .promo-badge {
+        .canje-card {
+            border-left: 4px solid #8e44ad;
+            background-color: #fcf9ff;
+        }
+
+        .promo-badge,
+        .canje-badge {
             grid-column: 1 / -1;
             font-size: 0.75rem;
             font-weight: 700;
-            color: #b9770e;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             margin-bottom: 0.5rem;
+        }
+
+        .promo-badge {
+            color: #b9770e;
+        }
+
+        .canje-badge {
+            color: #7d3c98;
         }
 
         .optiongroups-box {
@@ -253,6 +269,47 @@
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+        }
+
+        /* --- Datos de canje del cliente (order.user) --- */
+        .loyalty-box {
+            margin-top: 1rem;
+            padding: 0.85rem;
+            border: 1px solid #d7bde2;
+            border-left: 4px solid #8e44ad;
+            border-radius: 6px;
+            background-color: #fcf9ff;
+        }
+
+        .loyalty-box>label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #7d3c98;
+            margin-bottom: 0.25rem;
+        }
+
+        .loyalty-hint {
+            font-size: 0.75rem;
+            color: #7a8794;
+            margin: 0 0 0.75rem;
+        }
+
+        .loyalty-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem 0.75rem;
+        }
+
+        .loyalty-grid label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .loyalty-grid input,
+        .loyalty-grid select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
         }
 
         .btn-small {
@@ -380,11 +437,44 @@
                             </select>
                         </div>
 
-                        <label>Productos y promociones</label>
+                        <label>Productos, promociones y canjes</label>
                         <div id="itemsContainer"></div>
                         <div class="items-buttons">
                             <button type="button" id="addItemButton" class="btn-small">+ Agregar producto</button>
                             <button type="button" id="addPromoButton" class="btn-small">+ Agregar Promoción</button>
+                            <button type="button" id="addCanjeButton" class="btn-small">+ Agregar Canje</button>
+                        </div>
+
+                        <!-- Aparece solo si hay al menos una tarjeta de canje. Ver
+                             refreshLoyaltyVisibility(): oculto = no se manda 'loyalty'. -->
+                        <div id="loyaltyBox" class="loyalty-box" hidden>
+                            <label>🎟️ Datos de canje (cliente)</label>
+                            <p class="loyalty-hint">
+                                Viajan en <code>order.user</code> y SmartPedidos los traspasa a
+                                SmartLoyalty, que valida el saldo y descuenta los puntos. El
+                                documento pisa al del cliente fijo de la orden.
+                            </p>
+                            <div class="loyalty-grid">
+                                <div class="form-group">
+                                    <label for="tipoIdentificacion">Tipo de identificación</label>
+                                    <select id="tipoIdentificacion">
+                                        <option value="DNI">DNI</option>
+                                        <option value="RUC">RUC</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loyaltyDni">Documento</label>
+                                    <input type="text" id="loyaltyDni" value="39690194">
+                                </div>
+                                <div class="form-group">
+                                    <label for="numeroTarjetaLoyalty">N° tarjeta loyalty</label>
+                                    <input type="text" id="numeroTarjetaLoyalty" value="1234567890">
+                                </div>
+                                <div class="form-group">
+                                    <label for="puntosCanjeados">Puntos canjeados (total)</label>
+                                    <input type="number" id="puntosCanjeados" min="0" step="1" value="5000">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="total-line">
@@ -496,8 +586,63 @@
             ]
         };
 
-        // Con qué se precarga un componente nuevo agregado a mano.
+        // --- Canje de ejemplo (misma idea: todo editable) ---
+        // Espeja PEDIGRIDO_DEFAULT_CANJE de worker.js. Un canje tiene la misma
+        // anatomía que una promo, pero viaja con canje: 1 y promotion: false, y
+        // exige los datos del socio del bloque de abajo.
+        const PEDIGRIDO_CANJE_DEFAULT = {
+            name: 'Canje 1 Kilo - 5000 puntos + 50%',
+            sku: '12931',
+            unitPrice: 5000,
+            notes: '',
+            optionGroups: [
+                { name: 'Kilo de Helado', sku: '64', notes: 'Chocolate, Dulce de Leche, Frutilla, Vainilla' }
+            ]
+        };
+
+        // Con qué se precarga un componente nuevo agregado a mano. En el canje las
+        // notas van cargadas porque ahí son obligatorias (el worker rechaza un
+        // componente de canje sin sabores); en la promo son opcionales.
         const PROMO_GROUP_TEMPLATE = { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: '' };
+        const CANJE_GROUP_TEMPLATE = { name: 'Kilo de Helado', sku: '64', notes: 'Chocolate' };
+
+        // Textos y precarga de cada tipo de tarjeta compuesta. Es lo único que
+        // difiere entre una promo y un canje del lado del front.
+        const COMPOSITE_KINDS = {
+            promo: {
+                cardClass: 'promo-card',
+                badge: '🎁 Promoción',
+                badgeClass: 'promo-badge',
+                nameLabel: 'Nombre de la promo',
+                skuLabel: 'SKU promo (no descuenta stock)',
+                qtyTitle: 'Siempre 1: una promo por tarjeta',
+                removeTitle: 'Quitar promoción',
+                groupsLabel: 'Componentes de la promo',
+                groupsHint: `Son los productos reales que descuentan stock. Su precio siempre
+                             va en 0. Para pedir 2 promos agregá otra tarjeta: cada promo se
+                             envía por separado con cantidad 1.`,
+                notesLabel: 'Notas (sabor / variante)',
+                preset: PEDIGRIDO_PROMO_DEFAULT,
+                groupTemplate: PROMO_GROUP_TEMPLATE
+            },
+            canje: {
+                cardClass: 'canje-card',
+                badge: '🎟️ Canje de puntos',
+                badgeClass: 'canje-badge',
+                nameLabel: 'Nombre del canje',
+                skuLabel: 'SKU canje (no descuenta stock)',
+                qtyTitle: 'Siempre 1: un canje por tarjeta',
+                removeTitle: 'Quitar canje',
+                groupsLabel: 'Componentes del canje',
+                groupsHint: `Son los productos reales que descuentan stock. Su precio siempre
+                             va en 0 y las notas son obligatorias: ahí van los sabores. Para
+                             dos canjes agregá otra tarjeta, cada uno se envía por separado
+                             con cantidad 1.`,
+                notesLabel: 'Sabores / variante (obligatorio)',
+                preset: PEDIGRIDO_CANJE_DEFAULT,
+                groupTemplate: CANJE_GROUP_TEMPLATE
+            }
+        };
 
         const DEFAULT_SKU = '64';
         const itemsContainer = document.getElementById('itemsContainer');
@@ -540,10 +685,12 @@
             return card;
         };
 
-        // Un componente de la promo = un optionGroup. Su 'sku' es el que descuenta
-        // stock, y su precio es siempre 0 (el precio de la promo va en la cabecera).
-        // El 'id' no es un input: se deriva del SKU (ver readOptionGroups).
-        const buildOptionGroupRow = (group) => {
+        // Un componente = un optionGroup, tanto en una promo como en un canje. Su
+        // 'sku' es el que descuenta stock, y su precio es siempre 0 (el precio va
+        // en la cabecera). El 'id' no es un input: se deriva del SKU (ver
+        // readOptionGroups). Lo único que cambia entre promo y canje es la etiqueta
+        // de las notas, que en el canje son obligatorias.
+        const buildOptionGroupRow = (group, notesLabel = 'Notas (sabor / variante)') => {
             const row = document.createElement('div');
             row.className = 'optiongroup-row';
             row.innerHTML = `
@@ -557,59 +704,60 @@
                 </div>
                 <button type="button" class="btn-remove btn-remove-group" title="Quitar componente">&times;</button>
                 <div class="og-notes">
-                    <label>Notas (sabor / variante)</label>
+                    <label>${notesLabel}</label>
                     <input type="text" class="og-notes-input" value="${group.notes}">
                 </div>`;
             return row;
         };
 
+        // Tarjeta compuesta: promoción o canje. Las dos tienen la misma anatomía
+        // —cabecera con SKU lógico + componentes que descuentan stock— así que se
+        // arman con la misma función y solo cambian los textos (COMPOSITE_KINDS).
         // A diferencia del producto, acá el 'name' es texto libre: no hay catálogo
-        // de promos, se escribe la descripción comercial que se quiera simular.
-        const buildPromoCard = () => {
-            const preset = PEDIGRIDO_PROMO_DEFAULT;
+        // de promos ni de canjes, se escribe la descripción comercial a simular.
+        const buildCompositeCard = (kind) => {
+            const cfg = COMPOSITE_KINDS[kind];
+            const preset = cfg.preset;
 
             const card = document.createElement('div');
-            card.className = 'item-card promo-card';
-            card.dataset.type = 'promo';
+            card.className = `item-card ${cfg.cardClass}`;
+            card.dataset.type = kind;
             card.innerHTML = `
                 <div class="item-row">
-                    <span class="promo-badge">🎁 Promoción</span>
+                    <span class="${cfg.badgeClass}">${cfg.badge}</span>
                     <div class="item-full">
-                        <label>Nombre de la promo</label>
-                        <input type="text" class="promo-name" value="${preset.name}">
+                        <label>${cfg.nameLabel}</label>
+                        <input type="text" class="composite-name" value="${preset.name}">
                     </div>
                     <div>
-                        <label>SKU promo (no descuenta stock)</label>
-                        <input type="text" class="promo-sku" value="${preset.sku}">
+                        <label>${cfg.skuLabel}</label>
+                        <input type="text" class="composite-sku" value="${preset.sku}">
                     </div>
                     <div>
                         <label>Precio</label>
-                        <input type="number" class="promo-price" min="0" step="1" value="${preset.unitPrice}">
+                        <input type="number" class="composite-price" min="0" step="1" value="${preset.unitPrice}">
                     </div>
                     <div>
                         <label>Cantidad</label>
-                        <input type="number" class="promo-qty" value="1" disabled title="Siempre 1: una promo por tarjeta">
+                        <input type="number" class="composite-qty" value="1" disabled title="${cfg.qtyTitle}">
                     </div>
-                    <button type="button" class="btn-remove btn-remove-card" title="Quitar promoción">&times;</button>
+                    <button type="button" class="btn-remove btn-remove-card" title="${cfg.removeTitle}">&times;</button>
                     <div class="item-notes">
                         <label>Notas generales</label>
-                        <input type="text" class="promo-notes-input" value="${preset.notes}">
+                        <input type="text" class="composite-notes-input" value="${preset.notes}">
                     </div>
 
                     <div class="optiongroups-box">
-                        <label>Componentes de la promo</label>
-                        <p class="optiongroup-hint">
-                            Son los productos reales que descuentan stock. Su precio siempre
-                            va en 0. Para pedir 2 promos agregá otra tarjeta: cada promo se
-                            envía por separado con cantidad 1.
-                        </p>
+                        <label>${cfg.groupsLabel}</label>
+                        <p class="optiongroup-hint">${cfg.groupsHint}</p>
                         <div class="optiongroups-container"></div>
                         <button type="button" class="btn-small btn-add-group">+ Agregar componente</button>
                     </div>
                 </div>`;
 
             const groupsContainer = card.querySelector('.optiongroups-container');
-            preset.optionGroups.forEach(group => groupsContainer.appendChild(buildOptionGroupRow(group)));
+            preset.optionGroups.forEach(group =>
+                groupsContainer.appendChild(buildOptionGroupRow(group, cfg.notesLabel)));
 
             return card;
         };
@@ -632,16 +780,22 @@
             }));
 
         // En los productos el 'name' no es editable: sale del select del catálogo.
-        // En las promos sí, y además 'quantity' se fuerza a 1 (regla del formato:
-        // dos promos son dos líneas separadas, no una línea con cantidad 2).
+        // En promos y canjes sí, y además 'quantity' se fuerza a 1 (regla del
+        // formato: dos promos —o dos canjes— son dos líneas separadas, no una
+        // línea con cantidad 2, para que cada unidad lleve sus propios sabores).
+        //
+        // 'promotion' y 'canje' viajan como booleanos: el worker los traduce a los
+        // flags que espera la orden (promotion true/false, canje 1/0).
         const readItems = () => Array.from(itemsContainer.querySelectorAll('.item-card')).map(card => {
-            if (card.dataset.type === 'promo') {
-                const notes = card.querySelector('.promo-notes-input').value.trim();
+            const kind = card.dataset.type;
+
+            if (kind === 'promo' || kind === 'canje') {
+                const notes = card.querySelector('.composite-notes-input').value.trim();
                 return {
-                    promotion: true,
-                    name: card.querySelector('.promo-name').value.trim(),
-                    sku: card.querySelector('.promo-sku').value.trim(),
-                    unitPrice: Number(card.querySelector('.promo-price').value),
+                    ...(kind === 'canje' ? { canje: true } : { promotion: true }),
+                    name: card.querySelector('.composite-name').value.trim(),
+                    sku: card.querySelector('.composite-sku').value.trim(),
+                    unitPrice: Number(card.querySelector('.composite-price').value),
                     quantity: 1,
                     notes: notes || null,
                     optionGroups: readOptionGroups(card)
@@ -657,33 +811,54 @@
             };
         });
 
+        // El bloque de datos del socio existe solo si hay algo que canjear: el
+        // worker rechaza 'loyalty' sin canjes y canjes sin 'loyalty'.
+        const loyaltyBox = document.getElementById('loyaltyBox');
+        const hasCanje = () => itemsContainer.querySelector('[data-type="canje"]') !== null;
+        const refreshLoyaltyVisibility = () => { loyaltyBox.hidden = !hasCanje(); };
+
+        // Oculto = no se manda. Misma lógica de "visible = activo" que el avanzado.
+        const readLoyalty = () => loyaltyBox.hidden ? null : {
+            dni: document.getElementById('loyaltyDni').value.trim(),
+            tipoIdentificacion: document.getElementById('tipoIdentificacion').value,
+            numeroTarjetaLoyalty: document.getElementById('numeroTarjetaLoyalty').value.trim(),
+            puntosCanjeados: Number(document.getElementById('puntosCanjeados').value)
+        };
+
         const renderTotal = () => {
             const total = readItems().reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
             document.getElementById('itemsTotal').textContent = '$' + total.toLocaleString('es-AR');
         };
 
-        // No se puede quedar sin líneas (productos + promos): con una sola, el botón
-        // se deshabilita. Misma regla adentro de cada promo: mínimo un componente.
+        // No se puede quedar sin líneas (productos + promos + canjes): con una sola,
+        // el botón se deshabilita. Misma regla adentro de cada tarjeta compuesta:
+        // mínimo un componente, o el parser no la arma como promo/canje.
         const refreshRemoveButtons = () => {
             const cards = itemsContainer.querySelectorAll('.item-card');
             cards.forEach(card => { card.querySelector('.btn-remove-card').disabled = cards.length === 1; });
 
-            itemsContainer.querySelectorAll('[data-type="promo"]').forEach(card => {
+            itemsContainer.querySelectorAll('[data-type="promo"], [data-type="canje"]').forEach(card => {
                 const groups = card.querySelectorAll('.optiongroup-row');
                 groups.forEach(row => { row.querySelector('.btn-remove-group').disabled = groups.length === 1; });
             });
         };
 
-        const addItem = (sku = DEFAULT_SKU) => {
-            itemsContainer.appendChild(buildItemCard(sku));
+        // Todo alta o baja de línea recalcula lo mismo: mínimos, total y si el
+        // bloque de datos del socio corresponde mostrarlo.
+        const refreshItems = () => {
             refreshRemoveButtons();
+            refreshLoyaltyVisibility();
             renderTotal();
         };
 
-        const addPromo = () => {
-            itemsContainer.appendChild(buildPromoCard());
-            refreshRemoveButtons();
-            renderTotal();
+        const addItem = (sku = DEFAULT_SKU) => {
+            itemsContainer.appendChild(buildItemCard(sku));
+            refreshItems();
+        };
+
+        const addComposite = (kind) => {
+            itemsContainer.appendChild(buildCompositeCard(kind));
+            refreshItems();
         };
 
         itemsContainer.addEventListener('input', renderTotal);
@@ -702,26 +877,28 @@
         });
 
         itemsContainer.addEventListener('click', e => {
-            // Los componentes de la promo se van antes que la tarjeta: el botón de
-            // grupo también lleva 'btn-remove', así que se chequea primero.
+            // Los componentes se van antes que la tarjeta: el botón de grupo
+            // también lleva 'btn-remove', así que se chequea primero.
             if (e.target.classList.contains('btn-remove-group')) {
                 e.target.closest('.optiongroup-row').remove();
             } else if (e.target.classList.contains('btn-add-group')) {
+                // La precarga del componente nuevo depende del tipo de tarjeta.
+                const cfg = COMPOSITE_KINDS[e.target.closest('.item-card').dataset.type];
                 e.target.closest('.optiongroups-box')
                     .querySelector('.optiongroups-container')
-                    .appendChild(buildOptionGroupRow(PROMO_GROUP_TEMPLATE));
+                    .appendChild(buildOptionGroupRow(cfg.groupTemplate, cfg.notesLabel));
             } else if (e.target.classList.contains('btn-remove-card')) {
                 e.target.closest('.item-card').remove();
             } else {
                 return;
             }
 
-            refreshRemoveButtons();
-            renderTotal();
+            refreshItems();
         });
 
         document.getElementById('addItemButton').addEventListener('click', () => addItem());
-        document.getElementById('addPromoButton').addEventListener('click', () => addPromo());
+        document.getElementById('addPromoButton').addEventListener('click', () => addComposite('promo'));
+        document.getElementById('addCanjeButton').addEventListener('click', () => addComposite('canje'));
 
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
@@ -783,6 +960,11 @@
                     paymentMode: document.getElementById('paymentMode').value,
                     items: readItems()
                 };
+
+                // Solo cuando hay al menos un canje. Sin canjes el worker rechaza
+                // el bloque, y con canjes lo exige.
+                const loyalty = readLoyalty();
+                if (loyalty) payload.data.advanced.loyalty = loyalty;
             }
 
             // Cada plataforma tiene su worker: con dos, "no responde" es ambiguo,
