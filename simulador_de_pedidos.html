@@ -55,7 +55,8 @@
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 0.75rem;
             font-size: 1rem;
@@ -66,10 +67,42 @@
             background-color: white;
         }
 
-        input:focus {
+        input:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+
+        textarea {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            resize: vertical;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+
+        /* Estado de la validación del JSON pegado (bloque de MercadoPago) */
+        .json-status {
+            margin: 0.5rem 0 0;
+            padding: 0.5rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background-color: #f2f4f6;
+            color: #7a8794;
+            word-break: break-word;
+        }
+
+        .json-status.is-valid {
+            background-color: #eafaf1;
+            color: #1e7e4f;
+        }
+
+        .json-status.is-invalid {
+            background-color: #fdedec;
+            color: #b03a2e;
         }
 
         button {
@@ -483,6 +516,40 @@
                         </div>
                     </div>
                 </details>
+
+                <!-- MercadoPago no compone la orden: la inyecta entera. Ver §3.1.2. -->
+                <details id="advancedMercadoPago" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (MercadoPago) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de MercadoPago tal como la devuelve producción y se
+                            reenvía a Staging. Si dejás este bloque cerrado se envía la orden fija
+                            de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="mpdOrderJson">Orden de MercadoPago (JSON)</label>
+                            <textarea id="mpdOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": "47983369012", "type": "DELIVERY", "createdAt": "…", "merchant": { … }, "items": [ … ], "total": { … }, "customer": { … }, "extension": { "store": { … } } }'></textarea>
+                            <small class="field-hint">
+                                El destino lo mandan los campos de arriba, no la orden pegada: el
+                                worker pisa <code>merchant.id</code> con el <b>MercadoPago User
+                                    ID</b> y <code>extension.store.id</code> con el
+                                <code>branchReference</code> de la <b>Branch ID</b>.
+                            </small>
+                        </div>
+
+                        <p id="mpdOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform), se refrescan las fechas
+                            conservando sus offsets, y se descartan
+                            <code>branchId</code>, <code>user_id</code> y <code>state</code>, que
+                            Platform inyecta por su cuenta. Todo lo demás viaja tal cual.
+                        </p>
+                    </div>
+                </details>
             </div>
 
             <button type="submit" id="submitButton">Crear Pedido</button>
@@ -524,8 +591,15 @@
         const gridoOnlyOptions = GRIDO_ONLY_PLATFORMS
             .map(value => platformSelect.querySelector(`option[value="${value}"]`));
 
+        // Cada plataforma con avanzado tiene su propio <details>: las estructuras
+        // de orden no se parecen en nada y el modo tampoco (Pedigrido COMPONE la
+        // orden campo por campo; MercadoPago INYECTA una entera). El wrapper es
+        // el contenedor común.
         const advancedWrapper = document.getElementById('advancedWrapper');
-        const advancedDetails = document.getElementById('advancedPedigrido');
+        const advancedByPlatform = {
+            pedigrido: document.getElementById('advancedPedigrido'),
+            mercadopago: document.getElementById('advancedMercadoPago')
+        };
 
         // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
         const userIdGroup = document.getElementById('userIdGroup');
@@ -546,14 +620,18 @@
                 platformSelect.value = 'pedidosya';
             }
 
-            // El bloque avanzado por ahora es propio de Pedigrido: cada plataforma
-            // tiene su propia estructura de orden y necesita su propio avanzado.
-            const isPedigrido = platformSelect.value === 'pedigrido';
-            advancedWrapper.hidden = !isPedigrido;
+            // Se muestra el <details> de la plataforma seleccionada, si tiene uno.
+            const activeAdvanced = advancedByPlatform[platformSelect.value] ?? null;
+            advancedWrapper.hidden = !activeAdvanced;
 
-            // Cerrarlo además de ocultarlo. Si queda abierto e invisible, al volver
-            // a Pedigrido se aplicaría sin que el usuario lo esté viendo.
-            if (!isPedigrido) advancedDetails.open = false;
+            // Los inactivos se ocultan Y se cierran. Si uno queda abierto e
+            // invisible, al volver a esa plataforma se aplicaría sin que el
+            // usuario lo esté viendo.
+            Object.values(advancedByPlatform).forEach(details => {
+                const isActive = details === activeAdvanced;
+                details.hidden = !isActive;
+                if (!isActive) details.open = false;
+            });
 
             // userId: obligatorio con MercadoPago, no existe para el resto.
             // Se DESHABILITA además de ocultarse, no solo se le saca 'required':
@@ -900,6 +978,61 @@
         document.getElementById('addPromoButton').addEventListener('click', () => addComposite('promo'));
         document.getElementById('addCanjeButton').addEventListener('click', () => addComposite('canje'));
 
+        /*───────────────────────────────────────────────────────────────────*
+         * Bloque avanzado de MercadoPago — INYECCIÓN de una orden
+         *
+         * Acá no se compone nada: se pega una orden de producción entera y se
+         * reenvía. La validación de verdad la hace el worker, que conoce las
+         * trampas del parser de Platform (externalCode como número, promos sin
+         * externalCode en las opciones, fullItemsPrice >= 1.000.000, etc.) y
+         * responde un 400 diciendo el campo exacto. Esto de acá es solo para no
+         * descubrir un typo de JSON después de haber mandado el pedido.
+         *───────────────────────────────────────────────────────────────────*/
+        const mpdOrderInput = document.getElementById('mpdOrderJson');
+        const mpdOrderStatus = document.getElementById('mpdOrderStatus');
+
+        // Devuelve { order } o { error }. Es exactamente lo que se manda en el submit.
+        const readMpdOrder = () => {
+            const raw = mpdOrderInput.value.trim();
+            if (!raw) return { error: 'Pegá la orden de MercadoPago que querés inyectar.' };
+
+            try {
+                return { order: JSON.parse(raw) };
+            } catch (err) {
+                return { error: `JSON inválido: ${err.message}` };
+            }
+        };
+
+        const renderMpdStatus = () => {
+            if (!mpdOrderInput.value.trim()) {
+                mpdOrderStatus.className = 'json-status';
+                mpdOrderStatus.textContent = 'Pegá una orden para validarla.';
+                return;
+            }
+
+            const { order, error } = readMpdOrder();
+
+            if (error) {
+                mpdOrderStatus.className = 'json-status is-invalid';
+                mpdOrderStatus.textContent = `❌ ${error}`;
+                return;
+            }
+
+            // El worker acepta también un array de una sola orden, así que el
+            // resumen tiene que reconocer las dos formas.
+            const target = Array.isArray(order) && order.length === 1 ? order[0] : order;
+            const items = Array.isArray(target?.items) ? target.items.length : 0;
+            const total = target?.total?.orderAmount?.value;
+
+            mpdOrderStatus.className = 'json-status is-valid';
+            mpdOrderStatus.textContent =
+                `✅ JSON válido · ${items} ítem${items === 1 ? '' : 's'}` +
+                (Number.isFinite(total) ? ` · total $${total.toLocaleString('es-AR')}` : '') +
+                (target?.id ? ` · id original ${target.id} (se reemplaza)` : '');
+        };
+
+        mpdOrderInput.addEventListener('input', renderMpdStatus);
+
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
         platformSelect.addEventListener('change', updatePlatformOptions);
@@ -921,6 +1054,39 @@
             const responseContainer = document.getElementById('responseContainer');
             const out = document.getElementById('respuesta');
             const button = document.getElementById('submitButton');
+
+            // "Desplegado = activo": cada plataforma arma su propio bloque avanzado.
+            // Se resuelve ANTES de bloquear el botón para poder abortar sin tener
+            // que restaurar la UI a mano.
+            const activeAdvanced = advancedByPlatform[platform] ?? null;
+            let advanced = null;
+
+            if (activeAdvanced && !advancedWrapper.hidden && activeAdvanced.open) {
+                if (platform === 'pedigrido') {
+                    // COMPOSICIÓN: la orden se arma con lo que hay en la UI.
+                    advanced = {
+                        deliveryMode: document.getElementById('deliveryMode').value,
+                        paymentMode: document.getElementById('paymentMode').value,
+                        items: readItems()
+                    };
+
+                    // Solo cuando hay al menos un canje. Sin canjes el worker rechaza
+                    // el bloque, y con canjes lo exige.
+                    const loyalty = readLoyalty();
+                    if (loyalty) advanced.loyalty = loyalty;
+                } else {
+                    // INYECCIÓN: viaja la orden pegada, tal cual. Si no parsea se
+                    // corta acá, sin tocar la red.
+                    const parsed = readMpdOrder();
+                    if (parsed.error) {
+                        renderMpdStatus();
+                        responseContainer.hidden = false;
+                        out.textContent = `No se envió nada.\n\n${parsed.error}`;
+                        return;
+                    }
+                    advanced = { order: parsed.order };
+                }
+            }
 
             // --- UX Mejorada: Feedback al usuario ---
             button.disabled = true;
@@ -953,19 +1119,8 @@
                 payload.data.userId = Number(userIdInput.value.trim());
             }
 
-            // Solo si el usuario desplegó el avanzado. Cerrado = orden por defecto.
-            if (!advancedWrapper.hidden && advancedDetails.open) {
-                payload.data.advanced = {
-                    deliveryMode: document.getElementById('deliveryMode').value,
-                    paymentMode: document.getElementById('paymentMode').value,
-                    items: readItems()
-                };
-
-                // Solo cuando hay al menos un canje. Sin canjes el worker rechaza
-                // el bloque, y con canjes lo exige.
-                const loyalty = readLoyalty();
-                if (loyalty) payload.data.advanced.loyalty = loyalty;
-            }
+            // Ya resuelto arriba, antes de bloquear el botón.
+            if (advanced) payload.data.advanced = advanced;
 
             // Cada plataforma tiene su worker: con dos, "no responde" es ambiguo,
             // así que la URL de destino se muestra en la respuesta.
