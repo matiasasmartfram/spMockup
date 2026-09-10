@@ -2,381 +2,574 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartFran - Status</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<title>Status</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; color: #212529; background: #f4f6f9; display: flex; min-height: 100vh; }
-
-  /* Sidebar */
-  .sidebar { width: 110px; min-height: 100vh; background: #fff; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; overflow-y: auto; }
-  .logo { padding: 12px 10px 14px; border-bottom: 1px solid #dee2e6; }
-  .logo-brand { font-size: 17px; font-weight: 700; line-height: 1.15; }
-  .logo-brand .brace { color: #1a5fc8; }
-  .logo-brand .text { color: #212529; }
-  .logo-ver { font-size: 10px; color: #6c757d; margin-top: 2px; }
-  .nav-group { padding: 10px 0 2px; }
-  .nav-group-title { font-size: 9.5px; font-weight: 600; color: #adb5bd; text-transform: uppercase; letter-spacing: 0.6px; padding: 0 10px 4px; }
-  .nav-item { display: block; padding: 4px 10px; font-size: 12px; color: #6c757d; cursor: pointer; border-radius: 3px; margin: 1px 4px; text-decoration: none; }
-  .nav-item:hover { background: #f1f3f5; color: #212529; }
-  .nav-item.active { color: #1a5fc8; background: #e8f0fb; }
-
-  /* Main */
-  .main { margin-left: 110px; flex: 1; display: flex; flex-direction: column; }
-  .topbar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; }
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
-  .back-btn { width: 28px; height: 28px; border-radius: 50%; background: #f1f3f5; border: 1px solid #dee2e6; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6c757d; font-size: 14px; }
-  .topbar-title { font-size: 16px; font-weight: 500; }
-  .topbar-user { font-size: 13px; color: #6c757d; cursor: pointer; }
-  .content { padding: 16px 20px; flex: 1; }
-
-  /* Top row */
-  .top-row { display: grid; grid-template-columns: 310px 1fr; gap: 14px; margin-bottom: 14px; }
-  .panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
-
-  /* Filter panel */
-  .filter-group { margin-bottom: 10px; }
-  .filter-label { font-size: 11px; color: #6c757d; margin-bottom: 3px; }
-  select, input[type="text"], input[type="date"] {
-    width: 100%; padding: 4px 8px; font-size: 12px; border: 1px solid #ced4da;
-    border-radius: 4px; background: #fff; color: #212529; height: 28px; outline: none;
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f5f7;
+    color: #222;
+    font-size: 14px;
   }
-  select:focus, input:focus { border-color: #86b7fe; box-shadow: 0 0 0 2px rgba(13,110,253,0.15); }
 
-  /* Stats panel */
-  .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .stats-header-title { font-size: 13px; font-weight: 500; }
-  .stats-controls { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #6c757d; }
-  .stats-controls select { width: auto; height: 24px; font-size: 11px; padding: 2px 4px; }
-  .interval-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: #6c757d; padding: 0 2px; }
-  .interval-btn:hover { color: #212529; }
-  .stats-body { text-align: center; padding: 16px 0 10px; }
-  .stats-big { font-size: 52px; font-weight: 300; color: #212529; line-height: 1; }
-  .stats-big-label { font-size: 12px; color: #6c757d; margin-top: 6px; }
-  .stats-sub { display: flex; justify-content: center; gap: 36px; margin-top: 16px; }
-  .stat-mini-n { font-size: 22px; font-weight: 400; color: #212529; }
-  .stat-mini-l { font-size: 11px; color: #6c757d; }
-  .stats-updated { font-size: 10px; color: #adb5bd; text-align: right; margin-top: 10px; }
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 14px 24px;
+    border-bottom: 1px solid #e2e4e8;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .back-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #1abfbf;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .header-left h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #222;
+  }
+  .header-right {
+    font-size: 14px;
+    color: #333;
+  }
+  .header-right .caret { margin-left: 4px; font-size: 11px; color: #888; }
 
-  /* Orders panel */
-  .orders-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px; }
-  .orders-title { font-size: 13px; font-weight: 500; margin-bottom: 12px; }
-  .filters-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 7px; align-items: end; }
-  .filter-input-wrap { position: relative; }
-  .filter-search-icon { position: absolute; left: 7px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #adb5bd; }
-  .filter-input-wrap input { padding-left: 26px; }
-  .f-sm { width: 130px; }
-  .f-md { width: 160px; }
-  .f-lg { width: 200px; }
-  .f-xl { width: 220px; }
-  .f-xs { width: 90px; }
-  .f-date { width: 150px; }
-  .actions-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-  .btn-update { padding: 5px 14px; background: #1a5fc8; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-  .btn-update:hover { background: #1550a8; }
+  /* Filters + status card row */
+  .top-section {
+    display: flex;
+    gap: 24px;
+    background: #fff;
+    margin: 20px;
+    padding: 20px 24px;
+    border-radius: 4px;
+    border: 1px solid #e2e4e8;
+  }
+  .filters {
+    flex: 0 0 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .field label {
+    display: block;
+    margin-bottom: 4px;
+    color: #333;
+    font-size: 13.5px;
+  }
+  select, input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #cfd3da;
+    border-radius: 3px;
+    font-size: 13.5px;
+    color: #444;
+    background: #fff;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23888'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 26px;
+  }
 
-  /* Table */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
-  th { text-align: left; padding: 8px 8px; font-weight: 500; font-size: 11px; color: #6c757d; border-bottom: 1px solid #dee2e6; white-space: nowrap; }
-  td { padding: 7px 8px; border-bottom: 1px solid #f1f3f5; white-space: nowrap; }
-  tbody tr:hover td { background: #f8f9fa; }
-  tbody tr.selected td { background: #e8f0fb; }
-  .badge { padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; display: inline-block; }
-  .badge-pendiente { background: #fff3cd; color: #856404; }
-  .badge-recibida { background: #d1ecf1; color: #0c5460; }
-  .badge-confirmada { background: #d4edda; color: #155724; }
-  .btn-ver { padding: 3px 10px; font-size: 11px; border: 1px solid #dee2e6; border-radius: 3px; background: #fff; color: #495057; cursor: pointer; }
-  .btn-ver:hover { background: #f1f3f5; }
+  .status-card {
+    flex: 1;
+    border-left: 1px solid #e2e4e8;
+    padding-left: 24px;
+    position: relative;
+  }
+  .status-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 18px 0;
+    color: #222;
+  }
+  .status-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  .status-topline .label {
+    font-weight: 700;
+    color: #222;
+  }
+  .ultimos-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #333;
+  }
+  .ultimos-group select {
+    width: 70px;
+    padding: 5px 20px 5px 8px;
+  }
+  .refresh-icon {
+    width: 20px;
+    height: 20px;
+    color: #555;
+    cursor: pointer;
+  }
+
+  .status-main {
+    text-align: center;
+  }
+  .status-main .big-number {
+    font-size: 56px;
+    font-weight: 300;
+    color: #444;
+    line-height: 1;
+  }
+  .status-main .sub-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+    margin-top: 6px;
+  }
+
+  .status-split {
+    display: flex;
+    justify-content: center;
+    gap: 90px;
+    margin-top: 24px;
+  }
+  .status-split div { text-align: center; }
+  .status-split .num {
+    font-size: 24px;
+    font-weight: 300;
+    color: #444;
+  }
+  .status-split .lbl {
+    font-size: 13.5px;
+    color: #222;
+    margin-top: 2px;
+  }
+
+  .updated-time {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    font-size: 12px;
+    color: #888;
+  }
+
+  /* Pedidos Entrantes */
+  .orders-section {
+    background: #fff;
+    margin: 20px;
+    padding: 20px 24px 8px 24px;
+    border-radius: 4px;
+    border: 1px solid #e2e4e8;
+  }
+  .orders-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    color: #222;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .search-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid #cfd3da;
+    border-radius: 3px;
+    padding: 0 10px;
+  }
+  .search-input svg { flex-shrink: 0; color: #888; margin-right: 6px; }
+  .search-input input {
+    border: none;
+    padding: 7px 0;
+  }
+  .search-input input:focus { outline: none; }
+
+  .update-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .update-btn {
+    background: #1770e6;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .page-size-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: #333;
+  }
+  .page-size-group select {
+    width: 72px;
+    padding: 7px 22px 7px 10px;
+  }
+
+  .pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 18px 0;
+    font-size: 13.5px;
+    color: #555;
+  }
+  .pagination-info { color: #666; }
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .page-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid #cfd3da;
+    background: #fff;
+    color: #444;
+    border-radius: 3px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .page-btn:hover:not(:disabled) {
+    background: #f0f2f5;
+  }
+  .page-btn.active {
+    background: #1770e6;
+    border-color: #1770e6;
+    color: #fff;
+  }
+  .page-btn:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    text-align: left;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #222;
+    padding: 10px 8px;
+    border-top: 1px solid #e2e4e8;
+    border-bottom: 1px solid #e2e4e8;
+  }
+  tbody td {
+    padding: 10px 8px;
+    font-size: 13.5px;
+    color: #333;
+    border-bottom: 1px solid #eef0f2;
+  }
+  td.link, .sucursal-link {
+    color: #1770e6;
+  }
+  .ver-mas-btn {
+    background: #fff;
+    border: 1px solid #cfd3da;
+    border-radius: 3px;
+    padding: 5px 12px;
+    font-size: 12.5px;
+    color: #333;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<nav class="sidebar">
-  <div class="logo">
-    <div class="logo-brand">
-      <span class="brace">{smart</span><br><span class="text">fran}</span>
+  <div class="header">
+    <div class="header-left">
+      <div class="back-btn">&#8592;</div>
+      <h1>Status</h1>
     </div>
-    <div class="logo-ver">V7.1.2</div>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Gestión</div>
-    <a class="nav-item" href="#">Usuarios</a>
-    <a class="nav-item" href="#">Plataformas</a>
-    <a class="nav-item" href="#">Courier</a>
-    <a class="nav-item" href="#">Cadenas</a>
-    <a class="nav-item" href="#">Clientes</a>
-    <a class="nav-item" href="#">Sucursales</a>
-    <a class="nav-item" href="#">Regiones</a>
-    <a class="nav-item" href="#">Países</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Dashboard</div>
-    <a class="nav-item active" href="#">Status</a>
-    <a class="nav-item" href="#">Reporting</a>
-    <a class="nav-item" href="#">Releases</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Swagger</div>
-    <a class="nav-item" href="#">Platform</a>
-    <a class="nav-item" href="#">Concentrador</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-group-title">Monitorización</div>
-    <a class="nav-item" href="#">DeadLetter</a>
-    <a class="nav-item" href="#">Latencias</a>
-  </div>
-</nav>
-
-<!-- Main -->
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-left">
-      <button class="back-btn">&#8592;</button>
-      <span class="topbar-title">Status</span>
-    </div>
-    <div class="topbar-user">Hola Matias! ▾</div>
+    <div class="header-right">Hola Matias! <span class="caret">&#9662;</span></div>
   </div>
 
-  <div class="content">
-    <div class="top-row">
-
-      <!-- Filter panel -->
-      <div class="panel">
-        <div class="filter-group">
-          <div class="filter-label">País</div>
-          <select><option>Todos los Países</option><option>Argentina</option><option>Uruguay</option><option>Chile</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label">Provincia</div>
-          <select><option>Todas las Provincias</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label">Ciudad</div>
-          <select><option>Todas las Ciudades</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label">Cadenas</div>
-          <select><option>Todos las Cadenas</option><option>Grido</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label">Regiones</div>
-          <select><option>Todos las Regiones</option></select>
-        </div>
+  <div class="top-section">
+    <div class="filters">
+      <div class="field">
+        <label>Pa&iacute;s</label>
+        <select><option>Todos los Pa&iacute;ses</option></select>
       </div>
-
-      <!-- Estado de Conexiones -->
-      <div class="panel">
-        <div class="stats-header">
-          <div class="stats-header-title">Estado de Conexiones</div>
-          <div class="stats-controls">
-            Últimos:
-            <select id="interval-sel">
-              <option value="1m">1m</option>
-              <option value="5m">5m</option>
-              <option value="15m">15m</option>
-              <option value="30m">30m</option>
-            </select>
-            <button class="interval-btn" onclick="refreshStats()" title="Actualizar">&#x27F3;</button>
-          </div>
-        </div>
-        <div style="font-size: 12px; color: #6c757d; margin-bottom: 6px;">Sucursales</div>
-        <div class="stats-body">
-          <div class="stats-big" id="stat-total">2312</div>
-          <div class="stats-big-label">Sucursales Registradas</div>
-          <div class="stats-sub">
-            <div>
-              <div class="stat-mini-n" id="stat-online">1976</div>
-              <div class="stat-mini-l">Online</div>
-            </div>
-            <div>
-              <div class="stat-mini-n" id="stat-offline">336</div>
-              <div class="stat-mini-l">Offline</div>
-            </div>
-          </div>
-        </div>
-        <div class="stats-updated" id="stats-time">Actualizado: 14:55:47</div>
+      <div class="field">
+        <label>Provincia</label>
+        <select><option>Todas las Provincias</option></select>
+      </div>
+      <div class="field">
+        <label>Ciudad</label>
+        <select><option>Todas las Ciudades</option></select>
+      </div>
+      <div class="field">
+        <label>Cadenas</label>
+        <select><option>Todas las Cadenas</option></select>
+      </div>
+      <div class="field">
+        <label>Regiones</label>
+        <select><option>Todas las Regiones</option></select>
       </div>
     </div>
 
-    <!-- Pedidos Entrantes -->
-    <div class="orders-panel">
-      <div class="orders-title">Pedidos Entrantes</div>
-
-      <div class="filters-row">
-        <div class="filter-input-wrap f-md">
-          <i class="ti ti-search filter-search-icon"></i>
-          <input type="text" placeholder="Nº Orden" id="search-orden">
+    <div class="status-card">
+      <h2 class="status-title">Estado de Conexiones</h2>
+      <div class="status-topline">
+        <span class="label">Sucursales</span>
+        <div class="ultimos-group">
+          <span>Ultimos:</span>
+          <select><option>1m</option></select>
+          <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+          </svg>
         </div>
-        <input type="text" class="f-sm" placeholder="Nº Sucursal" id="search-suc">
-        <input type="text" class="f-xs" placeholder="SKU" id="search-sku">
-        <select class="f-md" id="filter-estado">
-          <option value="">Todos los Estados</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Recibida">Recibida</option>
-          <option value="Confirmada">Confirmada</option>
-        </select>
-        <select class="f-lg" id="filter-motivo">
-          <option>Todos los Motivos de Rechazo</option>
-        </select>
-        <select class="f-lg" id="filter-plataforma">
-          <option value="">Todas las Plataformas</option>
-          <option value="PedidosYa">PedidosYa</option>
-          <option value="PediGrido">PediGrido</option>
-        </select>
-        <select class="f-md" id="filter-pais">
-          <option value="">Todos los Países</option>
-          <option value="Argentina">Argentina</option>
-          <option value="Uruguay">Uruguay</option>
-        </select>
       </div>
-
-      <div class="filters-row">
-        <input type="date" class="f-date" id="filter-fecha">
-        <select class="f-md">
-          <option>Más nuevo primero</option>
-          <option>Más antiguo primero</option>
-        </select>
-        <select class="f-md">
-          <option>Cloud/No Cloud</option>
-          <option>Cloud</option>
-          <option>No Cloud</option>
-        </select>
-        <select class="f-md">
-          <option>Turbo/No Turbo</option>
-          <option>Turbo</option>
-          <option>No Turbo</option>
-        </select>
-        <select class="f-lg">
-          <option>Todas las Cadenas</option>
-          <option>Grido</option>
-        </select>
-        <select class="f-md">
-          <option>Canje/Sin Canje</option>
-          <option>Canje</option>
-          <option>Sin Canje</option>
-        </select>
+      <div class="status-main">
+        <div class="big-number">2351</div>
+        <div class="sub-label">Sucursales Registradas</div>
       </div>
-
-      <div class="filters-row">
-        <select class="f-md">
-          <option>S/No PickedUp</option>
-          <option>PickedUp</option>
-          <option>No PickedUp</option>
-        </select>
-        <select class="f-lg">
-          <option>Todos los deliveries</option>
-        </select>
-        <input type="text" class="f-xs" value="0">
+      <div class="status-split">
+        <div>
+          <div class="num">2021</div>
+          <div class="lbl">Online</div>
+        </div>
+        <div>
+          <div class="num">330</div>
+          <div class="lbl">Offline</div>
+        </div>
       </div>
-
-      <div class="actions-row">
-        <button class="btn-update" onclick="applyFilters()">&#x27F3; Actualizar</button>
-      </div>
-
-      <div class="table-wrap">
-        <table id="orders-table">
-          <thead>
-            <tr>
-              <th>Cadena</th>
-              <th>País</th>
-              <th>Plataforma</th>
-              <th>Nº Sucursal</th>
-              <th>Sucursal</th>
-              <th>Orden</th>
-              <th>Estado</th>
-              <th>Motivo</th>
-              <th>Creado</th>
-              <th>Actualizado</th>
-              <th>Monto</th>
-              <th>Detalles</th>
-            </tr>
-          </thead>
-          <tbody id="orders-body">
-          </tbody>
-        </table>
-      </div>
+      <div class="updated-time">Actualizado: 16:31:27</div>
     </div>
   </div>
-</div>
+
+  <div class="orders-section">
+    <h3 class="orders-title">Pedidos Entrantes</h3>
+
+    <div class="filters-grid">
+      <div class="search-input">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="N&deg; Orden">
+      </div>
+      <input type="text" placeholder="N&deg; Sucursal">
+      <input type="text" placeholder="SKU">
+      <select><option>Todos los Estados</option></select>
+
+      <select><option>Todos los Motivos de Rechazo</option></select>
+      <select><option>Todas las Plataformas</option></select>
+      <select><option>Todos los Paises</option></select>
+      <input type="date" placeholder="mm/dd/yyyy">
+
+      <select><option>Mas nuevo primero</option></select>
+      <select><option>Cloud/No Cloud</option></select>
+      <select><option>Turbo/No Turbo</option></select>
+      <select><option>Todas las Cadenas</option></select>
+
+      <select><option>Canje/Sin Canje</option></select>
+      <select><option>Si/No PickedUp</option></select>
+      <select><option>Todos los deliveries</option></select>
+      <input type="text" placeholder="Monto">
+    </div>
+
+    <div class="update-btn-row">
+      <div class="page-size-group">
+        <span>Mostrar:</span>
+        <select id="pageSizeSelect" onchange="onPageSizeChange()">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <span>registros</span>
+      </div>
+      <button class="update-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Cadena</th>
+          <th>Pais</th>
+          <th>Plataforma</th>
+          <th>N&deg; Sucursal</th>
+          <th>Sucursal</th>
+          <th>Orden</th>
+          <th>Estado</th>
+          <th>Motivo</th>
+          <th>Creado</th>
+          <th>Actualizado</th>
+          <th>Monto</th>
+          <th>Detalles</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTableBody">
+      </tbody>
+    </table>
+
+    <div class="pagination-bar">
+      <div class="pagination-info" id="paginationInfo"></div>
+      <div class="pagination-controls" id="paginationControls"></div>
+    </div>
+  </div>
 
 <script>
-const ordersData = [
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4591', sucursal:'SAN LUIS XII', orden:'2032894877', estado:'Pendiente', motivo:'', creado:'05/06/2026 14:55:51', actualizado:'05/06/2026 14:55:51', monto:'$12800', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PediGrido', sucId:'3476', sucursal:'PILAR III', orden:'4999960', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:51', actualizado:'05/06/2026 14:55:51', monto:'$15000', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PediGrido', sucId:'4731', sucursal:'CORRIENTES (GDOR GELABER)', orden:'4999958', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:50', actualizado:'05/06/2026 14:55:51', monto:'$14950', selected:true },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'5362', sucursal:'Estacion Ballestero', orden:'2032894879', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:48', actualizado:'05/06/2026 14:55:49', monto:'$20700', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4887', sucursal:'VILLA BALLESTER II', orden:'2032894843', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:48', actualizado:'05/06/2026 14:55:49', monto:'$5000', selected:false },
-  { cadena:'Grido', pais:'Uruguay', plataforma:'PedidosYa', sucId:'4289', sucursal:'EL PINAR', orden:'2032908772', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:34', actualizado:'05/06/2026 14:55:34', monto:'$205', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'3256', sucursal:'SANTA LUCIA II', orden:'2032881652', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:30', actualizado:'05/06/2026 14:55:35', monto:'$33630', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'4339', sucursal:'SAN MARTIN - BS AS', orden:'2032881973', estado:'Confirmada', motivo:'', creado:'05/06/2026 14:55:28', actualizado:'05/06/2026 14:55:44', monto:'$12800', selected:false },
-  { cadena:'Grido', pais:'Argentina', plataforma:'PedidosYa', sucId:'5666', sucursal:'Plaza Belgrano II', orden:'2032881908', estado:'Recibida', motivo:'', creado:'05/06/2026 14:55:27', actualizado:'05/06/2026 14:55:28', monto:'$8850', selected:false },
-];
+  // ---- Mock data (demo only, reemplazar por datos reales de la API) ----
+  const CADENAS = ["Grido"];
+  const PLATAFORMAS = ["I+D", "PedidosYa", "Rappi", "Uber Eats"];
+  const ESTADOS = ["Despachada", "Recibida", "Rechazada", "En Preparacion"];
+  const SUCURSALES = ["ROSARIO XXII", "SAN MIGUEL XVI", "Laferrere V", "SALTA XIII", "CORDOBA IX", "MENDOZA IV", "TUCUMAN II", "NEUQUEN I"];
 
-function badgeClass(estado) {
-  if (estado === 'Pendiente') return 'badge-pendiente';
-  if (estado === 'Recibida') return 'badge-recibida';
-  if (estado === 'Confirmada') return 'badge-confirmada';
-  return '';
-}
+  const baseOrders = [
+    { cadena:"Grido", pais:"Argentina", plataforma:"I+D", nSucursal:3870, sucursal:"ROSARIO XXII", orden:904146, estado:"Despachada", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:4100 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5158, sucursal:"SAN MIGUEL XVI", orden:2276870707, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:5600 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5290, sucursal:"Laferrere V", orden:2276872303, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:22", monto:5600 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:3789, sucursal:"SALTA XIII", orden:2276842583, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:12", actualizado:"10/09/2026 16:31:13", monto:9950 },
+  ];
 
-function renderTable(data) {
-  const tbody = document.getElementById('orders-body');
-  tbody.innerHTML = '';
-  data.forEach(function(row, i) {
-    const tr = document.createElement('tr');
-    if (row.selected) tr.classList.add('selected');
-    tr.innerHTML = `
-      <td>${row.cadena}</td>
-      <td>${row.pais}</td>
-      <td>${row.plataforma}</td>
-      <td>${row.sucId}</td>
-      <td>${row.sucursal}</td>
-      <td>${row.orden}</td>
-      <td><span class="badge ${badgeClass(row.estado)}">${row.estado}</span></td>
-      <td>${row.motivo}</td>
-      <td>${row.creado}</td>
-      <td>${row.actualizado}</td>
-      <td>${row.monto}</td>
-      <td><button class="btn-ver" onclick="verDetalle('${row.orden}')">Ver Más</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+  // Genera datos adicionales de ejemplo para poder demostrar el paginado (10/20/50/100)
+  const allOrders = [...baseOrders];
+  for (let i = 0; i < 130; i++) {
+    allOrders.push({
+      cadena: "Grido",
+      pais: "Argentina",
+      plataforma: PLATAFORMAS[i % PLATAFORMAS.length],
+      nSucursal: 1000 + i,
+      sucursal: SUCURSALES[i % SUCURSALES.length],
+      orden: 900000 + i,
+      estado: ESTADOS[i % ESTADOS.length],
+      motivo: "",
+      creado: "10/09/2026 16:2" + (i % 10) + ":00",
+      actualizado: "10/09/2026 16:2" + (i % 10) + ":05",
+      monto: 1000 + (i * 37) % 9000
+    });
+  }
 
-function applyFilters() {
-  const searchOrden = document.getElementById('search-orden').value.toLowerCase();
-  const searchSuc = document.getElementById('search-suc').value.toLowerCase();
-  const filterEstado = document.getElementById('filter-estado').value;
-  const filterPlataforma = document.getElementById('filter-plataforma').value;
-  const filterPais = document.getElementById('filter-pais').value;
+  let pageSize = 10;
+  let currentPage = 1;
 
-  const filtered = ordersData.filter(function(row) {
-    if (searchOrden && !row.orden.toLowerCase().includes(searchOrden)) return false;
-    if (searchSuc && !row.sucId.includes(searchSuc)) return false;
-    if (filterEstado && row.estado !== filterEstado) return false;
-    if (filterPlataforma && row.plataforma !== filterPlataforma) return false;
-    if (filterPais && row.pais !== filterPais) return false;
-    return true;
-  });
-  renderTable(filtered);
-}
+  function renderTable() {
+    const totalRecords = allOrders.length;
+    const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
 
-function refreshStats() {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  const s = String(now.getSeconds()).padStart(2,'0');
-  document.getElementById('stats-time').textContent = 'Actualizado: ' + h + ':' + m + ':' + s;
-}
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, totalRecords);
+    const pageItems = allOrders.slice(start, end);
 
-function verDetalle(orden) {
-  alert('Ver detalles de la orden: ' + orden);
-}
+    const tbody = document.getElementById("ordersTableBody");
+    tbody.innerHTML = pageItems.map(o => `
+      <tr>
+        <td>${o.cadena}</td>
+        <td>${o.pais}</td>
+        <td>${o.plataforma}</td>
+        <td>${o.nSucursal}</td>
+        <td class="sucursal-link">${o.sucursal}</td>
+        <td>${o.orden}</td>
+        <td>${o.estado}</td>
+        <td>${o.motivo}</td>
+        <td>${o.creado}</td>
+        <td>${o.actualizado}</td>
+        <td>$${o.monto}</td>
+        <td><button class="ver-mas-btn">Ver Mas</button></td>
+      </tr>
+    `).join("");
 
-renderTable(ordersData);
+    document.getElementById("paginationInfo").textContent =
+      `Mostrando ${start + 1}-${end} de ${totalRecords} registros`;
+
+    renderPaginationControls(totalPages);
+  }
+
+  function renderPaginationControls(totalPages) {
+    const controls = document.getElementById("paginationControls");
+    let html = "";
+
+    html += `<button class="page-btn" ${currentPage === 1 ? "disabled" : ""} onclick="goToPage(${currentPage - 1})">&laquo;</button>`;
+
+    const pagesToShow = getPageRange(currentPage, totalPages);
+    pagesToShow.forEach(p => {
+      if (p === "...") {
+        html += `<span class="page-btn" style="border:none;cursor:default;">...</span>`;
+      } else {
+        html += `<button class="page-btn ${p === currentPage ? "active" : ""}" onclick="goToPage(${p})">${p}</button>`;
+      }
+    });
+
+    html += `<button class="page-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="goToPage(${currentPage + 1})">&raquo;</button>`;
+
+    controls.innerHTML = html;
+  }
+
+  function getPageRange(current, total) {
+    const range = [];
+    const delta = 1;
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        range.push(i);
+      } else if (range[range.length - 1] !== "...") {
+        range.push("...");
+      }
+    }
+    return range;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    renderTable();
+  }
+
+  function onPageSizeChange() {
+    pageSize = parseInt(document.getElementById("pageSizeSelect").value, 10);
+    currentPage = 1;
+    renderTable();
+  }
+
+  renderTable();
 </script>
+
 </body>
 </html>
