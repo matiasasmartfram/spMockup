@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
 <meta charset="UTF-8">
 <title>Status</title>
 <style>
@@ -319,17 +317,17 @@
 
   <div class="header">
     <div class="header-left">
-      <div class="back-btn">&#8592;</div>
+      <div class="back-btn">←</div>
       <h1>Status</h1>
     </div>
-    <div class="header-right">Hola Matias! <span class="caret">&#9662;</span></div>
+    <div class="header-right">Hola Matias! <span class="caret">▾</span></div>
   </div>
 
   <div class="top-section">
     <div class="filters">
       <div class="field">
-        <label>Pa&iacute;s</label>
-        <select><option>Todos los Pa&iacute;ses</option></select>
+        <label>País</label>
+        <select><option>Todos los Países</option></select>
       </div>
       <div class="field">
         <label>Provincia</label>
@@ -357,9 +355,9 @@
           <span>Ultimos:</span>
           <select><option>1m</option></select>
           <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M23 4v6h-6"/>
-            <path d="M1 20v-6h6"/>
-            <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"></path>
           </svg>
         </div>
       </div>
@@ -386,10 +384,10 @@
 
     <div class="filters-grid">
       <div class="search-input">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" placeholder="N&deg; Orden">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg>
+        <input type="text" placeholder="N° Orden">
       </div>
-      <input type="text" placeholder="N&deg; Sucursal">
+      <input type="text" placeholder="N° Sucursal">
       <input type="text" placeholder="SKU">
       <select><option>Todos los Estados</option></select>
 
@@ -407,13 +405,19 @@
       <select><option>Si/No PickedUp</option></select>
       <select><option>Todos los deliveries</option></select>
       <input type="text" placeholder="Monto">
+
+      <select id="pagoFilterSelect" onchange="onPagoFilterChange()">
+        <option value="">Todos Los Pagos</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Online">Online</option>
+      </select>
     </div>
 
     <div class="update-btn-row">
       <div class="page-size-group">
         <span>Mostrar:</span>
         <select id="pageSizeSelect" onchange="onPageSizeChange()">
-          <option value="10" selected>10</option>
+          <option value="10" selected="">10</option>
           <option value="20">20</option>
           <option value="50">50</option>
           <option value="100">100</option>
@@ -422,8 +426,8 @@
       </div>
       <button class="update-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
-          <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+          <path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"></path>
         </svg>
         Actualizar
       </button>
@@ -435,11 +439,12 @@
           <th>Cadena</th>
           <th>Pais</th>
           <th>Plataforma</th>
-          <th>N&deg; Sucursal</th>
+          <th>N° Sucursal</th>
           <th>Sucursal</th>
           <th>Orden</th>
           <th>Estado</th>
           <th>Motivo</th>
+          <th>Pago</th>
           <th>Creado</th>
           <th>Actualizado</th>
           <th>Monto</th>
@@ -451,7 +456,7 @@
     </table>
 
     <div class="pagination-bar">
-      <div class="pagination-info" id="paginationInfo"></div>
+      <div class="pagination-info" id="paginationInfo">Mostrando 1-10 de 134 registros</div>
       <div class="pagination-controls" id="paginationControls"></div>
     </div>
   </div>
@@ -462,12 +467,13 @@
   const PLATAFORMAS = ["I+D", "PedidosYa", "Rappi", "Uber Eats"];
   const ESTADOS = ["Despachada", "Recibida", "Rechazada", "En Preparacion"];
   const SUCURSALES = ["ROSARIO XXII", "SAN MIGUEL XVI", "Laferrere V", "SALTA XIII", "CORDOBA IX", "MENDOZA IV", "TUCUMAN II", "NEUQUEN I"];
+  const PAGOS = ["Efectivo", "Online"];
 
   const baseOrders = [
-    { cadena:"Grido", pais:"Argentina", plataforma:"I+D", nSucursal:3870, sucursal:"ROSARIO XXII", orden:904146, estado:"Despachada", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:4100 },
-    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5158, sucursal:"SAN MIGUEL XVI", orden:2276870707, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:5600 },
-    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5290, sucursal:"Laferrere V", orden:2276872303, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:22", monto:5600 },
-    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:3789, sucursal:"SALTA XIII", orden:2276842583, estado:"Recibida", motivo:"", creado:"10/09/2026 16:31:12", actualizado:"10/09/2026 16:31:13", monto:9950 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"I+D", nSucursal:3870, sucursal:"ROSARIO XXII", orden:904146, estado:"Despachada", motivo:"", pago:"Efectivo", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:4100 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5158, sucursal:"SAN MIGUEL XVI", orden:2276870707, estado:"Recibida", motivo:"", pago:"Online", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:23", monto:5600 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:5290, sucursal:"Laferrere V", orden:2276872303, estado:"Recibida", motivo:"", pago:"Online", creado:"10/09/2026 16:31:22", actualizado:"10/09/2026 16:31:22", monto:5600 },
+    { cadena:"Grido", pais:"Argentina", plataforma:"PedidosYa", nSucursal:3789, sucursal:"SALTA XIII", orden:2276842583, estado:"Recibida", motivo:"", pago:"Efectivo", creado:"10/09/2026 16:31:12", actualizado:"10/09/2026 16:31:13", monto:9950 },
   ];
 
   // Genera datos adicionales de ejemplo para poder demostrar el paginado (10/20/50/100)
@@ -482,6 +488,7 @@
       orden: 900000 + i,
       estado: ESTADOS[i % ESTADOS.length],
       motivo: "",
+      pago: PAGOS[i % PAGOS.length],
       creado: "10/09/2026 16:2" + (i % 10) + ":00",
       actualizado: "10/09/2026 16:2" + (i % 10) + ":05",
       monto: 1000 + (i * 37) % 9000
@@ -490,15 +497,22 @@
 
   let pageSize = 10;
   let currentPage = 1;
+  let pagoFilter = "";
+
+  function getFilteredOrders() {
+    if (!pagoFilter) return allOrders;
+    return allOrders.filter(o => o.pago === pagoFilter);
+  }
 
   function renderTable() {
-    const totalRecords = allOrders.length;
+    const filtered = getFilteredOrders();
+    const totalRecords = filtered.length;
     const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * pageSize;
     const end = Math.min(start + pageSize, totalRecords);
-    const pageItems = allOrders.slice(start, end);
+    const pageItems = filtered.slice(start, end);
 
     const tbody = document.getElementById("ordersTableBody");
     tbody.innerHTML = pageItems.map(o => `
@@ -511,6 +525,7 @@
         <td>${o.orden}</td>
         <td>${o.estado}</td>
         <td>${o.motivo}</td>
+        <td>${o.pago}</td>
         <td>${o.creado}</td>
         <td>${o.actualizado}</td>
         <td>$${o.monto}</td>
@@ -519,7 +534,9 @@
     `).join("");
 
     document.getElementById("paginationInfo").textContent =
-      `Mostrando ${start + 1}-${end} de ${totalRecords} registros`;
+      totalRecords > 0
+        ? `Mostrando ${start + 1}-${end} de ${totalRecords} registros`
+        : `No se encontraron registros`;
 
     renderPaginationControls(totalPages);
   }
@@ -568,8 +585,15 @@
     renderTable();
   }
 
+  function onPagoFilterChange() {
+    pagoFilter = document.getElementById("pagoFilterSelect").value;
+    currentPage = 1;
+    renderTable();
+  }
+
   renderTable();
 </script>
 
-</body>
-</html>
+
+
+</body></html>
