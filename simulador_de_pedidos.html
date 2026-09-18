@@ -448,11 +448,21 @@
                     <summary>⚙️ Opciones avanzadas (Pedigrido)</summary>
                     <div class="advanced-body">
                         <p class="advanced-hint">
-                            Todo viene precargado con la orden por defecto. Si dejás este bloque
-                            cerrado se envía esa orden tal cual; si lo dejás abierto, se envía lo
-                            que configures acá.
+                            Si dejás este bloque cerrado se envía la orden por defecto. Abierto, se
+                            envía lo que configures acá — componiendo la orden campo por campo, o
+                            pegando una orden de producción entera.
                         </p>
 
+                        <!-- Pedigrido es el único con los dos modos. Ver §3.1.1. -->
+                        <div class="form-group">
+                            <label for="pedigridoMode">Modo</label>
+                            <select id="pedigridoMode">
+                                <option value="compose">Componer la orden</option>
+                                <option value="inject">Pegar payload</option>
+                            </select>
+                        </div>
+
+                <div id="pedigridoCompose">
                         <div class="form-group">
                             <label for="deliveryMode">Tipo de entrega</label>
                             <select id="deliveryMode">
@@ -514,6 +524,40 @@
                             Total: <span id="itemsTotal">$0</span>
                             <small>Se envía en payment.partial y payment.subtotal</small>
                         </div>
+                </div><!-- /#pedigridoCompose -->
+
+                <div id="pedigridoInject" hidden>
+                        <p class="advanced-hint">
+                            Pegá una orden de Pedigrido tal como la devuelve producción y se reenvía
+                            a Staging. Una orden real <b>no cumple</b> las reglas de la composición
+                            —los <code>optionGroups</code> traen su precio real en vez de
+                            <code>0</code>, el pago trae <code>shipping</code> y
+                            <code>discount</code>— y está bien: acá viaja tal cual.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="pedigridoOrderJson">Orden de Pedigrido (JSON)</label>
+                            <textarea id="pedigridoOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": 5536727, "branch": "3909", "registeredDate": "…", "pickup": false, "logistics": true, "user": { … }, "address": { … }, "details": [ … ], "payment": [ … ] }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden
+                                pegada: el worker pisa <code>branch</code> y <code>branchId</code>
+                                con ella, porque es el <code>branchReference</code> con el que
+                                Platform resuelve la sucursal.
+                            </small>
+                        </div>
+
+                        <p id="pedigridoOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform) y se refresca
+                            <code>registeredDate</code> conservando los offsets. Todo lo demás
+                            —<code>user</code>, <code>address</code>, <code>details</code>,
+                            <code>payment</code>, <code>cupon</code>,
+                            <code>deliveryPartner</code>— viaja intacto.
+                        </p>
+                </div><!-- /#pedigridoInject -->
                     </div>
                 </details>
 
@@ -649,8 +693,12 @@
             mercadopago: document.getElementById('advancedMercadoPago')
         };
 
-        // Las dos plataformas que inyectan: el submit las trata igual.
-        const INJECTION_PLATFORMS = ['pedidosya', 'mercadopago'];
+        // ⭐ Pedigrido es el único con los DOS modos avanzados, y ahí el modo lo
+        // elige el usuario. El resto solo inyecta. Este es el único lugar donde
+        // se decide: el submit y el validador en vivo preguntan por acá.
+        const pedigridoMode = document.getElementById('pedigridoMode');
+        const advancedModeFor = (platform) =>
+            platform === 'pedigrido' ? pedigridoMode.value : 'inject';
 
         // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
         const userIdGroup = document.getElementById('userIdGroup');
@@ -1087,6 +1135,15 @@
         };
 
         const INJECTION_UI = {
+            pedigrido: {
+                plataforma: 'Pedigrido',
+                input: document.getElementById('pedigridoOrderJson'),
+                status: document.getElementById('pedigridoOrderStatus'),
+                linesKey: 'details',
+                unidad: 'línea',
+                idKey: 'id',
+                total: (o) => o?.payment?.[0]?.subtotal
+            },
             pedidosya: {
                 plataforma: 'PedidosYa',
                 input: document.getElementById('peyaOrderJson'),
@@ -1110,11 +1167,26 @@
         Object.values(INJECTION_UI).forEach(cfg =>
             cfg.input.addEventListener('input', () => renderInjectedStatus(cfg)));
 
+        // Los dos paneles de Pedigrido: se muestra el del modo elegido. A
+        // diferencia de los <details>, acá no hace falta "cerrar" el otro —
+        // el submit lee el modo del select, no la visibilidad.
+        const pedigridoCompose = document.getElementById('pedigridoCompose');
+        const pedigridoInject = document.getElementById('pedigridoInject');
+
+        const updatePedigridoMode = () => {
+            const inyecta = pedigridoMode.value === 'inject';
+            pedigridoCompose.hidden = inyecta;
+            pedigridoInject.hidden = !inyecta;
+        };
+
+        pedigridoMode.addEventListener('change', updatePedigridoMode);
+
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
         platformSelect.addEventListener('change', updatePlatformOptions);
         window.addEventListener('DOMContentLoaded', () => {
             addItem();
+            updatePedigridoMode();
             updatePlatformOptions();
         });
 
@@ -1139,8 +1211,9 @@
             let advanced = null;
 
             if (activeAdvanced && !advancedWrapper.hidden && activeAdvanced.open) {
-                if (platform === 'pedigrido') {
+                if (advancedModeFor(platform) === 'compose') {
                     // COMPOSICIÓN: la orden se arma con lo que hay en la UI.
+                    // Hoy solo Pedigrido la tiene.
                     advanced = {
                         deliveryMode: document.getElementById('deliveryMode').value,
                         paymentMode: document.getElementById('paymentMode').value,
@@ -1151,7 +1224,7 @@
                     // el bloque, y con canjes lo exige.
                     const loyalty = readLoyalty();
                     if (loyalty) advanced.loyalty = loyalty;
-                } else if (INJECTION_PLATFORMS.includes(platform)) {
+                } else {
                     // INYECCIÓN: viaja la orden pegada, tal cual. Si no parsea se
                     // corta acá, sin tocar la red.
                     const cfg = INJECTION_UI[platform];
