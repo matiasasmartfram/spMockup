@@ -517,6 +517,42 @@
                     </div>
                 </details>
 
+                <!-- PedidosYa tampoco compone: inyecta la orden entera. Ver §3.1.3. -->
+                <details id="advancedPedidosYa" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (PedidosYa) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de PedidosYa tal como la devuelve producción y se
+                            reenvía a Staging. Si dejás este bloque cerrado se envía la orden fija
+                            del tenant que elegiste arriba.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="peyaOrderJson">Orden de PedidosYa (JSON)</label>
+                            <textarea id="peyaOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "token": "189672-_-oma_…", "code": "2287914094", "createdAt": "…", "localInfo": { … }, "customer": { … }, "products": [ … ], "price": { … }, "payment": { … } }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden
+                                pegada: la orden se envía a <code>/order/{branchId}</code>. El
+                                <b>Tenant</b> tampoco es decorativo — Platform parsea Grido y Weiss
+                                con funciones distintas, y el worker valida según cuál elegiste.
+                            </small>
+                        </div>
+
+                        <p id="peyaOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>code</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform), se refrescan las fechas
+                            conservando sus offsets, se descartan <code>branchId</code> y
+                            <code>state</code> (los inyecta Platform), y se reescriben las
+                            <code>callbackUrls</code> apuntando al worker — si no, aceptar la orden
+                            en Staging dispararía un POST contra PedidosYa real. Todo lo demás
+                            viaja tal cual.
+                        </p>
+                    </div>
+                </details>
+
                 <!-- MercadoPago no compone la orden: la inyecta entera. Ver §3.1.2. -->
                 <details id="advancedMercadoPago" class="advanced">
                     <summary>⚙️ Opciones avanzadas (MercadoPago) — Inyectar orden</summary>
@@ -565,22 +601,33 @@
         /*───────────────────────────────────────────────────────────────────*
          * URLs de los workers — ÚNICO punto de conmutación LOCAL ↔ CLOUDFLARE
          *
-         * Son DOS workers distintos y se conmutan por separado, así se puede
-         * tener uno en Cloudflare y el otro en local al mismo tiempo.
+         * Son TRES workers distintos y se conmutan por separado, así se puede
+         * tener unos en Cloudflare y otros en local al mismo tiempo.
          *───────────────────────────────────────────────────────────────────*/
 
-        // Worker principal — PedidosYa / Pedigrido (worker.js, :8787)
+        // Worker principal — Pedigrido (worker.js, :8787)
          const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
         //const WORKER_URL = 'http://localhost:8787/';
+
+        // Worker PedidosYa (workerPEYA.js, :8789) — grido y weiss
+        const WORKER_URL_PEYA = 'https://smartfranpeya.matiasa.workers.dev/';
+        // const WORKER_URL_PEYA = 'http://localhost:8789/';
 
         // Worker MercadoPago Delivery (workerMPD.js, :8788)
         // Ojo: en LOCAL el circuito no se cierra — Platform no llega a localhost.
         const WORKER_URL_MPD = 'https://smartfranmpd.matiasa.workers.dev/';
         // const WORKER_URL_MPD = 'http://localhost:8788/';
 
-        // MercadoPago vive en su propio worker porque no es push directo: tiene
-        // que atender además el GET de detalle que Platform hace después.
-        const workerUrlFor = (platform) => platform === 'mercadopago' ? WORKER_URL_MPD : WORKER_URL;
+        // Cada plataforma tiene su worker. MercadoPago porque no es push directo
+        // (tiene que atender el GET de detalle que Platform hace después);
+        // PedidosYa porque atiende los callbacks de accept/reject/prepared y
+        // hace de proxy hacia PedidosYa real. Este mapa es el ÚNICO lugar donde
+        // se decide el destino: no agregues ifs de plataforma en el submit.
+        const WORKER_BY_PLATFORM = {
+            mercadopago: WORKER_URL_MPD,
+            pedidosya: WORKER_URL_PEYA
+        };
+        const workerUrlFor = (platform) => WORKER_BY_PLATFORM[platform] ?? WORKER_URL;
 
         // --- Lógica de Dependencia Tenant/Plataforma (Bloqueo Visual) ---
         const tenantSelect = document.getElementById('tenant');
@@ -593,13 +640,17 @@
 
         // Cada plataforma con avanzado tiene su propio <details>: las estructuras
         // de orden no se parecen en nada y el modo tampoco (Pedigrido COMPONE la
-        // orden campo por campo; MercadoPago INYECTA una entera). El wrapper es
-        // el contenedor común.
+        // orden campo por campo; PedidosYa y MercadoPago INYECTAN una entera).
+        // El wrapper es el contenedor común.
         const advancedWrapper = document.getElementById('advancedWrapper');
         const advancedByPlatform = {
             pedigrido: document.getElementById('advancedPedigrido'),
+            pedidosya: document.getElementById('advancedPedidosYa'),
             mercadopago: document.getElementById('advancedMercadoPago')
         };
+
+        // Las dos plataformas que inyectan: el submit las trata igual.
+        const INJECTION_PLATFORMS = ['pedidosya', 'mercadopago'];
 
         // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
         const userIdGroup = document.getElementById('userIdGroup');
@@ -979,22 +1030,25 @@
         document.getElementById('addCanjeButton').addEventListener('click', () => addComposite('canje'));
 
         /*───────────────────────────────────────────────────────────────────*
-         * Bloque avanzado de MercadoPago — INYECCIÓN de una orden
+         * Bloques avanzados de PedidosYa y MercadoPago — INYECCIÓN
          *
          * Acá no se compone nada: se pega una orden de producción entera y se
-         * reenvía. La validación de verdad la hace el worker, que conoce las
-         * trampas del parser de Platform (externalCode como número, promos sin
-         * externalCode en las opciones, fullItemsPrice >= 1.000.000, etc.) y
-         * responde un 400 diciendo el campo exacto. Esto de acá es solo para no
-         * descubrir un typo de JSON después de haber mandado el pedido.
+         * reenvía. Las dos plataformas comparten el mismo par de funciones y
+         * solo difieren en el resumen, porque las dos estructuras de orden no
+         * se parecen (products/price.grandTotal vs items/total.orderAmount).
+         *
+         * La validación de verdad la hace el worker, que conoce las trampas
+         * del parser de Platform (remoteCode como número, discounts ausente,
+         * fullItemsPrice >= 1.000.000, extras colgados de un artículo que no
+         * está en el combo…) y responde un 400 diciendo el campo exacto. Esto
+         * de acá es solo para no descubrir un typo de JSON después de haber
+         * mandado el pedido.
          *───────────────────────────────────────────────────────────────────*/
-        const mpdOrderInput = document.getElementById('mpdOrderJson');
-        const mpdOrderStatus = document.getElementById('mpdOrderStatus');
 
         // Devuelve { order } o { error }. Es exactamente lo que se manda en el submit.
-        const readMpdOrder = () => {
-            const raw = mpdOrderInput.value.trim();
-            if (!raw) return { error: 'Pegá la orden de MercadoPago que querés inyectar.' };
+        const readInjectedOrder = (input, plataforma) => {
+            const raw = input.value.trim();
+            if (!raw) return { error: `Pegá la orden de ${plataforma} que querés inyectar.` };
 
             try {
                 return { order: JSON.parse(raw) };
@@ -1003,35 +1057,58 @@
             }
         };
 
-        const renderMpdStatus = () => {
-            if (!mpdOrderInput.value.trim()) {
-                mpdOrderStatus.className = 'json-status';
-                mpdOrderStatus.textContent = 'Pegá una orden para validarla.';
+        const renderInjectedStatus = (cfg) => {
+            if (!cfg.input.value.trim()) {
+                cfg.status.className = 'json-status';
+                cfg.status.textContent = 'Pegá una orden para validarla.';
                 return;
             }
 
-            const { order, error } = readMpdOrder();
+            const { order, error } = readInjectedOrder(cfg.input, cfg.plataforma);
 
             if (error) {
-                mpdOrderStatus.className = 'json-status is-invalid';
-                mpdOrderStatus.textContent = `❌ ${error}`;
+                cfg.status.className = 'json-status is-invalid';
+                cfg.status.textContent = `❌ ${error}`;
                 return;
             }
 
-            // El worker acepta también un array de una sola orden, así que el
+            // Los workers aceptan también un array de una sola orden, así que el
             // resumen tiene que reconocer las dos formas.
             const target = Array.isArray(order) && order.length === 1 ? order[0] : order;
-            const items = Array.isArray(target?.items) ? target.items.length : 0;
-            const total = target?.total?.orderAmount?.value;
+            const lineas = Array.isArray(target?.[cfg.linesKey]) ? target[cfg.linesKey].length : 0;
+            const total = parseFloat(cfg.total(target));
+            const id = target?.[cfg.idKey];
 
-            mpdOrderStatus.className = 'json-status is-valid';
-            mpdOrderStatus.textContent =
-                `✅ JSON válido · ${items} ítem${items === 1 ? '' : 's'}` +
+            cfg.status.className = 'json-status is-valid';
+            cfg.status.textContent =
+                `✅ JSON válido · ${lineas} ${lineas === 1 ? cfg.unidad : cfg.unidad + 's'}` +
                 (Number.isFinite(total) ? ` · total $${total.toLocaleString('es-AR')}` : '') +
-                (target?.id ? ` · id original ${target.id} (se reemplaza)` : '');
+                (id ? ` · ${cfg.idKey} original ${id} (se reemplaza)` : '');
         };
 
-        mpdOrderInput.addEventListener('input', renderMpdStatus);
+        const INJECTION_UI = {
+            pedidosya: {
+                plataforma: 'PedidosYa',
+                input: document.getElementById('peyaOrderJson'),
+                status: document.getElementById('peyaOrderStatus'),
+                linesKey: 'products',
+                unidad: 'producto',
+                idKey: 'code',
+                total: (o) => o?.price?.grandTotal
+            },
+            mercadopago: {
+                plataforma: 'MercadoPago',
+                input: document.getElementById('mpdOrderJson'),
+                status: document.getElementById('mpdOrderStatus'),
+                linesKey: 'items',
+                unidad: 'ítem',
+                idKey: 'id',
+                total: (o) => o?.total?.orderAmount?.value
+            }
+        };
+
+        Object.values(INJECTION_UI).forEach(cfg =>
+            cfg.input.addEventListener('input', () => renderInjectedStatus(cfg)));
 
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
@@ -1074,12 +1151,13 @@
                     // el bloque, y con canjes lo exige.
                     const loyalty = readLoyalty();
                     if (loyalty) advanced.loyalty = loyalty;
-                } else {
+                } else if (INJECTION_PLATFORMS.includes(platform)) {
                     // INYECCIÓN: viaja la orden pegada, tal cual. Si no parsea se
                     // corta acá, sin tocar la red.
-                    const parsed = readMpdOrder();
+                    const cfg = INJECTION_UI[platform];
+                    const parsed = readInjectedOrder(cfg.input, cfg.plataforma);
                     if (parsed.error) {
-                        renderMpdStatus();
+                        renderInjectedStatus(cfg);
                         responseContainer.hidden = false;
                         out.textContent = `No se envió nada.\n\n${parsed.error}`;
                         return;
