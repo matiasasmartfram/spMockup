@@ -187,6 +187,28 @@
             color: #7a8794;
         }
 
+        /* --- Cancelación desde Uber (solo UberEats) --- */
+        .uber-cancel {
+            margin-top: 1.25rem;
+            padding: 0.75rem;
+            border: 1px dashed #e0b4ae;
+            border-radius: 6px;
+            background-color: #fdf6f5;
+        }
+
+        .uber-cancel button {
+            margin-top: 0.5rem;
+            background-color: #c0392b;
+        }
+
+        .uber-cancel button:hover:not(:disabled) {
+            background-color: #a93226;
+        }
+
+        .uber-cancel button:disabled {
+            background-color: #e6b0aa;
+        }
+
         .item-card {
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -432,6 +454,7 @@
                     <option value="pedigrido">Pedigrido</option>
                     <option value="pedidosya">PedidosYa</option>
                     <option value="mercadopago">MercadoPago Delivery</option>
+                    <option value="ubereats">UberEats</option>
                 </select>
             </div>
 
@@ -630,9 +653,57 @@
                         </p>
                     </div>
                 </details>
+
+                <!-- UberEats tampoco compone: inyecta entera, igual que MercadoPago. Ver §3.1.4. -->
+                <details id="advancedUberEats" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (UberEats) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de UberEats —la respuesta del GET de Uber
+                            (<code>{ "order": { … } }</code>) o la orden sola— y se reenvía a Staging.
+                            Si dejás este bloque cerrado se envía la orden fija de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="uberOrderJson">Orden de UberEats (JSON)</label>
+                            <textarea id="uberOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": "c4faad4b-…", "display_id": "B4936", "store": { … }, "customers": [ … ], "carts": [ { "items": [ … ] } ], "payment": { "payment_detail": { … } }, "created_time": "…" }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden pegada:
+                                el worker pisa <code>store.id</code> con el <code>branchReference</code>
+                                de UberEats de esa sucursal.
+                            </small>
+                        </div>
+
+                        <p id="uberOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> y un <code>display_id</code> nuevos
+                            (reusar el de producción choca con el control de duplicados de Platform),
+                            se refrescan las fechas conservando sus offsets, y se descartan
+                            <code>branchId</code>, <code>oldId</code> y <code>state</code>, que
+                            Platform inyecta por su cuenta. Todo lo demás viaja tal cual.
+                        </p>
+                    </div>
+                </details>
             </div>
 
             <button type="submit" id="submitButton">Crear Pedido</button>
+
+            <!-- Solo UberEats. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
+            <div class="uber-cancel" id="uberCancelGroup" hidden>
+                <div class="form-group" style="margin-bottom:0">
+                    <label for="uberCancelOrderId">Cancelar desde Uber (webhook <code>orders.cancel</code>)</label>
+                    <input type="text" id="uberCancelOrderId" value="" spellcheck="false"
+                        placeholder="sim.1758600000000.261f3c7a-0acd-591b-bbc3-a0437b67f4e4">
+                    <small class="field-hint">
+                        Se completa solo con el <code>orderId</code> del último envío. Platform pasa la
+                        news a <code>platform_rej_ord</code>; la orden tiene que existir (el GET ya
+                        tiene que haber llegado al worker).
+                    </small>
+                </div>
+                <button type="button" id="uberCancelButton">🚫 Cancelar desde Uber</button>
+            </div>
         </form>
 
         <div id="responseContainer" class="response-container" hidden>
@@ -662,14 +733,20 @@
         const WORKER_URL_MPD = 'https://smartfranmpd.matiasa.workers.dev/';
         // const WORKER_URL_MPD = 'http://localhost:8788/';
 
-        // Cada plataforma tiene su worker. MercadoPago porque no es push directo
-        // (tiene que atender el GET de detalle que Platform hace después);
-        // PedidosYa porque atiende los callbacks de accept/reject/prepared y
-        // hace de proxy hacia PedidosYa real. Este mapa es el ÚNICO lugar donde
-        // se decide el destino: no agregues ifs de plataforma en el submit.
+        // Worker UberEats (workerUBER.js, :8790)
+        // Igual que MercadoPago: en LOCAL el circuito no se cierra — Platform no llega a localhost.
+        const WORKER_URL_UBER = 'https://smartfranuber.matiasa.workers.dev/';
+        // const WORKER_URL_UBER = 'http://localhost:8790/';
+
+        // Cada plataforma tiene su worker. MercadoPago y UberEats porque no son
+        // push directo (tienen que atender el GET de detalle que Platform hace
+        // después); PedidosYa porque atiende los callbacks de accept/reject/
+        // prepared y hace de proxy hacia PedidosYa real. Este mapa es el ÚNICO
+        // lugar donde se decide el destino: no agregues ifs de plataforma en el submit.
         const WORKER_BY_PLATFORM = {
             mercadopago: WORKER_URL_MPD,
-            pedidosya: WORKER_URL_PEYA
+            pedidosya: WORKER_URL_PEYA,
+            ubereats: WORKER_URL_UBER
         };
         const workerUrlFor = (platform) => WORKER_BY_PLATFORM[platform] ?? WORKER_URL;
 
@@ -678,19 +755,20 @@
         const platformSelect = document.getElementById('platform');
 
         // Plataformas que solo operan con Grido. Weiss únicamente usa PedidosYa.
-        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago'];
+        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago', 'ubereats'];
         const gridoOnlyOptions = GRIDO_ONLY_PLATFORMS
             .map(value => platformSelect.querySelector(`option[value="${value}"]`));
 
         // Cada plataforma con avanzado tiene su propio <details>: las estructuras
         // de orden no se parecen en nada y el modo tampoco (Pedigrido COMPONE la
-        // orden campo por campo; PedidosYa y MercadoPago INYECTAN una entera).
-        // El wrapper es el contenedor común.
+        // orden campo por campo; PedidosYa, MercadoPago y UberEats INYECTAN una
+        // entera). El wrapper es el contenedor común.
         const advancedWrapper = document.getElementById('advancedWrapper');
         const advancedByPlatform = {
             pedigrido: document.getElementById('advancedPedigrido'),
             pedidosya: document.getElementById('advancedPedidosYa'),
-            mercadopago: document.getElementById('advancedMercadoPago')
+            mercadopago: document.getElementById('advancedMercadoPago'),
+            ubereats: document.getElementById('advancedUberEats')
         };
 
         // ⭐ Pedigrido es el único con los DOS modos avanzados, y ahí el modo lo
@@ -703,6 +781,11 @@
         // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
         const userIdGroup = document.getElementById('userIdGroup');
         const userIdInput = document.getElementById('userId');
+
+        // Cancelación desde Uber: solo existe con UberEats.
+        const uberCancelGroup = document.getElementById('uberCancelGroup');
+        const uberCancelInput = document.getElementById('uberCancelOrderId');
+        const uberCancelButton = document.getElementById('uberCancelButton');
 
         const updatePlatformOptions = () => {
             const isWeiss = tenantSelect.value === 'weiss';
@@ -740,6 +823,12 @@
             userIdGroup.hidden = !isMercadoPago;
             userIdInput.required = isMercadoPago;
             userIdInput.disabled = !isMercadoPago;
+
+            // Cancelación desde Uber: visible y habilitada solo con UberEats.
+            const isUberEats = platformSelect.value === 'ubereats';
+            uberCancelGroup.hidden = !isUberEats;
+            uberCancelInput.disabled = !isUberEats;
+            uberCancelButton.disabled = !isUberEats;
         };
 
         // --- Catálogo de productos (solo precarga: el worker acepta cualquier SKU) ---
@@ -1078,12 +1167,14 @@
         document.getElementById('addCanjeButton').addEventListener('click', () => addComposite('canje'));
 
         /*───────────────────────────────────────────────────────────────────*
-         * Bloques avanzados de PedidosYa y MercadoPago — INYECCIÓN
+         * Bloques avanzados de inyección (Pedigrido, PedidosYa, MercadoPago y
+         * UberEats)
          *
          * Acá no se compone nada: se pega una orden de producción entera y se
-         * reenvía. Las dos plataformas comparten el mismo par de funciones y
-         * solo difieren en el resumen, porque las dos estructuras de orden no
-         * se parecen (products/price.grandTotal vs items/total.orderAmount).
+         * reenvía. Todas comparten el mismo par de funciones y solo difieren en
+         * el resumen, porque las estructuras de orden no se parecen
+         * (products/price.grandTotal vs items/total.orderAmount vs
+         * carts[0].items/payment_detail.order_total).
          *
          * La validación de verdad la hace el worker, que conoce las trampas
          * del parser de Platform (remoteCode como número, discounts ausente,
@@ -1121,9 +1212,13 @@
             }
 
             // Los workers aceptan también un array de una sola orden, así que el
-            // resumen tiene que reconocer las dos formas.
-            const target = Array.isArray(order) && order.length === 1 ? order[0] : order;
-            const lineas = Array.isArray(target?.[cfg.linesKey]) ? target[cfg.linesKey].length : 0;
+            // resumen tiene que reconocer las dos formas. UberEats además acepta
+            // la respuesta cruda del GET ({ order }) y tiene las líneas anidadas
+            // (carts[0].items): para eso están `unwrap` y `lines`, opcionales.
+            const first = Array.isArray(order) && order.length === 1 ? order[0] : order;
+            const target = cfg.unwrap ? cfg.unwrap(first) : first;
+            const lineArray = cfg.lines ? cfg.lines(target) : target?.[cfg.linesKey];
+            const lineas = Array.isArray(lineArray) ? lineArray.length : 0;
             const total = parseFloat(cfg.total(target));
             const id = target?.[cfg.idKey];
 
@@ -1161,6 +1256,16 @@
                 unidad: 'ítem',
                 idKey: 'id',
                 total: (o) => o?.total?.orderAmount?.value
+            },
+            ubereats: {
+                plataforma: 'UberEats',
+                input: document.getElementById('uberOrderJson'),
+                status: document.getElementById('uberOrderStatus'),
+                unwrap: (o) => (o?.order && o.carts === undefined ? o.order : o),
+                lines: (o) => o?.carts?.[0]?.items,
+                unidad: 'ítem',
+                idKey: 'id',
+                total: (o) => o?.payment?.payment_detail?.order_total?.gross?.amount_e5 / 100000
             }
         };
 
@@ -1296,12 +1401,78 @@
 
                 out.textContent = `Worker: ${workerUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
 
+                // UberEats: el orderId de la respuesta es el que se cancela desde Uber.
+                if (platform === 'ubereats' && res.ok) {
+                    try {
+                        const { orderId } = JSON.parse(text);
+                        if (orderId) uberCancelInput.value = orderId;
+                    } catch { /* respuesta no JSON: no hay orderId que recordar */ }
+                }
+
             } catch (err) {
                 out.textContent = `Error de red contra ${workerUrl}\n\n${err.message}`;
             } finally {
                 // --- UX Mejorada: Restaurar el botón ---
                 button.disabled = false;
                 button.textContent = 'Crear Pedido';
+            }
+        });
+
+        // --- Cancelación desde Uber: webhook orders.cancel vía POST /cancel ---
+        // Usa el mismo gate (nombre/apellido) y contexto del formulario, pero no
+        // necesita Branch ID: la tienda viaja dentro del orderId (sim.{ts}.{storeId}).
+        uberCancelButton.addEventListener('click', async () => {
+            const orderId = uberCancelInput.value.trim();
+            const responseContainer = document.getElementById('responseContainer');
+            const out = document.getElementById('respuesta');
+            responseContainer.hidden = false;
+
+            if (!orderId) {
+                out.textContent = 'No se envió nada.\n\nFalta el orderId a cancelar: enviá un pedido primero o pegá el orderId de uno anterior.';
+                return;
+            }
+
+            const payload = {
+                context: {
+                    tenant: tenantSelect.value,
+                    platform: 'ubereats',
+                    environment: document.getElementById('environment').value
+                },
+                auth: {
+                    user: {
+                        name: document.getElementById('name').value.trim(),
+                        lastName: document.getElementById('lastName').value.trim()
+                    }
+                },
+                data: { orderId }
+            };
+
+            const cancelUrl = new URL('cancel', WORKER_URL_UBER).href;
+            uberCancelButton.disabled = true;
+            uberCancelButton.textContent = 'Cancelando...';
+            out.textContent = 'Procesando la cancelación...';
+
+            try {
+                const res = await fetch(cancelUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await res.text();
+                let pretty;
+                try {
+                    pretty = JSON.stringify(JSON.parse(text), null, 2);
+                } catch {
+                    pretty = text;
+                }
+
+                out.textContent = `Worker: ${cancelUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
+            } catch (err) {
+                out.textContent = `Error de red contra ${cancelUrl}\n\n${err.message}`;
+            } finally {
+                uberCancelButton.disabled = platformSelect.value !== 'ubereats';
+                uberCancelButton.textContent = '🚫 Cancelar desde Uber';
             }
         });
     </script>
