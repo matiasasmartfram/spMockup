@@ -187,8 +187,8 @@
             color: #7a8794;
         }
 
-        /* --- Cancelación desde Uber (solo UberEats) --- */
-        .uber-cancel {
+        /* --- Cancelación desde la plataforma (UberEats y Rappi) --- */
+        .platform-cancel {
             margin-top: 1.25rem;
             padding: 0.75rem;
             border: 1px dashed #e0b4ae;
@@ -196,16 +196,16 @@
             background-color: #fdf6f5;
         }
 
-        .uber-cancel button {
+        .platform-cancel button {
             margin-top: 0.5rem;
             background-color: #c0392b;
         }
 
-        .uber-cancel button:hover:not(:disabled) {
+        .platform-cancel button:hover:not(:disabled) {
             background-color: #a93226;
         }
 
-        .uber-cancel button:disabled {
+        .platform-cancel button:disabled {
             background-color: #e6b0aa;
         }
 
@@ -430,6 +430,17 @@
                 </small>
             </div>
 
+            <!-- Solo Rappi, y OPCIONAL. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.5. -->
+            <div class="form-group" id="rappiStoreIdGroup" hidden>
+                <label for="rappiStoreId">Rappi Store ID (opcional)</label>
+                <input type="text" id="rappiStoreId" value="" spellcheck="false" placeholder="222983"
+                    title="Es el branchReference de Rappi de la sucursal">
+                <small class="field-hint">
+                    Dejalo vacío y el worker lo lee de la sucursal. Completalo solo si el worker te
+                    dice que no pudo identificar la entrada de Rappi.
+                </small>
+            </div>
+
             <div class="form-group">
                 <label for="name">Nombre</label>
                 <input type="text" id="name" value="" required>
@@ -455,6 +466,7 @@
                     <option value="pedidosya">PedidosYa</option>
                     <option value="mercadopago">MercadoPago Delivery</option>
                     <option value="ubereats">UberEats</option>
+                    <option value="rappi">Rappi</option>
                 </select>
             </div>
 
@@ -686,23 +698,55 @@
                         </p>
                     </div>
                 </details>
+
+                <!-- Rappi tampoco compone: inyecta entera. La orden queda en la cola del worker
+                     hasta que Platform la pollea. Ver §3.1.5. -->
+                <details id="advancedRappi" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (Rappi) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de Rappi (<code>{ "order_detail": { … }, "customer": { … },
+                            "store": { … }, "state": "…" }</code>, sola o dentro del array que devuelve el
+                            poll) y se encola para el próximo poll de Platform. Si dejás este bloque
+                            cerrado se envía la orden fija de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="rappiOrderJson">Orden de Rappi (JSON)</label>
+                            <textarea id="rappiOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "order_detail": { "order_id": "481156739", "discounts": [ … ], "totals": { … }, "items": [ … ], "created_at": "2026-09-23 16:00:33" }, "customer": { … }, "store": { … }, "state": "SENT" }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba (o el <b>Rappi Store
+                                ID</b>), no la orden pegada: el worker pisa <code>store.external_id</code>.
+                            </small>
+                        </div>
+
+                        <p id="rappiOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>order_id</code> nuevo (Platform hace upsert por ese
+                            id: reusar el de producción pisaría esa orden), se pone <code>state: "SENT"</code>
+                            y se corre <code>created_at</code> al presente. Todo lo demás —ítems,
+                            descuentos, totales— viaja tal cual.
+                        </p>
+                    </div>
+                </details>
             </div>
 
             <button type="submit" id="submitButton">Crear Pedido</button>
 
-            <!-- Solo UberEats. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
-            <div class="uber-cancel" id="uberCancelGroup" hidden>
+            <!-- Solo UberEats y Rappi. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
+            <div class="platform-cancel" id="platformCancelGroup" hidden>
                 <div class="form-group" style="margin-bottom:0">
-                    <label for="uberCancelOrderId">Cancelar desde Uber (webhook <code>orders.cancel</code>)</label>
-                    <input type="text" id="uberCancelOrderId" value="" spellcheck="false"
-                        placeholder="sim.1758600000000.261f3c7a-0acd-591b-bbc3-a0437b67f4e4">
+                    <label for="platformCancelOrderId" id="platformCancelLabel">Cancelar desde la plataforma</label>
+                    <input type="text" id="platformCancelOrderId" value="" spellcheck="false">
                     <small class="field-hint">
-                        Se completa solo con el <code>orderId</code> del último envío. Platform pasa la
-                        news a <code>platform_rej_ord</code>; la orden tiene que existir (el GET ya
-                        tiene que haber llegado al worker).
+                        Se completa solo con el <code>orderId</code> del último envío de esta plataforma.
+                        Platform pasa la news a <code>platform_rej_ord</code>; la orden tiene que existir
+                        (Platform ya tiene que haberla levantado).
                     </small>
                 </div>
-                <button type="button" id="uberCancelButton">🚫 Cancelar desde Uber</button>
+                <button type="button" id="platformCancelButton">🚫 Cancelar desde la plataforma</button>
             </div>
         </form>
 
@@ -738,15 +782,22 @@
         const WORKER_URL_UBER = 'https://smartfranuber.matiasa.workers.dev/';
         // const WORKER_URL_UBER = 'http://localhost:8790/';
 
+        // Worker Rappi (workerRAPPI.js, :8791) — la cola vive en KV (binding RAPPI_KV).
+        // Igual que MercadoPago: en LOCAL el circuito no se cierra — Platform no llega a localhost.
+        const WORKER_URL_RAPPI = 'https://smartfranrappi.matiasa.workers.dev/';
+        // const WORKER_URL_RAPPI = 'http://localhost:8791/';
+
         // Cada plataforma tiene su worker. MercadoPago y UberEats porque no son
         // push directo (tienen que atender el GET de detalle que Platform hace
-        // después); PedidosYa porque atiende los callbacks de accept/reject/
-        // prepared y hace de proxy hacia PedidosYa real. Este mapa es el ÚNICO
-        // lugar donde se decide el destino: no agregues ifs de plataforma en el submit.
+        // después); Rappi porque Platform la pollea; PedidosYa porque atiende
+        // los callbacks de accept/reject/prepared y hace de proxy hacia PedidosYa
+        // real. Este mapa es el ÚNICO lugar donde se decide el destino: no
+        // agregues ifs de plataforma en el submit.
         const WORKER_BY_PLATFORM = {
             mercadopago: WORKER_URL_MPD,
             pedidosya: WORKER_URL_PEYA,
-            ubereats: WORKER_URL_UBER
+            ubereats: WORKER_URL_UBER,
+            rappi: WORKER_URL_RAPPI
         };
         const workerUrlFor = (platform) => WORKER_BY_PLATFORM[platform] ?? WORKER_URL;
 
@@ -755,20 +806,21 @@
         const platformSelect = document.getElementById('platform');
 
         // Plataformas que solo operan con Grido. Weiss únicamente usa PedidosYa.
-        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago', 'ubereats'];
+        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago', 'ubereats', 'rappi'];
         const gridoOnlyOptions = GRIDO_ONLY_PLATFORMS
             .map(value => platformSelect.querySelector(`option[value="${value}"]`));
 
         // Cada plataforma con avanzado tiene su propio <details>: las estructuras
         // de orden no se parecen en nada y el modo tampoco (Pedigrido COMPONE la
-        // orden campo por campo; PedidosYa, MercadoPago y UberEats INYECTAN una
-        // entera). El wrapper es el contenedor común.
+        // orden campo por campo; PedidosYa, MercadoPago, UberEats y Rappi
+        // INYECTAN una entera). El wrapper es el contenedor común.
         const advancedWrapper = document.getElementById('advancedWrapper');
         const advancedByPlatform = {
             pedigrido: document.getElementById('advancedPedigrido'),
             pedidosya: document.getElementById('advancedPedidosYa'),
             mercadopago: document.getElementById('advancedMercadoPago'),
-            ubereats: document.getElementById('advancedUberEats')
+            ubereats: document.getElementById('advancedUberEats'),
+            rappi: document.getElementById('advancedRappi')
         };
 
         // ⭐ Pedigrido es el único con los DOS modos avanzados, y ahí el modo lo
@@ -782,10 +834,33 @@
         const userIdGroup = document.getElementById('userIdGroup');
         const userIdInput = document.getElementById('userId');
 
-        // Cancelación desde Uber: solo existe con UberEats.
-        const uberCancelGroup = document.getElementById('uberCancelGroup');
-        const uberCancelInput = document.getElementById('uberCancelOrderId');
-        const uberCancelButton = document.getElementById('uberCancelButton');
+        // 'storeId' es OPCIONAL y solo para Rappi: el worker lo lee de la sucursal
+        // y solo lo pide si no puede identificar la entrada de Rappi.
+        const rappiStoreIdGroup = document.getElementById('rappiStoreIdGroup');
+        const rappiStoreIdInput = document.getElementById('rappiStoreId');
+
+        // Cancelación desde la plataforma: solo UberEats y Rappi. Cada una tiene su
+        // worker, su evento y su formato de id; el último orderId se recuerda POR
+        // plataforma, así que alternar entre las dos no mezcla los ids.
+        const CANCEL_BY_PLATFORM = {
+            ubereats: {
+                workerUrl: WORKER_URL_UBER,
+                label: 'Cancelar desde Uber (webhook orders.cancel)',
+                button: '🚫 Cancelar desde Uber',
+                placeholder: 'sim.1758600000000.261f3c7a-0acd-591b-bbc3-a0437b67f4e4'
+            },
+            rappi: {
+                workerUrl: WORKER_URL_RAPPI,
+                label: 'Cancelar desde Rappi (webhook ORDER_EVENT_CANCEL)',
+                button: '🚫 Cancelar desde Rappi',
+                placeholder: '9758600000'
+            }
+        };
+        const lastOrderIdByPlatform = {};
+        const platformCancelGroup = document.getElementById('platformCancelGroup');
+        const platformCancelLabel = document.getElementById('platformCancelLabel');
+        const platformCancelInput = document.getElementById('platformCancelOrderId');
+        const platformCancelButton = document.getElementById('platformCancelButton');
 
         const updatePlatformOptions = () => {
             const isWeiss = tenantSelect.value === 'weiss';
@@ -824,11 +899,22 @@
             userIdInput.required = isMercadoPago;
             userIdInput.disabled = !isMercadoPago;
 
-            // Cancelación desde Uber: visible y habilitada solo con UberEats.
-            const isUberEats = platformSelect.value === 'ubereats';
-            uberCancelGroup.hidden = !isUberEats;
-            uberCancelInput.disabled = !isUberEats;
-            uberCancelButton.disabled = !isUberEats;
+            // storeId de Rappi: opcional, visible y habilitado solo con Rappi.
+            const isRappi = platformSelect.value === 'rappi';
+            rappiStoreIdGroup.hidden = !isRappi;
+            rappiStoreIdInput.disabled = !isRappi;
+
+            // Cancelación: visible y habilitada solo con UberEats y Rappi.
+            const cancelCfg = CANCEL_BY_PLATFORM[platformSelect.value] ?? null;
+            platformCancelGroup.hidden = !cancelCfg;
+            platformCancelInput.disabled = !cancelCfg;
+            platformCancelButton.disabled = !cancelCfg;
+            if (cancelCfg) {
+                platformCancelLabel.textContent = cancelCfg.label;
+                platformCancelButton.textContent = cancelCfg.button;
+                platformCancelInput.placeholder = cancelCfg.placeholder;
+                platformCancelInput.value = lastOrderIdByPlatform[platformSelect.value] ?? '';
+            }
         };
 
         // --- Catálogo de productos (solo precarga: el worker acepta cualquier SKU) ---
@@ -1215,12 +1301,13 @@
             // resumen tiene que reconocer las dos formas. UberEats además acepta
             // la respuesta cruda del GET ({ order }) y tiene las líneas anidadas
             // (carts[0].items): para eso están `unwrap` y `lines`, opcionales.
+            // Rappi tiene también el id anidado (order_detail.order_id): `idOf`.
             const first = Array.isArray(order) && order.length === 1 ? order[0] : order;
             const target = cfg.unwrap ? cfg.unwrap(first) : first;
             const lineArray = cfg.lines ? cfg.lines(target) : target?.[cfg.linesKey];
             const lineas = Array.isArray(lineArray) ? lineArray.length : 0;
             const total = parseFloat(cfg.total(target));
-            const id = target?.[cfg.idKey];
+            const id = cfg.idOf ? cfg.idOf(target) : target?.[cfg.idKey];
 
             cfg.status.className = 'json-status is-valid';
             cfg.status.textContent =
@@ -1266,6 +1353,16 @@
                 unidad: 'ítem',
                 idKey: 'id',
                 total: (o) => o?.payment?.payment_detail?.order_total?.gross?.amount_e5 / 100000
+            },
+            rappi: {
+                plataforma: 'Rappi',
+                input: document.getElementById('rappiOrderJson'),
+                status: document.getElementById('rappiOrderStatus'),
+                lines: (o) => o?.order_detail?.items,
+                unidad: 'ítem',
+                idKey: 'order_id',
+                idOf: (o) => o?.order_detail?.order_id,
+                total: (o) => o?.order_detail?.totals?.total_order
             }
         };
 
@@ -1375,6 +1472,11 @@
                 payload.data.userId = Number(userIdInput.value.trim());
             }
 
+            // Rappi: solo si se completó. Vacío ⇒ el worker lo lee de la sucursal.
+            if (platform === 'rappi' && rappiStoreIdInput.value.trim()) {
+                payload.data.storeId = rappiStoreIdInput.value.trim();
+            }
+
             // Ya resuelto arriba, antes de bloquear el botón.
             if (advanced) payload.data.advanced = advanced;
 
@@ -1401,11 +1503,15 @@
 
                 out.textContent = `Worker: ${workerUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
 
-                // UberEats: el orderId de la respuesta es el que se cancela desde Uber.
-                if (platform === 'ubereats' && res.ok) {
+                // UberEats y Rappi: el orderId de la respuesta es el que se
+                // cancela desde la plataforma. Se recuerda por plataforma.
+                if (CANCEL_BY_PLATFORM[platform] && res.ok) {
                     try {
                         const { orderId } = JSON.parse(text);
-                        if (orderId) uberCancelInput.value = orderId;
+                        if (orderId) {
+                            lastOrderIdByPlatform[platform] = orderId;
+                            if (platformSelect.value === platform) platformCancelInput.value = orderId;
+                        }
                     } catch { /* respuesta no JSON: no hay orderId que recordar */ }
                 }
 
@@ -1418,11 +1524,21 @@
             }
         });
 
-        // --- Cancelación desde Uber: webhook orders.cancel vía POST /cancel ---
+        // Lo que se escriba a mano también se recuerda por plataforma.
+        platformCancelInput.addEventListener('input', () => {
+            lastOrderIdByPlatform[platformSelect.value] = platformCancelInput.value;
+        });
+
+        // --- Cancelación desde la plataforma: POST /cancel al worker de la
+        // plataforma elegida (UberEats → orders.cancel; Rappi → ORDER_EVENT_CANCEL).
         // Usa el mismo gate (nombre/apellido) y contexto del formulario, pero no
-        // necesita Branch ID: la tienda viaja dentro del orderId (sim.{ts}.{storeId}).
-        uberCancelButton.addEventListener('click', async () => {
-            const orderId = uberCancelInput.value.trim();
+        // necesita Branch ID: cada worker sabe resolverlo desde el orderId.
+        platformCancelButton.addEventListener('click', async () => {
+            const platform = platformSelect.value;
+            const cfg = CANCEL_BY_PLATFORM[platform];
+            if (!cfg) return;
+
+            const orderId = platformCancelInput.value.trim();
             const responseContainer = document.getElementById('responseContainer');
             const out = document.getElementById('respuesta');
             responseContainer.hidden = false;
@@ -1435,7 +1551,7 @@
             const payload = {
                 context: {
                     tenant: tenantSelect.value,
-                    platform: 'ubereats',
+                    platform,
                     environment: document.getElementById('environment').value
                 },
                 auth: {
@@ -1447,9 +1563,9 @@
                 data: { orderId }
             };
 
-            const cancelUrl = new URL('cancel', WORKER_URL_UBER).href;
-            uberCancelButton.disabled = true;
-            uberCancelButton.textContent = 'Cancelando...';
+            const cancelUrl = new URL('cancel', cfg.workerUrl).href;
+            platformCancelButton.disabled = true;
+            platformCancelButton.textContent = 'Cancelando...';
             out.textContent = 'Procesando la cancelación...';
 
             try {
@@ -1471,8 +1587,11 @@
             } catch (err) {
                 out.textContent = `Error de red contra ${cancelUrl}\n\n${err.message}`;
             } finally {
-                uberCancelButton.disabled = platformSelect.value !== 'ubereats';
-                uberCancelButton.textContent = '🚫 Cancelar desde Uber';
+                // Si mientras tanto se cambió de plataforma, updatePlatformOptions()
+                // ya dejó el botón como corresponde a la nueva.
+                const current = CANCEL_BY_PLATFORM[platformSelect.value];
+                platformCancelButton.disabled = !current;
+                platformCancelButton.textContent = current ? current.button : cfg.button;
             }
         });
     </script>
