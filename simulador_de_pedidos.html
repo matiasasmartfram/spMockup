@@ -27,7 +27,7 @@
         }
 
         .container {
-            max-width: 450px;
+            max-width: 520px;
             margin: auto;
             padding: 2rem 2.5rem;
             background-color: var(--container-bg-color);
@@ -55,7 +55,8 @@
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 0.75rem;
             font-size: 1rem;
@@ -66,10 +67,42 @@
             background-color: white;
         }
 
-        input:focus {
+        input:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+
+        textarea {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            resize: vertical;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+        }
+
+        /* Estado de la validación del JSON pegado (bloque de MercadoPago) */
+        .json-status {
+            margin: 0.5rem 0 0;
+            padding: 0.5rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background-color: #f2f4f6;
+            color: #7a8794;
+            word-break: break-word;
+        }
+
+        .json-status.is-valid {
+            background-color: #eafaf1;
+            color: #1e7e4f;
+        }
+
+        .json-status.is-invalid {
+            background-color: #fdedec;
+            color: #b03a2e;
         }
 
         button {
@@ -116,6 +149,262 @@
             overflow: auto;
             font-family: 'Source Code Pro', monospace;
         }
+
+        /* --- Bloque de Opciones Avanzadas --- */
+        details.advanced {
+            margin-bottom: 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #fafbfc;
+        }
+
+        details.advanced>summary {
+            padding: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        details.advanced[open]>summary {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .advanced-body {
+            padding: 1rem 0.75rem;
+        }
+
+        .advanced-hint {
+            font-size: 0.85rem;
+            color: #7a8794;
+            margin: 0 0 1rem;
+        }
+
+        .field-hint {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.78rem;
+            color: #7a8794;
+        }
+
+        /* --- Cancelación desde la plataforma (UberEats y Rappi) --- */
+        .platform-cancel {
+            margin-top: 1.25rem;
+            padding: 0.75rem;
+            border: 1px dashed #e0b4ae;
+            border-radius: 6px;
+            background-color: #fdf6f5;
+        }
+
+        .platform-cancel button {
+            margin-top: 0.5rem;
+            background-color: #c0392b;
+        }
+
+        .platform-cancel button:hover:not(:disabled) {
+            background-color: #a93226;
+        }
+
+        .platform-cancel button:disabled {
+            background-color: #e6b0aa;
+        }
+
+        .item-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            background-color: var(--container-bg-color);
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 40px;
+            gap: 0.5rem;
+            align-items: end;
+        }
+
+        .item-full,
+        .item-notes {
+            grid-column: 1 / -1;
+        }
+
+        .item-row label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-row input,
+        .item-row select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .item-row input:disabled {
+            background-color: #f2f4f6;
+            color: #7a8794;
+        }
+
+        /* --- Tarjetas compuestas: promoción y canje ---
+           Las dos tienen la misma anatomía (cabecera lógica + componentes que
+           descuentan stock); solo cambia el color para distinguirlas de un
+           vistazo dentro de una orden mixta. */
+        .promo-card {
+            border-left: 4px solid #f39c12;
+            background-color: #fffdf7;
+        }
+
+        .canje-card {
+            border-left: 4px solid #8e44ad;
+            background-color: #fcf9ff;
+        }
+
+        .promo-badge,
+        .canje-badge {
+            grid-column: 1 / -1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.5rem;
+        }
+
+        .promo-badge {
+            color: #b9770e;
+        }
+
+        .canje-badge {
+            color: #7d3c98;
+        }
+
+        .optiongroups-box {
+            grid-column: 1 / -1;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .optiongroups-box>label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .optiongroup-hint {
+            font-size: 0.75rem;
+            color: #7a8794;
+            margin: 0 0 0.75rem;
+        }
+
+        .optiongroup-row {
+            display: grid;
+            grid-template-columns: 1fr 110px 40px;
+            gap: 0.5rem;
+            align-items: end;
+            margin-bottom: 0.5rem;
+        }
+
+        .optiongroup-row .og-notes {
+            grid-column: 1 / -2;
+        }
+
+        .optiongroup-row label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .optiongroup-row input {
+            padding: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .items-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* --- Datos de canje del cliente (order.user) --- */
+        .loyalty-box {
+            margin-top: 1rem;
+            padding: 0.85rem;
+            border: 1px solid #d7bde2;
+            border-left: 4px solid #8e44ad;
+            border-radius: 6px;
+            background-color: #fcf9ff;
+        }
+
+        .loyalty-box>label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #7d3c98;
+            margin-bottom: 0.25rem;
+        }
+
+        .loyalty-hint {
+            font-size: 0.75rem;
+            color: #7a8794;
+            margin: 0 0 0.75rem;
+        }
+
+        .loyalty-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem 0.75rem;
+        }
+
+        .loyalty-grid label {
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .loyalty-grid input,
+        .loyalty-grid select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-small {
+            width: auto;
+            margin-top: 0;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-remove {
+            width: 100%;
+            margin-top: 0;
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+            line-height: 1;
+            background-color: #e74c3c;
+        }
+
+        .btn-remove:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
+
+        .btn-remove:disabled {
+            background-color: #e8b5af;
+        }
+
+        .total-line {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .total-line small {
+            display: block;
+            font-weight: 400;
+            color: #7a8794;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -128,6 +417,28 @@
             <div class="form-group">
                 <label for="branch">Branch ID</label>
                 <input type="number" id="branch" value="" required>
+            </div>
+
+            <!-- Solo MercadoPago. Se muestra/oculta en updatePlatformOptions(). -->
+            <div class="form-group" id="userIdGroup" hidden>
+                <label for="userId">MercadoPago User ID</label>
+                <input type="text" id="userId" inputmode="numeric" pattern="[0-9]+" value=""
+                    placeholder="175294506" title="Solo números: es el user_id del merchant en MercadoPago">
+                <small class="field-hint">
+                    Es el merchant al que Platform le va a resolver la orden. Si no coincide con el
+                    de la sucursal, el worker avisa pero igual lo manda.
+                </small>
+            </div>
+
+            <!-- Solo Rappi, y OPCIONAL. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.5. -->
+            <div class="form-group" id="rappiStoreIdGroup" hidden>
+                <label for="rappiStoreId">Rappi Store ID (opcional)</label>
+                <input type="text" id="rappiStoreId" value="" spellcheck="false" placeholder="222983"
+                    title="Es el branchReference de Rappi de la sucursal">
+                <small class="field-hint">
+                    Dejalo vacío y el worker lo lee de la sucursal. Completalo solo si el worker te
+                    dice que no pudo identificar la entrada de Rappi.
+                </small>
             </div>
 
             <div class="form-group">
@@ -153,6 +464,9 @@
                 <select id="platform" required>
                     <option value="pedigrido">Pedigrido</option>
                     <option value="pedidosya">PedidosYa</option>
+                    <option value="mercadopago">MercadoPago Delivery</option>
+                    <option value="ubereats">UberEats</option>
+                    <option value="rappi">Rappi</option>
                 </select>
             </div>
 
@@ -164,7 +478,276 @@
                 </select>
             </div>
 
+            <div id="advancedWrapper" hidden>
+                <details id="advancedPedigrido" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (Pedigrido)</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Si dejás este bloque cerrado se envía la orden por defecto. Abierto, se
+                            envía lo que configures acá — componiendo la orden campo por campo, o
+                            pegando una orden de producción entera.
+                        </p>
+
+                        <!-- Pedigrido es el único con los dos modos. Ver §3.1.1. -->
+                        <div class="form-group">
+                            <label for="pedigridoMode">Modo</label>
+                            <select id="pedigridoMode">
+                                <option value="compose">Componer la orden</option>
+                                <option value="inject">Pegar payload</option>
+                            </select>
+                        </div>
+
+                <div id="pedigridoCompose">
+                        <div class="form-group">
+                            <label for="deliveryMode">Tipo de entrega</label>
+                            <select id="deliveryMode">
+                                <option value="platformDelivery">Delivery a Cargo de la Plataforma</option>
+                                <option value="ownDelivery">Delivery Propio</option>
+                                <option value="customerPickup">Retira Cliente</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentMode">Pago</label>
+                            <select id="paymentMode">
+                                <option value="cash">Efectivo</option>
+                                <option value="online">Online</option>
+                            </select>
+                        </div>
+
+                        <label>Productos, promociones y canjes</label>
+                        <div id="itemsContainer"></div>
+                        <div class="items-buttons">
+                            <button type="button" id="addItemButton" class="btn-small">+ Agregar producto</button>
+                            <button type="button" id="addPromoButton" class="btn-small">+ Agregar Promoción</button>
+                            <button type="button" id="addCanjeButton" class="btn-small">+ Agregar Canje</button>
+                        </div>
+
+                        <!-- Aparece solo si hay al menos una tarjeta de canje. Ver
+                             refreshLoyaltyVisibility(): oculto = no se manda 'loyalty'. -->
+                        <div id="loyaltyBox" class="loyalty-box" hidden>
+                            <label>🎟️ Datos de canje (cliente)</label>
+                            <p class="loyalty-hint">
+                                Viajan en <code>order.user</code> y SmartPedidos los traspasa a
+                                SmartLoyalty, que valida el saldo y descuenta los puntos. El
+                                documento pisa al del cliente fijo de la orden.
+                            </p>
+                            <div class="loyalty-grid">
+                                <div class="form-group">
+                                    <label for="tipoIdentificacion">Tipo de identificación</label>
+                                    <select id="tipoIdentificacion">
+                                        <option value="DNI">DNI</option>
+                                        <option value="RUC">RUC</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loyaltyDni">Documento</label>
+                                    <input type="text" id="loyaltyDni" value="39690194">
+                                </div>
+                                <div class="form-group">
+                                    <label for="numeroTarjetaLoyalty">N° tarjeta loyalty</label>
+                                    <input type="text" id="numeroTarjetaLoyalty" value="1234567890">
+                                </div>
+                                <div class="form-group">
+                                    <label for="puntosCanjeados">Puntos canjeados (total)</label>
+                                    <input type="number" id="puntosCanjeados" min="0" step="1" value="5000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="total-line">
+                            Total: <span id="itemsTotal">$0</span>
+                            <small>Se envía en payment.partial y payment.subtotal</small>
+                        </div>
+                </div><!-- /#pedigridoCompose -->
+
+                <div id="pedigridoInject" hidden>
+                        <p class="advanced-hint">
+                            Pegá una orden de Pedigrido tal como la devuelve producción y se reenvía
+                            a Staging. Una orden real <b>no cumple</b> las reglas de la composición
+                            —los <code>optionGroups</code> traen su precio real en vez de
+                            <code>0</code>, el pago trae <code>shipping</code> y
+                            <code>discount</code>— y está bien: acá viaja tal cual.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="pedigridoOrderJson">Orden de Pedigrido (JSON)</label>
+                            <textarea id="pedigridoOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": 5536727, "branch": "3909", "registeredDate": "…", "pickup": false, "logistics": true, "user": { … }, "address": { … }, "details": [ … ], "payment": [ … ] }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden
+                                pegada: el worker pisa <code>branch</code> y <code>branchId</code>
+                                con ella, porque es el <code>branchReference</code> con el que
+                                Platform resuelve la sucursal.
+                            </small>
+                        </div>
+
+                        <p id="pedigridoOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform) y se refresca
+                            <code>registeredDate</code> conservando los offsets. Todo lo demás
+                            —<code>user</code>, <code>address</code>, <code>details</code>,
+                            <code>payment</code>, <code>cupon</code>,
+                            <code>deliveryPartner</code>— viaja intacto.
+                        </p>
+                </div><!-- /#pedigridoInject -->
+                    </div>
+                </details>
+
+                <!-- PedidosYa tampoco compone: inyecta la orden entera. Ver §3.1.3. -->
+                <details id="advancedPedidosYa" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (PedidosYa) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de PedidosYa tal como la devuelve producción y se
+                            reenvía a Staging. Si dejás este bloque cerrado se envía la orden fija
+                            del tenant que elegiste arriba.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="peyaOrderJson">Orden de PedidosYa (JSON)</label>
+                            <textarea id="peyaOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "token": "189672-_-oma_…", "code": "2287914094", "createdAt": "…", "localInfo": { … }, "customer": { … }, "products": [ … ], "price": { … }, "payment": { … } }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden
+                                pegada: la orden se envía a <code>/order/{branchId}</code>. El
+                                <b>Tenant</b> tampoco es decorativo — Platform parsea Grido y Weiss
+                                con funciones distintas, y el worker valida según cuál elegiste.
+                            </small>
+                        </div>
+
+                        <p id="peyaOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>code</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform), se refrescan las fechas
+                            conservando sus offsets, se descartan <code>branchId</code> y
+                            <code>state</code> (los inyecta Platform), y se reescriben las
+                            <code>callbackUrls</code> apuntando al worker — si no, aceptar la orden
+                            en Staging dispararía un POST contra PedidosYa real. Todo lo demás
+                            viaja tal cual.
+                        </p>
+                    </div>
+                </details>
+
+                <!-- MercadoPago no compone la orden: la inyecta entera. Ver §3.1.2. -->
+                <details id="advancedMercadoPago" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (MercadoPago) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de MercadoPago tal como la devuelve producción y se
+                            reenvía a Staging. Si dejás este bloque cerrado se envía la orden fija
+                            de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="mpdOrderJson">Orden de MercadoPago (JSON)</label>
+                            <textarea id="mpdOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": "47983369012", "type": "DELIVERY", "createdAt": "…", "merchant": { … }, "items": [ … ], "total": { … }, "customer": { … }, "extension": { "store": { … } } }'></textarea>
+                            <small class="field-hint">
+                                El destino lo mandan los campos de arriba, no la orden pegada: el
+                                worker pisa <code>merchant.id</code> con el <b>MercadoPago User
+                                    ID</b> y <code>extension.store.id</code> con el
+                                <code>branchReference</code> de la <b>Branch ID</b>.
+                            </small>
+                        </div>
+
+                        <p id="mpdOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> nuevo (reusar el de producción
+                            choca con el control de duplicados de Platform), se refrescan las fechas
+                            conservando sus offsets, y se descartan
+                            <code>branchId</code>, <code>user_id</code> y <code>state</code>, que
+                            Platform inyecta por su cuenta. Todo lo demás viaja tal cual.
+                        </p>
+                    </div>
+                </details>
+
+                <!-- UberEats tampoco compone: inyecta entera, igual que MercadoPago. Ver §3.1.4. -->
+                <details id="advancedUberEats" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (UberEats) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de UberEats —la respuesta del GET de Uber
+                            (<code>{ "order": { … } }</code>) o la orden sola— y se reenvía a Staging.
+                            Si dejás este bloque cerrado se envía la orden fija de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="uberOrderJson">Orden de UberEats (JSON)</label>
+                            <textarea id="uberOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "id": "c4faad4b-…", "display_id": "B4936", "store": { … }, "customers": [ … ], "carts": [ { "items": [ … ] } ], "payment": { "payment_detail": { … } }, "created_time": "…" }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba, no la orden pegada:
+                                el worker pisa <code>store.id</code> con el <code>branchReference</code>
+                                de UberEats de esa sucursal.
+                            </small>
+                        </div>
+
+                        <p id="uberOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>id</code> y un <code>display_id</code> nuevos
+                            (reusar el de producción choca con el control de duplicados de Platform),
+                            se refrescan las fechas conservando sus offsets, y se descartan
+                            <code>branchId</code>, <code>oldId</code> y <code>state</code>, que
+                            Platform inyecta por su cuenta. Todo lo demás viaja tal cual.
+                        </p>
+                    </div>
+                </details>
+
+                <!-- Rappi tampoco compone: inyecta entera. La orden queda en la cola del worker
+                     hasta que Platform la pollea. Ver §3.1.5. -->
+                <details id="advancedRappi" class="advanced">
+                    <summary>⚙️ Opciones avanzadas (Rappi) — Inyectar orden</summary>
+                    <div class="advanced-body">
+                        <p class="advanced-hint">
+                            Pegá una orden de Rappi (<code>{ "order_detail": { … }, "customer": { … },
+                            "store": { … }, "state": "…" }</code>, sola o dentro del array que devuelve el
+                            poll) y se encola para el próximo poll de Platform. Si dejás este bloque
+                            cerrado se envía la orden fija de siempre.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="rappiOrderJson">Orden de Rappi (JSON)</label>
+                            <textarea id="rappiOrderJson" rows="16" spellcheck="false"
+                                placeholder='{ "order_detail": { "order_id": "481156739", "discounts": [ … ], "totals": { … }, "items": [ … ], "created_at": "2026-09-23 16:00:33" }, "customer": { … }, "store": { … }, "state": "SENT" }'></textarea>
+                            <small class="field-hint">
+                                El destino lo manda la <b>Branch ID</b> de arriba (o el <b>Rappi Store
+                                ID</b>), no la orden pegada: el worker pisa <code>store.external_id</code>.
+                            </small>
+                        </div>
+
+                        <p id="rappiOrderStatus" class="json-status">Pegá una orden para validarla.</p>
+
+                        <p class="advanced-hint" style="margin-bottom:0">
+                            También se genera un <code>order_id</code> nuevo (Platform hace upsert por ese
+                            id: reusar el de producción pisaría esa orden), se pone <code>state: "SENT"</code>
+                            y se corre <code>created_at</code> al presente. Todo lo demás —ítems,
+                            descuentos, totales— viaja tal cual.
+                        </p>
+                    </div>
+                </details>
+            </div>
+
             <button type="submit" id="submitButton">Crear Pedido</button>
+
+            <!-- Solo UberEats y Rappi. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
+            <div class="platform-cancel" id="platformCancelGroup" hidden>
+                <div class="form-group" style="margin-bottom:0">
+                    <label for="platformCancelOrderId" id="platformCancelLabel">Cancelar desde la plataforma</label>
+                    <input type="text" id="platformCancelOrderId" value="" spellcheck="false">
+                    <small class="field-hint">
+                        Se completa solo con el <code>orderId</code> del último envío de esta plataforma.
+                        Platform pasa la news a <code>platform_rej_ord</code>; la orden tiene que existir
+                        (Platform ya tiene que haberla levantado).
+                    </small>
+                </div>
+                <button type="button" id="platformCancelButton">🚫 Cancelar desde la plataforma</button>
+            </div>
         </form>
 
         <div id="responseContainer" class="response-container" hidden>
@@ -174,34 +757,640 @@
     </div>
 
     <script>
-        // Para producción:
-        const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
-        // Para pruebas locales (Wrangler):
-        // const WORKER_URL = 'http://localhost:8787/';
+        /*───────────────────────────────────────────────────────────────────*
+         * URLs de los workers — ÚNICO punto de conmutación LOCAL ↔ CLOUDFLARE
+         *
+         * Son TRES workers distintos y se conmutan por separado, así se puede
+         * tener unos en Cloudflare y otros en local al mismo tiempo.
+         *───────────────────────────────────────────────────────────────────*/
+
+        // Worker principal — Pedigrido (worker.js, :8787)
+         const WORKER_URL = 'https://smartfran.matiasa.workers.dev/';
+        //const WORKER_URL = 'http://localhost:8787/';
+
+        // Worker PedidosYa (workerPEYA.js, :8789) — grido y weiss
+        const WORKER_URL_PEYA = 'https://smartfranpeya.matiasa.workers.dev/';
+        // const WORKER_URL_PEYA = 'http://localhost:8789/';
+
+        // Worker MercadoPago Delivery (workerMPD.js, :8788)
+        // Ojo: en LOCAL el circuito no se cierra — Platform no llega a localhost.
+        const WORKER_URL_MPD = 'https://smartfranmpd.matiasa.workers.dev/';
+        // const WORKER_URL_MPD = 'http://localhost:8788/';
+
+        // Worker UberEats (workerUBER.js, :8790)
+        // Igual que MercadoPago: en LOCAL el circuito no se cierra — Platform no llega a localhost.
+        const WORKER_URL_UBER = 'https://smartfranuber.matiasa.workers.dev/';
+        // const WORKER_URL_UBER = 'http://localhost:8790/';
+
+        // Worker Rappi (workerRAPPI.js, :8791) — la cola vive en KV (binding RAPPI_KV).
+        // Igual que MercadoPago: en LOCAL el circuito no se cierra — Platform no llega a localhost.
+        const WORKER_URL_RAPPI = 'https://smartfranrappi.matiasa.workers.dev/';
+        // const WORKER_URL_RAPPI = 'http://localhost:8791/';
+
+        // Cada plataforma tiene su worker. MercadoPago y UberEats porque no son
+        // push directo (tienen que atender el GET de detalle que Platform hace
+        // después); Rappi porque Platform la pollea; PedidosYa porque atiende
+        // los callbacks de accept/reject/prepared y hace de proxy hacia PedidosYa
+        // real. Este mapa es el ÚNICO lugar donde se decide el destino: no
+        // agregues ifs de plataforma en el submit.
+        const WORKER_BY_PLATFORM = {
+            mercadopago: WORKER_URL_MPD,
+            pedidosya: WORKER_URL_PEYA,
+            ubereats: WORKER_URL_UBER,
+            rappi: WORKER_URL_RAPPI
+        };
+        const workerUrlFor = (platform) => WORKER_BY_PLATFORM[platform] ?? WORKER_URL;
 
         // --- Lógica de Dependencia Tenant/Plataforma (Bloqueo Visual) ---
         const tenantSelect = document.getElementById('tenant');
         const platformSelect = document.getElementById('platform');
-        const pedigridoOption = platformSelect.querySelector('option[value="pedigrido"]');
+
+        // Plataformas que solo operan con Grido. Weiss únicamente usa PedidosYa.
+        const GRIDO_ONLY_PLATFORMS = ['pedigrido', 'mercadopago', 'ubereats', 'rappi'];
+        const gridoOnlyOptions = GRIDO_ONLY_PLATFORMS
+            .map(value => platformSelect.querySelector(`option[value="${value}"]`));
+
+        // Cada plataforma con avanzado tiene su propio <details>: las estructuras
+        // de orden no se parecen en nada y el modo tampoco (Pedigrido COMPONE la
+        // orden campo por campo; PedidosYa, MercadoPago, UberEats y Rappi
+        // INYECTAN una entera). El wrapper es el contenedor común.
+        const advancedWrapper = document.getElementById('advancedWrapper');
+        const advancedByPlatform = {
+            pedigrido: document.getElementById('advancedPedigrido'),
+            pedidosya: document.getElementById('advancedPedidosYa'),
+            mercadopago: document.getElementById('advancedMercadoPago'),
+            ubereats: document.getElementById('advancedUberEats'),
+            rappi: document.getElementById('advancedRappi')
+        };
+
+        // ⭐ Pedigrido es el único con los DOS modos avanzados, y ahí el modo lo
+        // elige el usuario. El resto solo inyecta. Este es el único lugar donde
+        // se decide: el submit y el validador en vivo preguntan por acá.
+        const pedigridoMode = document.getElementById('pedigridoMode');
+        const advancedModeFor = (platform) =>
+            platform === 'pedigrido' ? pedigridoMode.value : 'inject';
+
+        // 'userId' es obligatorio SOLO para MercadoPago (worker.js ni lo mira).
+        const userIdGroup = document.getElementById('userIdGroup');
+        const userIdInput = document.getElementById('userId');
+
+        // 'storeId' es OPCIONAL y solo para Rappi: el worker lo lee de la sucursal
+        // y solo lo pide si no puede identificar la entrada de Rappi.
+        const rappiStoreIdGroup = document.getElementById('rappiStoreIdGroup');
+        const rappiStoreIdInput = document.getElementById('rappiStoreId');
+
+        // Cancelación desde la plataforma: solo UberEats y Rappi. Cada una tiene su
+        // worker, su evento y su formato de id; el último orderId se recuerda POR
+        // plataforma, así que alternar entre las dos no mezcla los ids.
+        const CANCEL_BY_PLATFORM = {
+            ubereats: {
+                workerUrl: WORKER_URL_UBER,
+                label: 'Cancelar desde Uber (webhook orders.cancel)',
+                button: '🚫 Cancelar desde Uber',
+                placeholder: 'sim.1758600000000.261f3c7a-0acd-591b-bbc3-a0437b67f4e4'
+            },
+            rappi: {
+                workerUrl: WORKER_URL_RAPPI,
+                label: 'Cancelar desde Rappi (webhook ORDER_EVENT_CANCEL)',
+                button: '🚫 Cancelar desde Rappi',
+                placeholder: '9758600000'
+            }
+        };
+        const lastOrderIdByPlatform = {};
+        const platformCancelGroup = document.getElementById('platformCancelGroup');
+        const platformCancelLabel = document.getElementById('platformCancelLabel');
+        const platformCancelInput = document.getElementById('platformCancelOrderId');
+        const platformCancelButton = document.getElementById('platformCancelButton');
 
         const updatePlatformOptions = () => {
-            if (tenantSelect.value === 'weiss') {
-                // Si es Weiss, ocultamos y deshabilitamos Pedigrido
-                pedigridoOption.hidden = true;
-                pedigridoOption.disabled = true;
-                if (platformSelect.value === 'pedigrido') {
-                    platformSelect.value = 'pedidosya';
-                }
-            } else {
-                // Si es Grido, mostramos y habilitamos todo
-                pedigridoOption.hidden = false;
-                pedigridoOption.disabled = false;
+            const isWeiss = tenantSelect.value === 'weiss';
+
+            // Con Weiss se ocultan y deshabilitan las plataformas de Grido; con
+            // Grido se muestran todas.
+            gridoOnlyOptions.forEach(option => {
+                option.hidden = isWeiss;
+                option.disabled = isWeiss;
+            });
+
+            // Si la seleccionada quedó oculta, caemos a la única que le sirve a Weiss.
+            if (isWeiss && GRIDO_ONLY_PLATFORMS.includes(platformSelect.value)) {
+                platformSelect.value = 'pedidosya';
+            }
+
+            // Se muestra el <details> de la plataforma seleccionada, si tiene uno.
+            const activeAdvanced = advancedByPlatform[platformSelect.value] ?? null;
+            advancedWrapper.hidden = !activeAdvanced;
+
+            // Los inactivos se ocultan Y se cierran. Si uno queda abierto e
+            // invisible, al volver a esa plataforma se aplicaría sin que el
+            // usuario lo esté viendo.
+            Object.values(advancedByPlatform).forEach(details => {
+                const isActive = details === activeAdvanced;
+                details.hidden = !isActive;
+                if (!isActive) details.open = false;
+            });
+
+            // userId: obligatorio con MercadoPago, no existe para el resto.
+            // Se DESHABILITA además de ocultarse, no solo se le saca 'required':
+            // un input oculto que no valida corta el submit con "not focusable",
+            // y el usuario no ve ningún error. Los deshabilitados no se validan.
+            const isMercadoPago = platformSelect.value === 'mercadopago';
+            userIdGroup.hidden = !isMercadoPago;
+            userIdInput.required = isMercadoPago;
+            userIdInput.disabled = !isMercadoPago;
+
+            // storeId de Rappi: opcional, visible y habilitado solo con Rappi.
+            const isRappi = platformSelect.value === 'rappi';
+            rappiStoreIdGroup.hidden = !isRappi;
+            rappiStoreIdInput.disabled = !isRappi;
+
+            // Cancelación: visible y habilitada solo con UberEats y Rappi.
+            const cancelCfg = CANCEL_BY_PLATFORM[platformSelect.value] ?? null;
+            platformCancelGroup.hidden = !cancelCfg;
+            platformCancelInput.disabled = !cancelCfg;
+            platformCancelButton.disabled = !cancelCfg;
+            if (cancelCfg) {
+                platformCancelLabel.textContent = cancelCfg.label;
+                platformCancelButton.textContent = cancelCfg.button;
+                platformCancelInput.placeholder = cancelCfg.placeholder;
+                platformCancelInput.value = lastOrderIdByPlatform[platformSelect.value] ?? '';
             }
         };
 
+        // --- Catálogo de productos (solo precarga: el worker acepta cualquier SKU) ---
+        const PEDIGRIDO_CATALOG = {
+            '64': { name: 'Helado 1 Kg', unitPrice: 9500, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' },
+            '65': { name: 'Helado 1/2 Kg', unitPrice: 9000, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' },
+            '66': { name: 'Helado 1/4 Kg', unitPrice: 9500, notes: 'Super dulce de leche Grido Tramontana Chocolate c/Almendras' }
+        };
+
+        // --- Promo de ejemplo (solo precarga: nombre, SKU, precio y componentes son editables) ---
+        // El 'sku' de cabecera es lógico y NO descuenta stock: el stock lo descuentan
+        // los optionGroups. Espeja PEDIGRIDO_DEFAULT_PROMO de worker.js.
+        const PEDIGRIDO_PROMO_DEFAULT = {
+            name: '2 Cuartos por $5000',
+            sku: '12760',
+            unitPrice: 5000,
+            notes: '',
+            optionGroups: [
+                { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: 'Chocolate' },
+                { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: 'Frutilla' }
+            ]
+        };
+
+        // --- Canje de ejemplo (misma idea: todo editable) ---
+        // Espeja PEDIGRIDO_DEFAULT_CANJE de worker.js. Un canje tiene la misma
+        // anatomía que una promo, pero viaja con canje: 1 y promotion: false, y
+        // exige los datos del socio del bloque de abajo.
+        const PEDIGRIDO_CANJE_DEFAULT = {
+            name: 'Canje 1 Kilo - 5000 puntos + 50%',
+            sku: '12931',
+            unitPrice: 5000,
+            notes: '',
+            optionGroups: [
+                { name: 'Kilo de Helado', sku: '64', notes: 'Chocolate, Dulce de Leche, Frutilla, Vainilla' }
+            ]
+        };
+
+        // Con qué se precarga un componente nuevo agregado a mano. En el canje las
+        // notas van cargadas porque ahí son obligatorias (el worker rechaza un
+        // componente de canje sin sabores); en la promo son opcionales.
+        const PROMO_GROUP_TEMPLATE = { name: 'Sabores Helado 1/4 Kg', sku: '66', notes: '' };
+        const CANJE_GROUP_TEMPLATE = { name: 'Kilo de Helado', sku: '64', notes: 'Chocolate' };
+
+        // Textos y precarga de cada tipo de tarjeta compuesta. Es lo único que
+        // difiere entre una promo y un canje del lado del front.
+        const COMPOSITE_KINDS = {
+            promo: {
+                cardClass: 'promo-card',
+                badge: '🎁 Promoción',
+                badgeClass: 'promo-badge',
+                nameLabel: 'Nombre de la promo',
+                skuLabel: 'SKU promo (no descuenta stock)',
+                qtyTitle: 'Siempre 1: una promo por tarjeta',
+                removeTitle: 'Quitar promoción',
+                groupsLabel: 'Componentes de la promo',
+                groupsHint: `Son los productos reales que descuentan stock. Su precio siempre
+                             va en 0. Para pedir 2 promos agregá otra tarjeta: cada promo se
+                             envía por separado con cantidad 1.`,
+                notesLabel: 'Notas (sabor / variante)',
+                preset: PEDIGRIDO_PROMO_DEFAULT,
+                groupTemplate: PROMO_GROUP_TEMPLATE
+            },
+            canje: {
+                cardClass: 'canje-card',
+                badge: '🎟️ Canje de puntos',
+                badgeClass: 'canje-badge',
+                nameLabel: 'Nombre del canje',
+                skuLabel: 'SKU canje (no descuenta stock)',
+                qtyTitle: 'Siempre 1: un canje por tarjeta',
+                removeTitle: 'Quitar canje',
+                groupsLabel: 'Componentes del canje',
+                groupsHint: `Son los productos reales que descuentan stock. Su precio siempre
+                             va en 0 y las notas son obligatorias: ahí van los sabores. Para
+                             dos canjes agregá otra tarjeta, cada uno se envía por separado
+                             con cantidad 1.`,
+                notesLabel: 'Sabores / variante (obligatorio)',
+                preset: PEDIGRIDO_CANJE_DEFAULT,
+                groupTemplate: CANJE_GROUP_TEMPLATE
+            }
+        };
+
+        const DEFAULT_SKU = '64';
+        const itemsContainer = document.getElementById('itemsContainer');
+
+        const buildItemCard = (sku) => {
+            const preset = PEDIGRIDO_CATALOG[sku];
+            const options = Object.entries(PEDIGRIDO_CATALOG)
+                .map(([code, p]) => `<option value="${code}">${p.name}</option>`)
+                .join('');
+
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.dataset.type = 'product';
+            card.innerHTML = `
+                <div class="item-row">
+                    <div class="item-full">
+                        <label>Producto</label>
+                        <select class="item-product">${options}</select>
+                    </div>
+                    <div>
+                        <label>SKU</label>
+                        <input type="text" class="item-sku" value="${sku}">
+                    </div>
+                    <div>
+                        <label>Precio unitario</label>
+                        <input type="number" class="item-price" min="0" step="1" value="${preset.unitPrice}">
+                    </div>
+                    <div>
+                        <label>Cantidad</label>
+                        <input type="number" class="item-qty" min="1" step="1" value="1">
+                    </div>
+                    <button type="button" class="btn-remove btn-remove-card" title="Quitar producto">&times;</button>
+                    <div class="item-notes">
+                        <label>Notas</label>
+                        <input type="text" class="item-notes-input" value="${preset.notes}">
+                    </div>
+                </div>`;
+
+            card.querySelector('.item-product').value = sku;
+            return card;
+        };
+
+        // Un componente = un optionGroup, tanto en una promo como en un canje. Su
+        // 'sku' es el que descuenta stock, y su precio es siempre 0 (el precio va
+        // en la cabecera). El 'id' no es un input: se deriva del SKU (ver
+        // readOptionGroups). Lo único que cambia entre promo y canje es la etiqueta
+        // de las notas, que en el canje son obligatorias.
+        const buildOptionGroupRow = (group, notesLabel = 'Notas (sabor / variante)') => {
+            const row = document.createElement('div');
+            row.className = 'optiongroup-row';
+            row.innerHTML = `
+                <div>
+                    <label>Nombre del grupo</label>
+                    <input type="text" class="og-name" value="${group.name}">
+                </div>
+                <div>
+                    <label>SKU real</label>
+                    <input type="text" class="og-sku" value="${group.sku}">
+                </div>
+                <button type="button" class="btn-remove btn-remove-group" title="Quitar componente">&times;</button>
+                <div class="og-notes">
+                    <label>${notesLabel}</label>
+                    <input type="text" class="og-notes-input" value="${group.notes}">
+                </div>`;
+            return row;
+        };
+
+        // Tarjeta compuesta: promoción o canje. Las dos tienen la misma anatomía
+        // —cabecera con SKU lógico + componentes que descuentan stock— así que se
+        // arman con la misma función y solo cambian los textos (COMPOSITE_KINDS).
+        // A diferencia del producto, acá el 'name' es texto libre: no hay catálogo
+        // de promos ni de canjes, se escribe la descripción comercial a simular.
+        const buildCompositeCard = (kind) => {
+            const cfg = COMPOSITE_KINDS[kind];
+            const preset = cfg.preset;
+
+            const card = document.createElement('div');
+            card.className = `item-card ${cfg.cardClass}`;
+            card.dataset.type = kind;
+            card.innerHTML = `
+                <div class="item-row">
+                    <span class="${cfg.badgeClass}">${cfg.badge}</span>
+                    <div class="item-full">
+                        <label>${cfg.nameLabel}</label>
+                        <input type="text" class="composite-name" value="${preset.name}">
+                    </div>
+                    <div>
+                        <label>${cfg.skuLabel}</label>
+                        <input type="text" class="composite-sku" value="${preset.sku}">
+                    </div>
+                    <div>
+                        <label>Precio</label>
+                        <input type="number" class="composite-price" min="0" step="1" value="${preset.unitPrice}">
+                    </div>
+                    <div>
+                        <label>Cantidad</label>
+                        <input type="number" class="composite-qty" value="1" disabled title="${cfg.qtyTitle}">
+                    </div>
+                    <button type="button" class="btn-remove btn-remove-card" title="${cfg.removeTitle}">&times;</button>
+                    <div class="item-notes">
+                        <label>Notas generales</label>
+                        <input type="text" class="composite-notes-input" value="${preset.notes}">
+                    </div>
+
+                    <div class="optiongroups-box">
+                        <label>${cfg.groupsLabel}</label>
+                        <p class="optiongroup-hint">${cfg.groupsHint}</p>
+                        <div class="optiongroups-container"></div>
+                        <button type="button" class="btn-small btn-add-group">+ Agregar componente</button>
+                    </div>
+                </div>`;
+
+            const groupsContainer = card.querySelector('.optiongroups-container');
+            preset.optionGroups.forEach(group =>
+                groupsContainer.appendChild(buildOptionGroupRow(group, cfg.notesLabel)));
+
+            return card;
+        };
+
+        // El 'id' del grupo no se pide en la UI: se manda el mismo valor del SKU.
+        // Si el SKU no es numérico (caso válido: simular uno que el POS no conoce)
+        // no hay número que espejar y se manda 0, que el backend tampoco usa.
+        const groupIdFromSku = (sku) => {
+            const parsed = Number(sku);
+            return Number.isInteger(parsed) ? parsed : 0;
+        };
+
+        const readOptionGroups = (card) =>
+            Array.from(card.querySelectorAll('.optiongroup-row')).map(row => ({
+                id: groupIdFromSku(row.querySelector('.og-sku').value.trim()),
+                name: row.querySelector('.og-name').value.trim(),
+                sku: row.querySelector('.og-sku').value.trim(),
+                unitPrice: 0,
+                notes: row.querySelector('.og-notes-input').value
+            }));
+
+        // En los productos el 'name' no es editable: sale del select del catálogo.
+        // En promos y canjes sí, y además 'quantity' se fuerza a 1 (regla del
+        // formato: dos promos —o dos canjes— son dos líneas separadas, no una
+        // línea con cantidad 2, para que cada unidad lleve sus propios sabores).
+        //
+        // 'promotion' y 'canje' viajan como booleanos: el worker los traduce a los
+        // flags que espera la orden (promotion true/false, canje 1/0).
+        const readItems = () => Array.from(itemsContainer.querySelectorAll('.item-card')).map(card => {
+            const kind = card.dataset.type;
+
+            if (kind === 'promo' || kind === 'canje') {
+                const notes = card.querySelector('.composite-notes-input').value.trim();
+                return {
+                    ...(kind === 'canje' ? { canje: true } : { promotion: true }),
+                    name: card.querySelector('.composite-name').value.trim(),
+                    sku: card.querySelector('.composite-sku').value.trim(),
+                    unitPrice: Number(card.querySelector('.composite-price').value),
+                    quantity: 1,
+                    notes: notes || null,
+                    optionGroups: readOptionGroups(card)
+                };
+            }
+
+            return {
+                name: PEDIGRIDO_CATALOG[card.querySelector('.item-product').value].name,
+                sku: card.querySelector('.item-sku').value.trim(),
+                unitPrice: Number(card.querySelector('.item-price').value),
+                quantity: Number(card.querySelector('.item-qty').value),
+                notes: card.querySelector('.item-notes-input').value
+            };
+        });
+
+        // El bloque de datos del socio existe solo si hay algo que canjear: el
+        // worker rechaza 'loyalty' sin canjes y canjes sin 'loyalty'.
+        const loyaltyBox = document.getElementById('loyaltyBox');
+        const hasCanje = () => itemsContainer.querySelector('[data-type="canje"]') !== null;
+        const refreshLoyaltyVisibility = () => { loyaltyBox.hidden = !hasCanje(); };
+
+        // Oculto = no se manda. Misma lógica de "visible = activo" que el avanzado.
+        const readLoyalty = () => loyaltyBox.hidden ? null : {
+            dni: document.getElementById('loyaltyDni').value.trim(),
+            tipoIdentificacion: document.getElementById('tipoIdentificacion').value,
+            numeroTarjetaLoyalty: document.getElementById('numeroTarjetaLoyalty').value.trim(),
+            puntosCanjeados: Number(document.getElementById('puntosCanjeados').value)
+        };
+
+        const renderTotal = () => {
+            const total = readItems().reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+            document.getElementById('itemsTotal').textContent = '$' + total.toLocaleString('es-AR');
+        };
+
+        // No se puede quedar sin líneas (productos + promos + canjes): con una sola,
+        // el botón se deshabilita. Misma regla adentro de cada tarjeta compuesta:
+        // mínimo un componente, o el parser no la arma como promo/canje.
+        const refreshRemoveButtons = () => {
+            const cards = itemsContainer.querySelectorAll('.item-card');
+            cards.forEach(card => { card.querySelector('.btn-remove-card').disabled = cards.length === 1; });
+
+            itemsContainer.querySelectorAll('[data-type="promo"], [data-type="canje"]').forEach(card => {
+                const groups = card.querySelectorAll('.optiongroup-row');
+                groups.forEach(row => { row.querySelector('.btn-remove-group').disabled = groups.length === 1; });
+            });
+        };
+
+        // Todo alta o baja de línea recalcula lo mismo: mínimos, total y si el
+        // bloque de datos del socio corresponde mostrarlo.
+        const refreshItems = () => {
+            refreshRemoveButtons();
+            refreshLoyaltyVisibility();
+            renderTotal();
+        };
+
+        const addItem = (sku = DEFAULT_SKU) => {
+            itemsContainer.appendChild(buildItemCard(sku));
+            refreshItems();
+        };
+
+        const addComposite = (kind) => {
+            itemsContainer.appendChild(buildCompositeCard(kind));
+            refreshItems();
+        };
+
+        itemsContainer.addEventListener('input', renderTotal);
+
+        itemsContainer.addEventListener('change', e => {
+            // Elegir otro producto repuebla SKU, precio y notas de esa fila.
+            // Después de la precarga los tres siguen siendo editables.
+            if (!e.target.classList.contains('item-product')) return;
+
+            const card = e.target.closest('.item-card');
+            const preset = PEDIGRIDO_CATALOG[e.target.value];
+            card.querySelector('.item-sku').value = e.target.value;
+            card.querySelector('.item-price').value = preset.unitPrice;
+            card.querySelector('.item-notes-input').value = preset.notes;
+            renderTotal();
+        });
+
+        itemsContainer.addEventListener('click', e => {
+            // Los componentes se van antes que la tarjeta: el botón de grupo
+            // también lleva 'btn-remove', así que se chequea primero.
+            if (e.target.classList.contains('btn-remove-group')) {
+                e.target.closest('.optiongroup-row').remove();
+            } else if (e.target.classList.contains('btn-add-group')) {
+                // La precarga del componente nuevo depende del tipo de tarjeta.
+                const cfg = COMPOSITE_KINDS[e.target.closest('.item-card').dataset.type];
+                e.target.closest('.optiongroups-box')
+                    .querySelector('.optiongroups-container')
+                    .appendChild(buildOptionGroupRow(cfg.groupTemplate, cfg.notesLabel));
+            } else if (e.target.classList.contains('btn-remove-card')) {
+                e.target.closest('.item-card').remove();
+            } else {
+                return;
+            }
+
+            refreshItems();
+        });
+
+        document.getElementById('addItemButton').addEventListener('click', () => addItem());
+        document.getElementById('addPromoButton').addEventListener('click', () => addComposite('promo'));
+        document.getElementById('addCanjeButton').addEventListener('click', () => addComposite('canje'));
+
+        /*───────────────────────────────────────────────────────────────────*
+         * Bloques avanzados de inyección (Pedigrido, PedidosYa, MercadoPago y
+         * UberEats)
+         *
+         * Acá no se compone nada: se pega una orden de producción entera y se
+         * reenvía. Todas comparten el mismo par de funciones y solo difieren en
+         * el resumen, porque las estructuras de orden no se parecen
+         * (products/price.grandTotal vs items/total.orderAmount vs
+         * carts[0].items/payment_detail.order_total).
+         *
+         * La validación de verdad la hace el worker, que conoce las trampas
+         * del parser de Platform (remoteCode como número, discounts ausente,
+         * fullItemsPrice >= 1.000.000, extras colgados de un artículo que no
+         * está en el combo…) y responde un 400 diciendo el campo exacto. Esto
+         * de acá es solo para no descubrir un typo de JSON después de haber
+         * mandado el pedido.
+         *───────────────────────────────────────────────────────────────────*/
+
+        // Devuelve { order } o { error }. Es exactamente lo que se manda en el submit.
+        const readInjectedOrder = (input, plataforma) => {
+            const raw = input.value.trim();
+            if (!raw) return { error: `Pegá la orden de ${plataforma} que querés inyectar.` };
+
+            try {
+                return { order: JSON.parse(raw) };
+            } catch (err) {
+                return { error: `JSON inválido: ${err.message}` };
+            }
+        };
+
+        const renderInjectedStatus = (cfg) => {
+            if (!cfg.input.value.trim()) {
+                cfg.status.className = 'json-status';
+                cfg.status.textContent = 'Pegá una orden para validarla.';
+                return;
+            }
+
+            const { order, error } = readInjectedOrder(cfg.input, cfg.plataforma);
+
+            if (error) {
+                cfg.status.className = 'json-status is-invalid';
+                cfg.status.textContent = `❌ ${error}`;
+                return;
+            }
+
+            // Los workers aceptan también un array de una sola orden, así que el
+            // resumen tiene que reconocer las dos formas. UberEats además acepta
+            // la respuesta cruda del GET ({ order }) y tiene las líneas anidadas
+            // (carts[0].items): para eso están `unwrap` y `lines`, opcionales.
+            // Rappi tiene también el id anidado (order_detail.order_id): `idOf`.
+            const first = Array.isArray(order) && order.length === 1 ? order[0] : order;
+            const target = cfg.unwrap ? cfg.unwrap(first) : first;
+            const lineArray = cfg.lines ? cfg.lines(target) : target?.[cfg.linesKey];
+            const lineas = Array.isArray(lineArray) ? lineArray.length : 0;
+            const total = parseFloat(cfg.total(target));
+            const id = cfg.idOf ? cfg.idOf(target) : target?.[cfg.idKey];
+
+            cfg.status.className = 'json-status is-valid';
+            cfg.status.textContent =
+                `✅ JSON válido · ${lineas} ${lineas === 1 ? cfg.unidad : cfg.unidad + 's'}` +
+                (Number.isFinite(total) ? ` · total $${total.toLocaleString('es-AR')}` : '') +
+                (id ? ` · ${cfg.idKey} original ${id} (se reemplaza)` : '');
+        };
+
+        const INJECTION_UI = {
+            pedigrido: {
+                plataforma: 'Pedigrido',
+                input: document.getElementById('pedigridoOrderJson'),
+                status: document.getElementById('pedigridoOrderStatus'),
+                linesKey: 'details',
+                unidad: 'línea',
+                idKey: 'id',
+                total: (o) => o?.payment?.[0]?.subtotal
+            },
+            pedidosya: {
+                plataforma: 'PedidosYa',
+                input: document.getElementById('peyaOrderJson'),
+                status: document.getElementById('peyaOrderStatus'),
+                linesKey: 'products',
+                unidad: 'producto',
+                idKey: 'code',
+                total: (o) => o?.price?.grandTotal
+            },
+            mercadopago: {
+                plataforma: 'MercadoPago',
+                input: document.getElementById('mpdOrderJson'),
+                status: document.getElementById('mpdOrderStatus'),
+                linesKey: 'items',
+                unidad: 'ítem',
+                idKey: 'id',
+                total: (o) => o?.total?.orderAmount?.value
+            },
+            ubereats: {
+                plataforma: 'UberEats',
+                input: document.getElementById('uberOrderJson'),
+                status: document.getElementById('uberOrderStatus'),
+                unwrap: (o) => (o?.order && o.carts === undefined ? o.order : o),
+                lines: (o) => o?.carts?.[0]?.items,
+                unidad: 'ítem',
+                idKey: 'id',
+                total: (o) => o?.payment?.payment_detail?.order_total?.gross?.amount_e5 / 100000
+            },
+            rappi: {
+                plataforma: 'Rappi',
+                input: document.getElementById('rappiOrderJson'),
+                status: document.getElementById('rappiOrderStatus'),
+                lines: (o) => o?.order_detail?.items,
+                unidad: 'ítem',
+                idKey: 'order_id',
+                idOf: (o) => o?.order_detail?.order_id,
+                total: (o) => o?.order_detail?.totals?.total_order
+            }
+        };
+
+        Object.values(INJECTION_UI).forEach(cfg =>
+            cfg.input.addEventListener('input', () => renderInjectedStatus(cfg)));
+
+        // Los dos paneles de Pedigrido: se muestra el del modo elegido. A
+        // diferencia de los <details>, acá no hace falta "cerrar" el otro —
+        // el submit lee el modo del select, no la visibilidad.
+        const pedigridoCompose = document.getElementById('pedigridoCompose');
+        const pedigridoInject = document.getElementById('pedigridoInject');
+
+        const updatePedigridoMode = () => {
+            const inyecta = pedigridoMode.value === 'inject';
+            pedigridoCompose.hidden = inyecta;
+            pedigridoInject.hidden = !inyecta;
+        };
+
+        pedigridoMode.addEventListener('change', updatePedigridoMode);
+
         // Ejecutar al cambiar y al cargar la página
         tenantSelect.addEventListener('change', updatePlatformOptions);
-        window.addEventListener('DOMContentLoaded', updatePlatformOptions);
+        platformSelect.addEventListener('change', updatePlatformOptions);
+        window.addEventListener('DOMContentLoaded', () => {
+            addItem();
+            updatePedigridoMode();
+            updatePlatformOptions();
+        });
 
         document.getElementById('pedidoForm').addEventListener('submit', async e => {
             e.preventDefault();
@@ -216,6 +1405,41 @@
             const responseContainer = document.getElementById('responseContainer');
             const out = document.getElementById('respuesta');
             const button = document.getElementById('submitButton');
+
+            // "Desplegado = activo": cada plataforma arma su propio bloque avanzado.
+            // Se resuelve ANTES de bloquear el botón para poder abortar sin tener
+            // que restaurar la UI a mano.
+            const activeAdvanced = advancedByPlatform[platform] ?? null;
+            let advanced = null;
+
+            if (activeAdvanced && !advancedWrapper.hidden && activeAdvanced.open) {
+                if (advancedModeFor(platform) === 'compose') {
+                    // COMPOSICIÓN: la orden se arma con lo que hay en la UI.
+                    // Hoy solo Pedigrido la tiene.
+                    advanced = {
+                        deliveryMode: document.getElementById('deliveryMode').value,
+                        paymentMode: document.getElementById('paymentMode').value,
+                        items: readItems()
+                    };
+
+                    // Solo cuando hay al menos un canje. Sin canjes el worker rechaza
+                    // el bloque, y con canjes lo exige.
+                    const loyalty = readLoyalty();
+                    if (loyalty) advanced.loyalty = loyalty;
+                } else {
+                    // INYECCIÓN: viaja la orden pegada, tal cual. Si no parsea se
+                    // corta acá, sin tocar la red.
+                    const cfg = INJECTION_UI[platform];
+                    const parsed = readInjectedOrder(cfg.input, cfg.plataforma);
+                    if (parsed.error) {
+                        renderInjectedStatus(cfg);
+                        responseContainer.hidden = false;
+                        out.textContent = `No se envió nada.\n\n${parsed.error}`;
+                        return;
+                    }
+                    advanced = { order: parsed.order };
+                }
+            }
 
             // --- UX Mejorada: Feedback al usuario ---
             button.disabled = true;
@@ -242,8 +1466,26 @@
                 }
             };
 
+            // Solo MercadoPago lo pide. Es el merchant que Platform va a resolver:
+            // ya no se deriva de la sucursal, manda el que se escribe acá.
+            if (platform === 'mercadopago') {
+                payload.data.userId = Number(userIdInput.value.trim());
+            }
+
+            // Rappi: solo si se completó. Vacío ⇒ el worker lo lee de la sucursal.
+            if (platform === 'rappi' && rappiStoreIdInput.value.trim()) {
+                payload.data.storeId = rappiStoreIdInput.value.trim();
+            }
+
+            // Ya resuelto arriba, antes de bloquear el botón.
+            if (advanced) payload.data.advanced = advanced;
+
+            // Cada plataforma tiene su worker: con dos, "no responde" es ambiguo,
+            // así que la URL de destino se muestra en la respuesta.
+            const workerUrl = workerUrlFor(platform);
+
             try {
-                const res = await fetch(WORKER_URL, {
+                const res = await fetch(workerUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -259,14 +1501,97 @@
                     pretty = text;
                 }
 
-                out.textContent = `Status: ${res.status} ${res.statusText}\n\n${pretty}`;
+                out.textContent = `Worker: ${workerUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
+
+                // UberEats y Rappi: el orderId de la respuesta es el que se
+                // cancela desde la plataforma. Se recuerda por plataforma.
+                if (CANCEL_BY_PLATFORM[platform] && res.ok) {
+                    try {
+                        const { orderId } = JSON.parse(text);
+                        if (orderId) {
+                            lastOrderIdByPlatform[platform] = orderId;
+                            if (platformSelect.value === platform) platformCancelInput.value = orderId;
+                        }
+                    } catch { /* respuesta no JSON: no hay orderId que recordar */ }
+                }
 
             } catch (err) {
-                out.textContent = 'Error de red: ' + err.message;
+                out.textContent = `Error de red contra ${workerUrl}\n\n${err.message}`;
             } finally {
                 // --- UX Mejorada: Restaurar el botón ---
                 button.disabled = false;
                 button.textContent = 'Crear Pedido';
+            }
+        });
+
+        // Lo que se escriba a mano también se recuerda por plataforma.
+        platformCancelInput.addEventListener('input', () => {
+            lastOrderIdByPlatform[platformSelect.value] = platformCancelInput.value;
+        });
+
+        // --- Cancelación desde la plataforma: POST /cancel al worker de la
+        // plataforma elegida (UberEats → orders.cancel; Rappi → ORDER_EVENT_CANCEL).
+        // Usa el mismo gate (nombre/apellido) y contexto del formulario, pero no
+        // necesita Branch ID: cada worker sabe resolverlo desde el orderId.
+        platformCancelButton.addEventListener('click', async () => {
+            const platform = platformSelect.value;
+            const cfg = CANCEL_BY_PLATFORM[platform];
+            if (!cfg) return;
+
+            const orderId = platformCancelInput.value.trim();
+            const responseContainer = document.getElementById('responseContainer');
+            const out = document.getElementById('respuesta');
+            responseContainer.hidden = false;
+
+            if (!orderId) {
+                out.textContent = 'No se envió nada.\n\nFalta el orderId a cancelar: enviá un pedido primero o pegá el orderId de uno anterior.';
+                return;
+            }
+
+            const payload = {
+                context: {
+                    tenant: tenantSelect.value,
+                    platform,
+                    environment: document.getElementById('environment').value
+                },
+                auth: {
+                    user: {
+                        name: document.getElementById('name').value.trim(),
+                        lastName: document.getElementById('lastName').value.trim()
+                    }
+                },
+                data: { orderId }
+            };
+
+            const cancelUrl = new URL('cancel', cfg.workerUrl).href;
+            platformCancelButton.disabled = true;
+            platformCancelButton.textContent = 'Cancelando...';
+            out.textContent = 'Procesando la cancelación...';
+
+            try {
+                const res = await fetch(cancelUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await res.text();
+                let pretty;
+                try {
+                    pretty = JSON.stringify(JSON.parse(text), null, 2);
+                } catch {
+                    pretty = text;
+                }
+
+                out.textContent = `Worker: ${cancelUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
+            } catch (err) {
+                out.textContent = `Error de red contra ${cancelUrl}\n\n${err.message}`;
+            } finally {
+                // Si mientras tanto se cambió de plataforma, updatePlatformOptions()
+                // ya dejó el botón como corresponde a la nueva.
+                const current = CANCEL_BY_PLATFORM[platformSelect.value];
+                platformCancelButton.disabled = !current;
+                platformCancelButton.textContent = current ? current.button : cfg.button;
             }
         });
     </script>
