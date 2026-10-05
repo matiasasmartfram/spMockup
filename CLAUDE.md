@@ -162,6 +162,7 @@ Las secciones (`<details>`) se ordenan **alfabéticamente** de arriba a abajo.
 - `mockup_extras_pos.html` → POS
 
 ### MockUps Items
+- `mockup_items_disponibilidad_delivery_conPeya.html` → Disponibilidad Delivery con Peya
 - `mockup_items_orden_de_venta.html` → Orden de Venta (Original)
 - `mockup_items_orden_de_venta_new.html` → Orden de Venta (Nueva)
 - `mockup_items_para_cocina.html` → Para Cocina
