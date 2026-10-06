@@ -187,7 +187,7 @@
             color: #7a8794;
         }
 
-        /* --- Cancelación desde la plataforma (UberEats y Rappi) --- */
+        /* --- Cancelación desde la plataforma (UberEats, Rappi, Pedigrido y PedidosYa) --- */
         .platform-cancel {
             margin-top: 1.25rem;
             padding: 0.75rem;
@@ -735,7 +735,7 @@
 
             <button type="submit" id="submitButton">Crear Pedido</button>
 
-            <!-- Solo UberEats y Rappi. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
+            <!-- UberEats, Rappi, Pedigrido y PedidosYa. Se muestra/oculta en updatePlatformOptions(). Ver §3.1.4. -->
             <div class="platform-cancel" id="platformCancelGroup" hidden>
                 <div class="form-group" style="margin-bottom:0">
                     <label for="platformCancelOrderId" id="platformCancelLabel">Cancelar desde la plataforma</label>
@@ -839,9 +839,10 @@
         const rappiStoreIdGroup = document.getElementById('rappiStoreIdGroup');
         const rappiStoreIdInput = document.getElementById('rappiStoreId');
 
-        // Cancelación desde la plataforma: solo UberEats y Rappi. Cada una tiene su
-        // worker, su evento y su formato de id; el último orderId se recuerda POR
-        // plataforma, así que alternar entre las dos no mezcla los ids.
+        // Cancelación desde la plataforma: UberEats, Rappi, Pedigrido y
+        // PedidosYa. Cada una tiene su worker, su evento y su formato de id; el
+        // último orderId se recuerda POR plataforma, así que alternar entre
+        // ellas no mezcla los ids.
         const CANCEL_BY_PLATFORM = {
             ubereats: {
                 workerUrl: WORKER_URL_UBER,
@@ -854,6 +855,26 @@
                 label: 'Cancelar desde Rappi (webhook ORDER_EVENT_CANCEL)',
                 button: '🚫 Cancelar desde Rappi',
                 placeholder: '9758600000'
+            },
+            // A diferencia de Uber/Rappi, Platform exige el branchId además del
+            // orderId para este endpoint (aunque no lo usa para encontrar la
+            // orden). needsBranchId hace que el click handler lo sume al payload.
+            pedigrido: {
+                workerUrl: WORKER_URL,
+                label: 'Cancelar desde Pedigrido (POST /orders/cancel)',
+                button: '🚫 Cancelar desde Pedigrido',
+                placeholder: '1757511200123',
+                needsBranchId: true
+            },
+            // Mismo motivo que Pedigrido: el worker necesita el branchId del
+            // formulario para resolver el remoteId (branchName) de la sucursal
+            // antes de poder pegarle al PUT de cancelación.
+            pedidosya: {
+                workerUrl: WORKER_URL_PEYA,
+                label: 'Cancelar desde PedidosYa (PUT posOrderStatus)',
+                button: '🚫 Cancelar desde PedidosYa',
+                placeholder: '1757511200123',
+                needsBranchId: true
             }
         };
         const lastOrderIdByPlatform = {};
@@ -904,7 +925,9 @@
             rappiStoreIdGroup.hidden = !isRappi;
             rappiStoreIdInput.disabled = !isRappi;
 
-            // Cancelación: visible y habilitada solo con UberEats y Rappi.
+            // Cancelación: visible y habilitada con cualquier plataforma que
+            // tenga entrada en CANCEL_BY_PLATFORM (hoy: UberEats, Rappi,
+            // Pedigrido y PedidosYa).
             const cancelCfg = CANCEL_BY_PLATFORM[platformSelect.value] ?? null;
             platformCancelGroup.hidden = !cancelCfg;
             platformCancelInput.disabled = !cancelCfg;
@@ -1503,8 +1526,9 @@
 
                 out.textContent = `Worker: ${workerUrl}\nStatus: ${res.status} ${res.statusText}\n\n${pretty}`;
 
-                // UberEats y Rappi: el orderId de la respuesta es el que se
-                // cancela desde la plataforma. Se recuerda por plataforma.
+                // UberEats, Rappi, Pedigrido y PedidosYa: el orderId de la
+                // respuesta es el que se cancela desde la plataforma. Se
+                // recuerda por plataforma.
                 if (CANCEL_BY_PLATFORM[platform] && res.ok) {
                     try {
                         const { orderId } = JSON.parse(text);
@@ -1530,9 +1554,14 @@
         });
 
         // --- Cancelación desde la plataforma: POST /cancel al worker de la
-        // plataforma elegida (UberEats → orders.cancel; Rappi → ORDER_EVENT_CANCEL).
-        // Usa el mismo gate (nombre/apellido) y contexto del formulario, pero no
-        // necesita Branch ID: cada worker sabe resolverlo desde el orderId.
+        // plataforma elegida (UberEats → orders.cancel; Rappi → ORDER_EVENT_CANCEL;
+        // Pedigrido → POST /orders/cancel; PedidosYa → PUT posOrderStatus —
+        // las cuatro directo contra Platform, sin webhook intermedio en las
+        // últimas dos).
+        // Usa el mismo gate (nombre/apellido) y contexto del formulario. Uber y
+        // Rappi no necesitan Branch ID (cada worker lo resuelve desde el orderId);
+        // Pedigrido y PedidosYa sí, porque sus endpoints lo exigen (o lo necesitan
+        // para resolver el remoteId) — cfg.needsBranchId.
         platformCancelButton.addEventListener('click', async () => {
             const platform = platformSelect.value;
             const cfg = CANCEL_BY_PLATFORM[platform];
@@ -1548,6 +1577,16 @@
                 return;
             }
 
+            const data = { orderId };
+            if (cfg.needsBranchId) {
+                const branch = document.getElementById('branch').value.trim();
+                if (!branch) {
+                    out.textContent = 'No se envió nada.\n\nFalta la Branch ID: Pedigrido necesita el branchId para cancelar.';
+                    return;
+                }
+                data.branchId = Number(branch);
+            }
+
             const payload = {
                 context: {
                     tenant: tenantSelect.value,
@@ -1560,7 +1599,7 @@
                         lastName: document.getElementById('lastName').value.trim()
                     }
                 },
-                data: { orderId }
+                data
             };
 
             const cancelUrl = new URL('cancel', cfg.workerUrl).href;
