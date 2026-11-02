@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFran POS - Disponibilidad en Delivery</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --purple: #6e59ee;
+            --purple-dark: #5040d0;
+            --navy: #0f0035;
+            --radius: 4px;
+            --shadow-card: 0 2px 8px rgba(0, 0, 0, .08);
+            --shadow-panel: 0 4px 24px rgba(0, 0, 0, .12);
+            --shadow-elevation-1: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
+            --shadow-elevation-2: 0 2px 4px -1px rgba(0, 0, 0, .2), 0 4px 5px 0 rgba(0, 0, 0, .14), 0 1px 10px 0 rgba(0, 0, 0, .12);
+            --green: #2f9e44;
+            --green-bg: #d3f9d8;
+            --amber: #d08700;
+            --amber-bg: #fff3cd;
+            --red: #e53935;
+            --red-bg: #ffe3e1;
+            --blue: #1976d2;
+            --blue-bg: #e3f2fd;
+        }
+
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #f1f3f5;
+            min-height: 100vh;
+            color: rgba(0, 0, 0, .87);
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            height: 64px;
+            background: var(--navy);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .4);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 220;
+        }
+
+        .btn-hamburger {
+            background: transparent;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background .2s;
+        }
+
+        .btn-hamburger:hover {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .btn-hamburger svg {
+            width: 18px;
+            height: 18px;
+            fill: #fff;
+        }
+
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+
+        .brand-lockup .brace {
+            color: #8f80e8;
+            font-size: 1.5rem;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .brand-stack {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.05;
+        }
+
+        .brand-stack .l1 {
+            color: #fff;
+            font-weight: 700;
+            font-size: .92rem;
+            letter-spacing: .2px;
+        }
+
+        .brand-stack .l2 {
+            color: #8f7bf0;
+            font-weight: 800;
+            font-size: .92rem;
+            letter-spacing: .5px;
+        }
+
+        .env-tag {
+            color: #9d94c2;
+            font-size: .78rem;
+            margin-left: 2px;
+            white-space: nowrap;
+        }
+
+        .topbar-info {
+            color: #d8d4ea;
+            font-size: .72rem;
+            line-height: 1.5;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .topbar-info.user {
+            color: #b4acd6;
+            margin-left: 18px;
+        }
+
+        .topbar-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple) 0%, #9b8cf2 100%);
+            color: #fff;
+            font-weight: 700;
+            font-size: .78rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ── LAYOUT ── */
+        .layout {
+            display: flex;
+            padding-top: 64px;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 258px;
+            flex-shrink: 0;
+            background: #fff;
+            border-right: 1px solid #e9ecef;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transform: translateX(0);
+            transition: transform .22s ease;
+            scrollbar-width: thin;
+            z-index: 210;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, .18);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            box-shadow: none;
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 0, 53, .35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .22s ease;
+            z-index: 205;
+        }
+
+        body:not(.sidebar-collapsed) .sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #dee2e6;
+            border-radius: 4px;
+        }
+
+        .nav-group {
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .nav-parent {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 18px;
+            font-weight: 700;
+            font-size: .82rem;
+            color: #1a1a2e;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .nav-parent:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-parent svg.icon {
+            width: 17px;
+            height: 17px;
+            fill: #495057;
+            flex-shrink: 0;
+        }
+
+        .nav-parent .chev {
+            margin-left: auto;
+            width: 12px;
+            height: 12px;
+            fill: #adb5bd;
+            transition: transform .2s;
+            flex-shrink: 0;
+        }
+
+        .nav-group.open .nav-parent .chev {
+            transform: rotate(180deg);
+        }
+
+        .nav-children {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height .25s ease;
+        }
+
+        .nav-group.open .nav-children {
+            max-height: 320px;
+        }
+
+        .nav-child {
+            padding: 9px 18px 9px 45px;
+            font-size: .78rem;
+            color: #343a40;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .nav-child:hover {
+            background: rgba(0, 0, 0, .04);
+        }
+
+        .nav-child.active {
+            background: rgba(110, 89, 238, .1);
+            color: var(--purple-dark);
+            font-weight: 500;
+            padding-left: 42px;
+            border-left: 3px solid var(--purple);
+        }
+
+        .nav-plain {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 18px;
+            font-weight: 700;
+            font-size: .82rem;
+            color: #1a1a2e;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .nav-plain:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-plain svg {
+            width: 17px;
+            height: 17px;
+            fill: #495057;
+            flex-shrink: 0;
+        }
+
+        .badge-new {
+            background: linear-gradient(135deg, var(--purple) 0%, #9b8cf2 100%);
+            color: #fff;
+            font-size: .58rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 1px 7px;
+            letter-spacing: .4px;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .content {
+            flex: 1;
+            padding: 24px 28px 132px;
+            min-width: 0;
+        }
+
+        .page-head {
+            margin-bottom: 14px;
+        }
+
+        .page-head-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .page-head h1 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .page-head .subtitle {
+            font-size: .82rem;
+            color: var(--purple-dark);
+        }
+
+        .page-head .subtitle b {
+            font-weight: 700;
+        }
+
+        .btn-reset-demo {
+            margin-left: auto;
+            flex-shrink: 0;
+            background: none;
+            border: 1px solid rgba(0, 0, 0, .23);
+            border-radius: var(--radius);
+            color: rgba(0, 0, 0, .6);
+            font-family: inherit;
+            font-size: .72rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-reset-demo:hover {
+            background: rgba(0, 0, 0, .05);
+        }
+
+        /* Leyenda fija de la Ley 3 (MudAlert Severity.Info en el POS real).
+           Va fija en el encabezado y no como snackbar: un aviso que aparece en cada
+           apertura es un aviso que nadie lee. */
+        .ley3-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 9px 14px;
+            border-radius: var(--radius);
+            background: var(--blue-bg);
+            color: #0d47a1;
+            font-size: .76rem;
+            line-height: 1.45;
+        }
+
+        .ley3-alert svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--blue);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            max-width: 380px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 9px 14px;
+            border: 1px solid rgba(0, 0, 0, .23);
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 1px var(--purple);
+        }
+
+        .search-box svg {
+            width: 15px;
+            height: 15px;
+            fill: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: .82rem;
+            flex: 1;
+            background: transparent;
+        }
+
+        /* filtro por estado (Todos / Disponibles / Apagados): coincide si CUALQUIER
+           plataforma del producto está en el estado elegido. Con una sola plataforma
+           activa, Disponibles + Apagados suma exacto. */
+        .status-filter,
+        .signal-filter {
+            display: flex;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .23);
+            border-radius: var(--radius);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .status-filter button,
+        .signal-filter button {
+            background: none;
+            border: none;
+            border-right: 1px solid rgba(0, 0, 0, .12);
+            font-family: inherit;
+            font-size: .78rem;
+            font-weight: 500;
+            color: rgba(0, 0, 0, .6);
+            padding: 0 14px;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+        }
+
+        .status-filter button:last-child,
+        .signal-filter button:last-child {
+            border-right: none;
+        }
+
+        .status-filter button:hover {
+            background: rgba(110, 89, 238, .07);
+        }
+
+        .status-filter button.active {
+            background: var(--purple);
+            color: #fff;
+        }
+
+        /* contador dentro de cada botón: "Disponibles 15". Responde "cuántos productos
+           me quedan si toco esto" — se calcula ignorando el propio filtro pero
+           respetando el otro (ver updateFilterCounts). */
+        .status-filter button .count,
+        .signal-filter button .count {
+            display: inline-block;
+            margin-left: 6px;
+            min-width: 17px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, .07);
+            font-size: .7rem;
+            font-weight: 700;
+            line-height: 16px;
+            text-align: center;
+        }
+
+        .status-filter button.active .count,
+        .signal-filter button.active .count {
+            background: rgba(255, 255, 255, .25);
+            color: #fff;
+        }
+
+        /* filtro por señal de stock. Eje distinto al de estado: se pinta en ámbar para
+           que no se lean como el mismo control. Los dos se combinan y con el buscador. */
+        .signal-filter button:hover {
+            background: rgba(208, 135, 0, .1);
+        }
+
+        .signal-filter button.active {
+            background: var(--amber);
+            color: #fff;
+        }
+
+        /* ── PRODUCT LIST ── */
+        .product-list-wrap {
+            background: #fff;
+            border-radius: var(--radius);
+            border: 1px solid rgba(0, 0, 0, .12);
+            overflow: auto;
+        }
+
+        /* Dos bloques de columnas, separados por un espaciador flexible:
+           izquierda  → PRODUCTO + STOCK  (qué es y cuánto tengo)
+           derecha    → SKU + las plataformas activas (con qué se identifica y dónde se vende)
+           El SKU queda pegado a las plataformas porque es el dato que viaja en el payload.
+
+           Las dos plataformas están activas y sus columnas son gemelas: mismo switch,
+           misma etiqueta y los mismos chips. Lo único que las distingue es el nombre
+           del encabezado — en cuanto una se dibuja distinta, se lee como "la rara"
+           y el colaborador duda de lo que dice el switch (Ley 6). */
+        .list-head,
+        .product-row {
+            display: grid;
+            /* Cada fila es su propio grid (no hay un grid compartido ni subgrid), así que
+               toda columna que no sea un largo fijo se mide POR FILA. Con max-content en
+               la columna de producto, cada fila calculaba un ancho distinto según SU
+               nombre y el espaciador (1fr, donde vive el switch "Todos") terminaba en una
+               posición horizontal distinta en cada fila. Fija en 300px: todas las filas
+               —y el encabezado— reparten el resto exactamente igual, así el switch
+               "Todos" queda siempre en la misma columna real. */
+            grid-template-columns: 30px 380px 116px 1fr 90px 232px 232px;
+            gap: 10px;
+            align-items: center;
+            min-width: 1140px;
+        }
+
+        /* Los encabezados de plataforma van todos iguales: sin badges ni adornos
+           propios de una columna (Ley 6). */
+        .list-head .platform-col-lbl {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .list-head {
+            padding: 8px 18px;
+            background: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, .12);
+            font-size: .68rem;
+            font-weight: 700;
+            color: rgba(0, 0, 0, .6);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        /* el SKU (5ª columna) va alineado a la derecha, contra la plataforma */
+        .list-head>span:nth-child(5) {
+            text-align: right;
+            padding-right: 8px;
+        }
+
+        /* switch extra por fila, con su propia columna "Todos" —tan columna como
+           PediGrido o PedidosYa, aunque solo tenga el switch—: prende/apaga las dos
+           plataformas de ESE producto de una. Convive con los switches de PediGrido
+           y PedidosYa, no los reemplaza: es un atajo para el caso común de querer
+           las dos plataformas iguales. */
+        .list-head .todos-col-lbl {
+            display: flex;
+            justify-content: center;
+        }
+
+        .row-master-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* mismo box que .platform-cell (padding 4px 8px + borde transparente)
+               para que el switch quede exactamente a la misma altura que los de
+               PediGrido y PedidosYa — si no, el centrado de cada celda parte de
+               una caja de otro tamaño y los tres switches no quedan en línea. */
+            padding: 4px 8px;
+            border: 1.5px solid transparent;
+        }
+
+        /* ── Encabezado de grupo de productos (Helados, Cucuruchos, …) ──
+           Los productos siguen siendo una sola lista; esto es una separación visual
+           para que el colaborador ubique rápido la familia que está buscando. */
+        .group-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            min-width: 1140px;
+            background: rgba(110, 89, 238, .07);
+            border-top: 1px solid rgba(0, 0, 0, .08);
+            border-bottom: 1px solid rgba(0, 0, 0, .12);
+            font-size: .68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--purple-dark);
+        }
+
+        .group-head:first-child {
+            border-top: none;
+        }
+
+        .group-count {
+            font-weight: 600;
+            font-size: .62rem;
+            letter-spacing: 0;
+            color: rgba(0, 0, 0, .5);
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .12);
+            border-radius: 999px;
+            padding: 1px 7px;
+        }
+
+        .product-row {
+            padding: 7px 18px;
+            border-bottom: 1px solid rgba(0, 0, 0, .12);
+            transition: background .15s;
+        }
+
+        .product-row:last-child {
+            border-bottom: none;
+        }
+
+        .product-row:hover {
+            background: rgba(110, 89, 238, .04);
+        }
+
+        .prod-icon {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--navy);
+        }
+
+        /* nombre y grupo en una sola línea, para que la fila mida ~44px en vez de ~72px.
+           El grupo NO se saca: la banda de arriba no lo reemplaza — cuando el colaborador
+           está en mitad de la lista y no ve la banda, la fila igual dice de qué familia es. */
+        .prod-main {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            min-width: 0;
+            white-space: nowrap;
+        }
+
+        .prod-name {
+            font-weight: 500;
+            font-size: .82rem;
+            color: rgba(0, 0, 0, .87);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prod-cat {
+            font-size: .75rem;
+            color: var(--purple);
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .prod-sku {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .74rem;
+            color: rgba(0, 0, 0, .6);
+            text-align: right;
+            padding-right: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── STOCK + SEÑAL ──
+           La cantidad es dato del POS (StockGetByWarehouse); la señal es una recomendación
+           derivada de cruzarla con lo que el switch muestra ahora (draft).
+           Ninguna de las dos viaja en el payload — Ley 5. */
+        .stock-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* la cantidad se alinea a la derecha dentro de su propio ancho, así los dígitos
+           quedan en columna aunque la celda esté alineada a la izquierda */
+        .stock-qty {
+            font-size: .8rem;
+            font-weight: 500;
+            color: rgba(0, 0, 0, .75);
+            min-width: 3.5ch;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stock-qty.zero {
+            color: var(--red);
+            font-weight: 700;
+        }
+
+        /* producto sin control de stock: nunca genera señal */
+        .stock-qty.none {
+            color: rgba(0, 0, 0, .3);
+            font-weight: 400;
+            cursor: help;
+        }
+
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            border-radius: 999px;
+            padding: 1px 7px;
+            font-size: .68rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: help;
+        }
+
+        /* rojo: se está vendiendo algo que no hay — termina en un pedido rechazado */
+        .stock-badge.turn-off {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        /* ámbar: hay stock y está apagado — venta perdida, pero silenciosa */
+        .stock-badge.turn-on {
+            background: var(--amber-bg);
+            color: var(--amber);
+        }
+
+        /* toggle switch — estilo Material (MudSwitch Size.Small: 44×24, thumb 14px) */
+        .switch {
+            position: relative;
+            width: 34px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch .track {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            height: 12px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, .38);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .switch .track::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            border-radius: 50%;
+            transition: transform .2s, background .2s;
+            box-shadow: 0 2px 1px -1px rgba(0, 0, 0, .2), 0 1px 1px 0 rgba(0, 0, 0, .14), 0 1px 3px 0 rgba(0, 0, 0, .12);
+        }
+
+        .switch input:checked+.track {
+            background: rgba(47, 158, 68, .5);
+        }
+
+        .switch input:checked+.track::before {
+            background: var(--green);
+            transform: translateY(-50%) translateX(16px);
+        }
+
+        .switch input:disabled+.track {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* platform cell: switch + etiqueta + chip, todo en una línea.
+           Antes iba en dos filas apiladas; pasarlo a una es el mayor ahorro de alto. */
+        .platform-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1.5px solid transparent;
+            transition: border-color .15s, background .15s;
+        }
+
+        .platform-cell.is-dirty {
+            border-color: #d9d2fb;
+            background: #faf9ff;
+        }
+
+        .avail-lbl {
+            font-size: .72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .avail-lbl.on {
+            color: var(--green);
+        }
+
+        .avail-lbl.off {
+            color: var(--red);
+        }
+
+        /* chip de estado de la celda. Cuatro valores y nada más: Guardado, Guardar,
+           Guardando…, Error. Ninguno se persiste: son de sesión. */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .chip-synced {
+            color: var(--green);
+        }
+
+        .chip-dirty {
+            color: var(--red);
+        }
+
+        .chip-sending {
+            color: var(--blue);
+        }
+
+        /* Guardar y Error comparten el rojo a propósito: los dos piden atención sobre la
+           misma celda. Se distinguen por el texto. El motivo del error va en el tooltip. */
+        .chip-failed {
+            color: var(--red);
+            cursor: help;
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+        }
+
+        .chip .dot-spin {
+            width: 7px;
+            height: 7px;
+            border: 2px solid var(--blue);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── BATCH BAR ── */
+        .batch-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            border-top: 1px solid #e9ecef;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, .08);
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            z-index: 150;
+        }
+
+        .batch-bar .bb-count {
+            font-size: .85rem;
+            font-weight: 500;
+            color: rgba(0, 0, 0, .87);
+        }
+
+        .batch-bar .bb-hint {
+            font-size: .74rem;
+            color: var(--purple-dark);
+        }
+
+        .btn-discard,
+        .btn-view-batch {
+            background: none;
+            border: none;
+            color: var(--purple-dark);
+            font-family: inherit;
+            font-weight: 500;
+            font-size: .8125rem;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            transition: background .2s;
+        }
+
+        .btn-view-batch {
+            border: 1px solid rgba(0, 0, 0, .23);
+            padding: 8px 16px;
+        }
+
+        .btn-discard:hover,
+        .btn-view-batch:hover {
+            background: rgba(110, 89, 238, .08);
+        }
+
+        .btn-discard:disabled {
+            color: rgba(0, 0, 0, .26);
+            cursor: not-allowed;
+            background: none;
+        }
+
+        /* ── Los TRES botones de guardado — solo del mockup ──
+           En el POS real hay UN botón: el status lo decide el Concentrador según lo que
+           responda la plataforma. Acá se separa en tres para poder mostrar en una demo
+           los tres desenlaces del §3 sin depender de qué SKU exista en PediGrido. */
+        .send-group {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .send-group-lbl {
+            font-size: .64rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #adb5bd;
+            text-align: right;
+            line-height: 1.3;
+            max-width: 118px;
+        }
+
+        .send-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-send {
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            cursor: pointer;
+            padding: 9px 16px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: var(--shadow-elevation-1);
+            transition: filter .2s, box-shadow .2s;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            filter: brightness(1.1);
+            box-shadow: var(--shadow-elevation-2);
+        }
+
+        .btn-send.v-success {
+            background: var(--green);
+        }
+
+        .btn-send.v-partial {
+            background: var(--amber);
+        }
+
+        .btn-send.v-failed {
+            background: var(--red);
+        }
+
+        .btn-send:disabled {
+            background: rgba(0, 0, 0, .12);
+            color: rgba(0, 0, 0, .26);
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: none;
+        }
+
+        .btn-send .tag {
+            font-size: .6rem;
+            font-weight: 800;
+            background: rgba(255, 255, 255, .22);
+            border-radius: 999px;
+            padding: 1px 6px;
+            letter-spacing: .3px;
+        }
+
+        .bb-spinner {
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        /* ── PAYLOAD MODAL ── */
+        .payload-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 600;
+        }
+
+        .payload-overlay.show {
+            display: flex;
+        }
+
+        .payload-modal {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-panel);
+            width: 760px;
+            max-width: calc(100vw - 40px);
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .payload-head {
+            background: linear-gradient(135deg, var(--navy) 0%, #241a5e 100%);
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .payload-head h3 {
+            font-size: .95rem;
+            font-weight: 700;
+        }
+
+        .payload-head p {
+            font-size: .72rem;
+            color: #c3bff0;
+            margin-top: 2px;
+        }
+
+        .status-pill {
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .5px;
+            border-radius: 999px;
+            padding: 3px 11px;
+            flex-shrink: 0;
+        }
+
+        .status-pill.SUCCESS {
+            background: var(--green-bg);
+            color: #1b5e20;
+        }
+
+        .status-pill.PARTIAL_SUCCESS {
+            background: var(--amber-bg);
+            color: #7a4f00;
+        }
+
+        .status-pill.FAILED {
+            background: var(--red-bg);
+            color: #a61b1b;
+        }
+
+        .btn-close-payload {
+            background: rgba(255, 255, 255, .15);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-close-payload:hover {
+            background: rgba(255, 255, 255, .3);
+        }
+
+        .btn-close-payload svg {
+            width: 13px;
+            height: 13px;
+            fill: #fff;
+        }
+
+        .payload-body {
+            padding: 18px 20px;
+            overflow-y: auto;
+        }
+
+        .payload-section-lbl {
+            font-size: .68rem;
+            font-weight: 700;
+            color: #868e96;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin: 16px 0 6px;
+        }
+
+        .payload-section-lbl:first-child {
+            margin-top: 0;
+        }
+
+        /* el tramo que el POS realmente lee y sobre el que aplica la Ley 1 */
+        .payload-section-lbl.key {
+            color: var(--purple-dark);
+        }
+
+        .payload-code {
+            background: #14102c;
+            color: #d7d3f5;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .payload-code.key {
+            box-shadow: 0 0 0 2px var(--purple);
+        }
+
+        .payload-code .k {
+            color: #74c0fc;
+        }
+
+        .payload-code .s {
+            color: #ffd43b;
+        }
+
+        .payload-code .n {
+            color: #ff8787;
+        }
+
+        .payload-code .b {
+            color: #69db7c;
+        }
+
+        .payload-route {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #495057;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+
+        .payload-route .verb {
+            background: #e9ecef;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-weight: 600;
+            color: #343a40;
+        }
+
+        .payload-note {
+            font-size: .7rem;
+            color: #868e96;
+            line-height: 1.5;
+            margin: 6px 0 0;
+        }
+
+        .payload-empty {
+            text-align: center;
+            color: #adb5bd;
+            font-size: .82rem;
+            padding: 30px 10px;
+        }
+
+        details.log-box {
+            margin-top: 16px;
+            border: 1px solid rgba(0, 0, 0, .12);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        details.log-box>summary {
+            cursor: pointer;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            font-size: .74rem;
+            font-weight: 700;
+            color: #495057;
+            user-select: none;
+        }
+
+        details.log-box>summary:hover {
+            background: #f1f3f5;
+        }
+
+        details.log-box .inner {
+            padding: 12px 14px;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 108px;
+            right: 24px;
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: transform .3s, opacity .3s;
+            z-index: 999;
+            max-width: 360px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--green);
+        }
+
+        .toast.warning {
+            background: var(--amber);
+        }
+
+        .toast.danger {
+            background: var(--red);
+        }
+
+        .empty-search {
+            padding: 40px 20px;
+            text-align: center;
+            color: #adb5bd;
+            font-size: .82rem;
+            min-width: 1140px;
+        }
+    </style>
+</head>
+
+<body class="sidebar-collapsed">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Mostrar/ocultar menú">
+            <svg viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+        </button>
+        <div class="brand-lockup">
+            <span class="brace">{</span>
+            <span class="brand-stack">
+                <span class="l1">smartfran</span>
+                <span class="l2">CLOUD</span>
+            </span>
+            <span class="brace">}</span>
+        </div>
+        <span class="env-tag">(Staging)</span>
+        <div style="flex:1"></div>
+        <div class="topbar-info">
+            <div>Tienda: Franquicia Arguello</div>
+            <div>Punto de Venta: POS Peya</div>
+            <div>Turno: TUR 0001</div>
+        </div>
+        <div class="topbar-info user">
+            <div>Matias Avila</div>
+            <div>03/09/2026 15:56</div>
+            <div>Gestor: Gabriel Bossio - Argentina</div>
+        </div>
+        <div class="topbar-avatar">MA</div>
+    </header>
+
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+        <nav class="sidebar collapsed" id="sidebar">
+
+            <div class="nav-plain">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                Home
+            </div>
+
+            <div class="nav-group open" id="grp-ventas">
+                <div class="nav-parent" onclick="toggleGroup('grp-ventas')">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
+                    </svg>
+                    Ventas
+                    <svg class="chev" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </div>
+                <div class="nav-children">
+                    <div class="nav-child">Ventas Minoristas</div>
+                    <div class="nav-child" onclick="goTo('pos_pedidos.html')">Delivery</div>
+                    <div class="nav-child">Informe de Ventas del turno</div>
+                </div>
+            </div>
+
+            <div class="nav-plain">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 10h4v7H4v-7zm6 0h4v7h-4v-7zm-6 9h16v2H4v-2zm6-9h4v7h-4v-7zM12 1L2 6v2h20V6L12 1z" />
+                </svg>
+                Caja
+            </div>
+
+            <div class="nav-group open" id="grp-stock">
+                <div class="nav-parent" onclick="toggleGroup('grp-stock')">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z" />
+                    </svg>
+                    Stock
+                    <svg class="chev" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </div>
+                <div class="nav-children">
+                    <div class="nav-child">Bajas de cajas de helado por consumo</div>
+                    <div class="nav-child">Apertura de caja a ítem individual</div>
+                    <div class="nav-child">Consulta bajas de cajas de helado</div>
+                    <div class="nav-child">Movimientos de Stock</div>
+                    <div class="nav-child">Informe de Stock</div>
+                    <div class="nav-child active">
+                        Disponibilidad en Delivery
+                        <span class="badge-new">NUEVO</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-group" id="grp-fidelizacion">
+                <div class="nav-parent" onclick="toggleGroup('grp-fidelizacion')">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                    Fidelización
+                    <svg class="chev" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </div>
+                <div class="nav-children">
+                    <div class="nav-child">Nuevo Socio</div>
+                    <div class="nav-child">Remplazo Tarjeta</div>
+                </div>
+            </div>
+
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+
+            <div class="page-head">
+                <div class="page-head-top">
+                    <div>
+                        <h1>Disponibilidad en Delivery</h1>
+                        <div class="subtitle">Sucursal <b>18</b> · Franquicia Arguello — tocá los switches que necesites
+                            y confirmá con "Guardar cambios". Nada se guarda hasta ese momento.</div>
+                    </div>
+                    <button class="btn-reset-demo" onclick="resetDemo()"
+                        title="Borra el registro local (itemAvailability_18) y vuelve todo a Disponible">Reiniciar
+                        demo</button>
+                </div>
+                <!-- Ley 3: leyenda fija, no snackbar. El POS nunca consulta el GET /status. -->
+                <div class="ley3-alert">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11 7h2v2h-2V7zm0 4h2v6h-2v-6zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                    </svg>
+                    <span><b>El estado que ves no se consultó a la plataforma.</b> Es la última fotografía que guardó
+                        este POS cuando la plataforma le confirmó un cambio. Si alguien apagó algo directo en el
+                        backoffice de PediGrido o de PedidosYa, acá no se refleja.</span>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                    <input type="text" id="search" placeholder="Buscar por nombre, SKU o grupo…" oninput="renderList()">
+                </div>
+                <div class="status-filter" role="group" aria-label="Filtrar por estado">
+                    <button type="button" class="active" data-filter="all" onclick="setStatusFilter('all')">Todos<span
+                            class="count" id="cnt-status-all">0</span></button>
+                    <button type="button" data-filter="on" onclick="setStatusFilter('on')">Disponibles<span class="count"
+                            id="cnt-status-on">0</span></button>
+                    <button type="button" data-filter="off" onclick="setStatusFilter('off')">Apagados<span class="count"
+                            id="cnt-status-off">0</span></button>
+                </div>
+                <div class="signal-filter" role="group" aria-label="Filtrar por alerta de stock">
+                    <button type="button" class="active" data-signal="all" onclick="setSignalFilter('all')">Todas<span
+                            class="count" id="cnt-signal-all">0</span></button>
+                    <button type="button" data-signal="off" onclick="setSignalFilter('off')"
+                        title="Sin stock y todavía prendido en alguna plataforma">⚠ Sugeridos apagar<span class="count"
+                            id="cnt-signal-off">0</span></button>
+                    <button type="button" data-signal="on" onclick="setSignalFilter('on')"
+                        title="Con stock y apagado en alguna plataforma">⚠ Sugeridos prender<span class="count"
+                            id="cnt-signal-on">0</span></button>
+                </div>
+            </div>
+
+            <div class="product-list-wrap">
+                <div class="list-head">
+                    <span></span>
+                    <span>Producto</span>
+                    <span>Stock</span>
+                    <span class="todos-col-lbl">Todos</span>
+                    <span>SKU</span>
+                    <span class="platform-col-lbl">PediGrido</span>
+                    <span class="platform-col-lbl">PedidosYa</span>
+                </div>
+                <div id="rows"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- BATCH BAR -->
+    <div class="batch-bar">
+        <div>
+            <div class="bb-count"><span id="bb-count">0</span> cambios sin guardar</div>
+            <div class="bb-hint">Solo se guarda lo que quedó distinto del último estado confirmado.</div>
+        </div>
+        <button class="btn-discard" id="btn-discard" onclick="discardChanges()" disabled>Descartar cambios</button>
+        <button class="btn-view-batch" id="btn-view-batch" onclick="showBatchPayload()">Ver payload</button>
+
+        <!-- Los tres botones son EXCLUSIVOS DEL MOCKUP. En el POS real hay uno solo:
+             el status lo decide el Concentrador según lo que responda PediGrido. -->
+        <div class="send-group">
+            <div class="send-group-lbl">Solo mockup:<br>simular respuesta</div>
+            <div class="send-btns">
+                <button class="btn-send v-success" id="btn-send-success" onclick="sendBatch('success')" disabled
+                    title="Todas las celdas vuelven success: true">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                    Guardar <span class="tag">SUCCESS</span>
+                </button>
+                <button class="btn-send v-partial" id="btn-send-partial" onclick="sendBatch('partial')" disabled
+                    title="Con cambios en las dos plataformas: se cae PedidosYa entera y PediGrido anda. Solo en PediGrido: falla un artículo">
+                    ⚠ Guardar <span class="tag">PARCIAL</span>
+                </button>
+                <button class="btn-send v-failed" id="btn-send-failed" onclick="sendBatch('failed')" disabled
+                    title="Ninguna celda se confirma: revierte todo el lote">
+                    ✕ Guardar <span class="tag">FAILED</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYLOAD MODAL -->
+    <div class="payload-overlay" id="payload-overlay">
+        <div class="payload-modal">
+            <div class="payload-head">
+                <div>
+                    <h3 id="payload-title">Payload del guardado</h3>
+                    <p id="payload-sub">SmartCloud → SmartPedidos → PediGrido</p>
+                </div>
+                <span class="status-pill" id="payload-status" style="display:none"></span>
+                <button class="btn-close-payload" onclick="closePayload()">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="payload-body" id="payload-body"></div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════════
+        //  Mockup de la pantalla "Disponibilidad en Delivery" del POS.
+        //
+        //  Los datos de ruteo, los payloads y las respuestas replican lo que hoy está
+        //  funcionando contra staging (ver ejemplo.json y PLAN_SMARTCLOUD.md §4).
+        //  Lo único que NO existe en el POS real son los tres botones de guardado:
+        //  ahí hay uno solo y el status lo decide el Concentrador.
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        // ── Identidad de la sucursal ──
+        // branchId es lo que el POS saca de Credentials["user"] de la integración SMTP.
+        // Cada plataforma la conoce con OTRO identificador, y los dos los resuelve el
+        // Concentrador leyendo campos distintos de la sucursal. El POS no ve ninguno.
+        const BRANCH_ID = 18;
+        const BRANCH_REFERENCES = ['22'];                      // PediGrido: campo branchReference
+        const POS_VENDOR_ID = 'AR-GRIDO-HELADOS-VDP-0001';     // PedidosYa: campo branchName
+
+        // Las plataformas activas. Todo lo demás —header, celdas, payload, señales y
+        // ruteo de la respuesta— itera esta lista: sumar una es agregar su id acá.
+        //
+        // Las dos están activas de punta a punta. Sumar una tercera es agregar su
+        // internalCode acá y su nombre abajo: no hay markup por plataforma.
+        const ACTIVE_PLATFORMS = [7, 1];
+        const PLATFORM_NAMES = { 7: 'PediGrido', 1: 'PedidosYa' };
+
+        // ── Rutas reales ──
+        const CONCENTRADOR = 'http://localhost:3086/api';
+        const ENDPOINT_UPDATE = CONCENTRADOR + '/itemAvailability/update';
+        const ENDPOINT_LOGIN = CONCENTRADOR + '/branches/login';
+
+        const PEDIGRIDO_STOCK_URL = 'https://backoffice-staging.pedigrido.com/v1/locals/stock';
+
+        // PedidosYa expone un Integration Middleware que hace de proxy. Host, chainCode y
+        // token tienen que ser del MISMO entorno: cruzarlos da 401.
+        const PEYA_BASE = 'https://integration-middleware.stg.restaurant-partners.com';
+        const PEYA_CHAIN_CODE = 'SMARTFRANTEST0001';
+        const PEYA_AVAILABILITY_URL = PEYA_BASE + '/v2/chains/' + PEYA_CHAIN_CODE +
+            '/vendors/' + POS_VENDOR_ID + '/catalog/items/availability';
+
+        // Motivo con el que PediGrido rechaza un artículo que no tiene en su catálogo.
+        // El Concentrador lo prefija con "local <branchReference>: " porque una sucursal
+        // nuestra puede mapear a varios locales suyos. Se muestra verbatim, no se parsea.
+        const FAIL_REASON = 'El producto no existe';
+
+        // PedidosYa no dice qué producto falló: cuando la llamada se cae, se cae entera
+        // y este es el mensaje que queda para todas las celdas de esa llamada.
+        const PEYA_FAIL_REASON = 'An invalid response was received from the upstream server';
+
+        // Registro local, Ley 4: un documento por sucursal con la forma de
+        // 03-ITEM_AVAILABILITY_PERSISTENCIA §3. Es lo único que sobrevive a un F5.
+        const STORAGE_KEY = 'itemAvailability_' + BRANCH_ID;
+
+        // ── CATÁLOGO ──
+        // Los tres primeros SKU son los reales de staging (aparecen en ejemplo.json).
+        // `pgId` es el id interno con el que PediGrido devuelve el artículo en `updated[]`
+        // — no es el SKU, y el POS no lo usa para nada: está solo para que la respuesta
+        // de la plataforma se vea como se ve de verdad.
+        // `stock` sale de StockGetByWarehouse. `null` = el producto no vino en la respuesta,
+        // o sea que no lleva control de stock: muestra "—" y nunca genera señal.
+        // El último parámetro son las plataformas que arrancan APAGADAS. La disponibilidad
+        // es independiente por plataforma: los catálogos no son idénticos y el stock a veces
+        // se agota primero en un canal que en otro, así que un mismo producto puede estar
+        // prendido en PediGrido y apagado en PedidosYa al mismo tiempo.
+        const CATALOG = [
+            p('10', 'Familiar Nº 1 (Chocolate/D.Leche/Americana)', 'Helados Familiares', 12, 557),
+            p('11', 'Familiar Nº 2 (Americana/Frutilla/Ddl Graniz.)', 'Helados Familiares', 0, 558),
+            p('65', 'Helado pote 1/2 kg', 'Granel', 5, 559),
+            p('66', 'Helado pote 1/4 kg', 'Granel', 8, 560, [7]),
+            p('sab00002', 'Chocolate', 'Sabores', null, null),
+            p('sab00007', 'Dulce de Leche Granizado', 'Sabores', null, 612),
+            p('9301', 'Torta Helada Chica', 'Tortas', 3, 901),
+            p('9302', 'Torta Helada Grande', 'Tortas', 6, 902),
+            p('9500', 'Bastoncito de Mozzarella', 'Frizzio', 20, 960),
+            p('9501', 'Pizza Frizzio Integral', 'Frizzio', 10, 961),
+            p('9502', 'Pizza Frizzio Mozzarella', 'Frizzio', 15, 962),
+            p('9503', 'Pizza Frizzio Mozzarella y Cebolla', 'Frizzio', 12, 963),
+            p('9504', 'Pizza Frizzio Mozzarella y Jamon', 'Frizzio', 8, 964),
+            p('9505', 'Pizza Frizzio Tipo Casera', 'Frizzio', 6, 965),
+        ];
+
+        // `type` es el tipo de item del contrato §2. Hoy siempre 'ITEM'. PediGrido apaga
+        // productos enteros y nada más; PedidosYa sí acepta TOPPING, pero el contrato §2
+        // todavía no lo usa. Está para que sumar opcionales no obligue a abrirlo.
+        function p(sku, name, group, stock, pgId, initialOff, type = 'ITEM') {
+            initialOff = initialOff || [];
+            return { sku, name, group, type, stock, pgId, initialOff, platforms: freshCells(initialOff) };
+        }
+
+        // El default del §0 es "todo disponible": solo se guardan las excepciones. Sobre
+        // esa base se hidrata lo apagado desde el registro local.
+        function freshCells(initialOff) {
+            const platforms = {};
+            ACTIVE_PLATFORMS.forEach(pid => {
+                const on = !initialOff.includes(pid);
+                platforms[pid] = { draft: on, synced: on, sending: false, error: null };
+            });
+            return platforms;
+        }
+
+        let products = CATALOG;
+
+        // ═══════════════════ REGISTRO LOCAL (Ley 4) ═══════════════════
+        // Documento por sucursal que lista SOLO lo apagado. Lo que no está acá está
+        // disponible. Se escribe únicamente cuando la plataforma confirma, nunca al
+        // tocar un switch: por construcción todo lo persistido está confirmado.
+
+        function hydrateFromStorage() {
+            let doc = null;
+            try {
+                doc = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            } catch (e) {
+                doc = null; // documento corrupto se trata igual que "sin registro"
+            }
+            if (!doc || !Array.isArray(doc.unavailable)) return;
+
+            doc.unavailable.forEach(entry => {
+                const prod = products.find(x => x.sku === entry.sku);
+                if (!prod) return;
+                const st = prod.platforms[entry.platformId];
+                if (!st) return;
+                // Es lo último CONFIRMADO, no un cambio pendiente: por eso se pisan los dos
+                // valores. Si solo se pisara el draft, el contador arrancaría en N en vez de 0.
+                st.draft = false;
+                st.synced = false;
+            });
+        }
+
+        function persistToStorage() {
+            const now = new Date().toISOString();
+            const unavailable = [];
+            products.forEach(prod => {
+                ACTIVE_PLATFORMS.forEach(pid => {
+                    if (!prod.platforms[pid].synced) {
+                        unavailable.push({
+                            sku: prod.sku,
+                            platformId: pid,
+                            name: prod.name,
+                            type: prod.type,
+                            updatedAt: now
+                        });
+                    }
+                });
+            });
+            const doc = { id: String(BRANCH_ID), branchId: BRANCH_ID, unavailable, updatedAt: now };
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(doc)); } catch (e) { }
+            return doc;
+        }
+
+        function resetDemo() {
+            if (!confirm('Borra el registro local (' + STORAGE_KEY + ') y vuelve todo a Disponible.\n\n¿Seguir?')) return;
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
+            products.forEach(prod => { prod.platforms = freshCells(prod.initialOff); });
+            loginDone = false;
+            window.__lastExchange = null;
+            renderList();
+            showToast('Demo reiniciada');
+        }
+
+        // ═══════════════════ ESTADO DE UNA CELDA ═══════════════════
+        function isDirty(st) { return st.draft !== st.synced; }
+
+        // ── SEÑAL DE STOCK ──
+        // Cruza la cantidad disponible con lo que el switch muestra AHORA (`draft`, no
+        // `synced`): la señal desaparece apenas el colaborador hace el cambio recomendado,
+        // sin esperar al guardado. Las dos son mutuamente excluyentes por construcción
+        // (<=0 y >0 son disjuntos). Un producto sin control de stock nunca genera señal —
+        // si se leyera como 0, medio catálogo pediría "apagalo" el primer día y nadie
+        // volvería a mirar las señales.
+        function signalOf(prod) {
+            if (prod.stock === null) return null;
+            const anyOn = ACTIVE_PLATFORMS.some(pid => prod.platforms[pid].draft === true);
+            const anyOff = ACTIVE_PLATFORMS.some(pid => prod.platforms[pid].draft === false);
+            if (prod.stock <= 0 && anyOn) return 'TURN_OFF';   // sin stock y todavía se vende
+            if (prod.stock > 0 && anyOff) return 'TURN_ON';    // hay stock y está apagado
+            return null;
+        }
+
+        // ═══════════════════ FILTROS ═══════════════════
+        let statusFilter = 'all';
+        let signalFilter = 'all';
+
+        function setStatusFilter(value) {
+            statusFilter = value;
+            document.querySelectorAll('.status-filter button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === value);
+            });
+            renderList();
+        }
+
+        function setSignalFilter(value) {
+            signalFilter = value;
+            document.querySelectorAll('.signal-filter button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.signal === value);
+            });
+            renderList();
+        }
+
+        // Coincide si ALGUNA plataforma del producto está en el estado buscado: un producto
+        // apagado en PediGrido y prendido en PedidosYa aparece en los DOS filtros. Por eso,
+        // con dos plataformas activas, Disponibles + Apagados puede superar el total.
+        // Está bien y es la lectura honesta — no hay que "arreglarlo".
+        function matchesStatusFilter(prod, value = statusFilter) {
+            if (value === 'all') return true;
+            const want = value === 'on';
+            return ACTIVE_PLATFORMS.some(pid => prod.platforms[pid].draft === want);
+        }
+
+        function matchesSignalFilter(prod, value = signalFilter) {
+            if (value === 'all') return true;
+            return signalOf(prod) === (value === 'off' ? 'TURN_OFF' : 'TURN_ON');
+        }
+
+        function matchesSearch(prod, term) {
+            if (!term) return true;
+            return prod.name.toLowerCase().includes(term) ||
+                prod.sku.toLowerCase().includes(term) ||
+                prod.group.toLowerCase().includes(term);
+        }
+
+        // ── CONTADORES DE LOS BOTONES ──
+        // Conteo tipo faceta, en UNA sola pasada: cada grupo se cuenta ignorando su propio
+        // filtro pero respetando el otro (y siempre el buscador). Así el número responde
+        // "cuántos me quedan si toco esto" y no se mueve al cambiar de opción dentro del
+        // mismo grupo. Si al tocar "Disponibles" cambian los números del grupo de estado,
+        // está mal implementado.
+        function updateFilterCounts(term) {
+            let all = 0, on = 0, off = 0, sigAll = 0, sigOff = 0, sigOn = 0;
+
+            products.forEach(prod => {
+                if (!matchesSearch(prod, term)) return;
+
+                if (matchesSignalFilter(prod)) {          // contadores de ESTADO
+                    all++;
+                    if (ACTIVE_PLATFORMS.some(pid => prod.platforms[pid].draft)) on++;
+                    if (ACTIVE_PLATFORMS.some(pid => !prod.platforms[pid].draft)) off++;
+                }
+
+                if (matchesStatusFilter(prod)) {          // contadores de SEÑAL
+                    sigAll++;
+                    const s = signalOf(prod);
+                    if (s === 'TURN_OFF') sigOff++;
+                    else if (s === 'TURN_ON') sigOn++;
+                }
+            });
+
+            document.getElementById('cnt-status-all').textContent = all;
+            document.getElementById('cnt-status-on').textContent = on;
+            document.getElementById('cnt-status-off').textContent = off;
+            document.getElementById('cnt-signal-all').textContent = sigAll;
+            document.getElementById('cnt-signal-off').textContent = sigOff;
+            document.getElementById('cnt-signal-on').textContent = sigOn;
+        }
+
+        // ═══════════════════ RENDER ═══════════════════
+        function renderList() {
+            const term = document.getElementById('search').value.trim().toLowerCase();
+            const rows = document.getElementById('rows');
+            const list = products.filter(prod =>
+                matchesSearch(prod, term) &&
+                matchesStatusFilter(prod) &&
+                matchesSignalFilter(prod));
+
+            updateFilterCounts(term);
+
+            if (!list.length) {
+                rows.innerHTML = '<div class="empty-search">No encontramos productos con ese criterio.</div>';
+                updateBatchBar();
+                return;
+            }
+
+            // Agrupación por grupo de catálogo. Es SOLO visual: sigue siendo una única
+            // lista — el contador, el envío y el diff no saben que existen los grupos.
+            // Las bandas se recalculan sobre lo filtrado: un grupo sin coincidencias
+            // no aparece.
+            const byGroup = new Map();
+            list.forEach(prod => {
+                if (!byGroup.has(prod.group)) byGroup.set(prod.group, []);
+                byGroup.get(prod.group).push(prod);
+            });
+
+            rows.innerHTML = [...byGroup].map(([group, items]) =>
+                '<div class="group-head">' + group + '<span class="group-count">' + items.length + '</span></div>' +
+                items.map(rowHtml).join('')
+            ).join('');
+
+            updateBatchBar();
+        }
+
+        function rowHtml(prod) {
+            return '' +
+                '<div class="product-row">' +
+                '<div class="prod-icon"></div>' +
+                '<div class="prod-main">' +
+                '<span class="prod-name">' + prod.name + '</span>' +
+                '<span class="prod-cat">· ' + prod.group + '</span>' +
+                '</div>' +
+                stockCellHtml(prod) +
+                rowMasterCellHtml(prod) +
+                '<div class="prod-sku">' + prod.sku + '</div>' +
+                ACTIVE_PLATFORMS.map(pid => platformCellHtml(prod, pid)).join('') +
+                '</div>';
+        }
+
+        // Switch extra por fila: prende/apaga las 2 plataformas de ESE producto de una.
+        // Queda tildado solo si las dos están prendidas; al tocarlo, pisa las dos con
+        // el mismo valor. No reemplaza los switches individuales de cada plataforma.
+        function rowMasterCellHtml(prod) {
+            const bothOn = ACTIVE_PLATFORMS.every(pid => prod.platforms[pid].draft === true);
+            const anySending = ACTIVE_PLATFORMS.some(pid => prod.platforms[pid].sending);
+            return '' +
+                '<div class="row-master-cell">' +
+                '<label class="switch" title="Prende o apaga las 2 plataformas para este producto">' +
+                '<input type="checkbox" ' + (bothOn ? 'checked' : '') + ' ' + (anySending ? 'disabled' : '') +
+                ' onchange="onToggleBoth(\'' + prod.sku + '\', this.checked)">' +
+                '<span class="track"></span>' +
+                '</label>' +
+                '</div>';
+        }
+
+        function stockCellHtml(prod) {
+            if (prod.stock === null) {
+                return '<div class="stock-cell"><span class="stock-qty none" ' +
+                    'title="Este producto no lleva control de stock">—</span></div>';
+            }
+            const signal = signalOf(prod);
+            let badge = '';
+            if (signal === 'TURN_OFF') {
+                badge = '<span class="stock-badge turn-off" title="No te queda stock y todavía está prendido: ' +
+                    'se va a seguir vendiendo algo que no tenés.">⚠ Apagar</span>';
+            } else if (signal === 'TURN_ON') {
+                badge = '<span class="stock-badge turn-on" title="Tenés stock y está apagado: ' +
+                    'lo estás dejando de vender sin necesidad.">⚠ Prender</span>';
+            }
+            return '<div class="stock-cell">' +
+                '<span class="stock-qty ' + (prod.stock <= 0 ? 'zero' : '') + '">' + prod.stock + '</span>' +
+                badge + '</div>';
+        }
+
+        function platformCellHtml(prod, platformId) {
+            const st = prod.platforms[platformId];
+            const dirty = isDirty(st);
+            return '' +
+                '<div class="platform-cell ' + (dirty ? 'is-dirty' : '') + '">' +
+                '<label class="switch">' +
+                '<input type="checkbox" ' + (st.draft ? 'checked' : '') + ' ' + (st.sending ? 'disabled' : '') +
+                ' onchange="onToggle(\'' + prod.sku + '\', ' + platformId + ', this.checked)">' +
+                '<span class="track"></span>' +
+                '</label>' +
+                '<span class="avail-lbl ' + (st.draft ? 'on' : 'off') + '">' +
+                (st.draft ? 'Disponible' : 'Apagado') + '</span>' +
+                syncChipHtml(st, dirty) +
+                '</div>';
+        }
+
+        // Cuatro chips y nada más. El orden de evaluación importa y es la causa de un bug
+        // real: el error se evalúa ANTES que el dirty, por eso onToggle tiene que limpiarlo.
+        function syncChipHtml(st, dirty) {
+            if (st.sending) return '<span class="chip chip-sending"><span class="dot-spin"></span> Guardando…</span>';
+            if (st.error) return '<span class="chip chip-failed" title="' + st.error +
+                ' — volvió a su estado anterior">Error</span>';
+            if (dirty) return '<span class="chip chip-dirty">Guardar</span>';
+            return '<span class="chip chip-synced">Guardado</span>';
+        }
+
+        // ── TOGGLE (solo cambia el draft; no dispara ningún envío) ──
+        function onToggle(sku, platformId, checked) {
+            const prod = products.find(x => x.sku === sku);
+            if (!prod) return;
+            const st = prod.platforms[platformId];
+            st.draft = checked;
+            // Tocar la celda limpia el error anterior. Sin esto, una celda que falló
+            // seguiría mostrando "Error" en vez de "Guardar" al volver a tocarla,
+            // porque el estado de fallo se chequea antes que el de cambio sin guardar.
+            st.error = null;
+            renderList();
+        }
+
+        // ── TOGGLE POR FILA (las 2 plataformas de un mismo producto a la vez) ──
+        function onToggleBoth(sku, checked) {
+            const prod = products.find(x => x.sku === sku);
+            if (!prod) return;
+            ACTIVE_PLATFORMS.forEach(pid => {
+                const st = prod.platforms[pid];
+                if (st.sending) return;
+                st.draft = checked;
+                st.error = null;
+            });
+            renderList();
+        }
+
+        // ═══════════════════ BARRA INFERIOR ═══════════════════
+        function getDirtyCells() {
+            const cells = [];
+            products.forEach(prod => {
+                ACTIVE_PLATFORMS.forEach(pid => {
+                    const st = prod.platforms[pid];
+                    if (isDirty(st) && !st.sending) cells.push({ prod, platformId: pid, st });
+                });
+            });
+            return cells;
+        }
+
+        function updateBatchBar() {
+            const n = getDirtyCells().length;
+            document.getElementById('bb-count').textContent = n;
+            document.getElementById('btn-discard').disabled = n === 0;
+            document.getElementById('btn-send-success').disabled = n === 0;
+            document.getElementById('btn-send-failed').disabled = n === 0;
+            document.getElementById('btn-send-partial').disabled = n === 0 || !canPartial(getDirtyCells());
+        }
+
+        function discardChanges() {
+            products.forEach(prod => {
+                ACTIVE_PLATFORMS.forEach(pid => {
+                    const st = prod.platforms[pid];
+                    if (isDirty(st)) { st.draft = st.synced; st.error = null; }
+                });
+            });
+            renderList();
+            showToast('Cambios descartados');
+        }
+
+        // ═══════════════════ ENVÍO EN LOTE ═══════════════════
+        // POS → Concentrador → PediGrido. El mockup no hace requests: arma los mismos
+        // payloads y sintetiza la respuesta según el botón que se haya tocado.
+
+        let loginDone = false;   // el login pasa una sola vez por sesión (Ley 2.3)
+        let sending = false;
+
+        function sendBatch(mode) {
+            if (sending) return;
+            const cells = getDirtyCells();
+            if (!cells.length) return;
+            if (mode === 'partial' && !canPartial(cells)) {
+                showToast('Con estos cambios no hay PARTIAL_SUCCESS posible. Tocá switches de ' +
+                    'las dos plataformas, o dos productos en PediGrido.', 'warning');
+                return;
+            }
+
+            sending = true;
+            const request = buildRequest(cells);
+            const loginShown = !loginDone;
+            loginDone = true;
+
+            // Lo que se intentó aplicar se guarda ANTES de tocar nada: si la celda
+            // revierte, el draft ya no lo dice.
+            cells.forEach(c => { c.attempted = c.st.draft; c.st.sending = true; });
+            setSendButtonsBusy(true);
+            renderList();
+
+            setTimeout(() => {
+                assignFailures(cells, mode);
+
+                const response = buildResponse(cells, request);
+                const log = buildTransactionLog(cells, request, response);
+
+                applyResponse(cells, request, response);
+
+                sending = false;
+                setSendButtonsBusy(false);
+                renderList();
+
+                notifyResult(response);
+                showExchange(cells, request, response, log, loginShown);
+            }, 1100);
+        }
+
+        // ── Qué falla, según el botón ──
+        // En el POS real esto lo deciden las plataformas, y cada una tiene su granularidad:
+        //
+        //   PediGrido  → por artículo. Devuelve `data.errores[]` con el id de cada uno que
+        //                rechazó, así que en un mismo lote unos pueden andar y otros no.
+        //   PedidosYa  → por llamada. Devuelve 204 (todo bien) o un 502 sin decir cuál
+        //                falló, así que la llamada entera se cae junta.
+        //
+        // Esa diferencia es real y vale la pena verla, así que el mockup la respeta.
+        function assignFailures(cells, mode) {
+            if (mode === 'success') { cells.forEach(c => c.failed = false); return; }
+            if (mode === 'failed') { cells.forEach(c => c.failed = true); return; }
+
+            const pg = cells.filter(c => c.platformId === 7);
+            const py = cells.filter(c => c.platformId === 1);
+            cells.forEach(c => c.failed = false);
+
+            if (pg.length && py.length) {
+                // El caso canónico del lote mixto: PedidosYa se cae, PediGrido anda. Muestra
+                // que las plataformas no se arrastran entre sí — el switch que PediGrido ya
+                // confirmó NO revierte porque la otra haya fallado.
+                py.forEach(c => c.failed = true);
+            } else if (pg.length) {
+                pg[pg.length - 1].failed = true;          // granularidad por artículo
+            } else {
+                // Solo PedidosYa: se cae una de las dos llamadas de polaridad, entera.
+                py.filter(c => c.attempted === false).forEach(c => c.failed = true);
+            }
+        }
+
+        // Un PARTIAL_SUCCESS necesita al menos una celda que salga bien y otra que salga mal,
+        // y eso depende de con qué plataformas se armó el lote.
+        function canPartial(cells) {
+            const pg = cells.filter(c => c.platformId === 7);
+            const py = cells.filter(c => c.platformId === 1);
+            if (pg.length && py.length) return true;                  // una plataforma cae, la otra no
+            if (!py.length) return pg.length >= 2;                    // dos artículos en PediGrido
+            // solo PedidosYa: hacen falta las dos llamadas de polaridad
+            return py.some(c => c.st.draft) && py.some(c => !c.st.draft);
+        }
+
+        function setSendButtonsBusy(busy) {
+            ['success', 'partial', 'failed'].forEach(m => {
+                const btn = document.getElementById('btn-send-' + m);
+                if (busy) { btn.disabled = true; btn.dataset.label = btn.innerHTML; btn.innerHTML = '<span class="bb-spinner"></span> Guardando…'; }
+                else if (btn.dataset.label) { btn.innerHTML = btn.dataset.label; delete btn.dataset.label; }
+            });
+            if (busy) document.getElementById('btn-discard').disabled = true;
+        }
+
+        // ── §2 — lo que SmartCloud le manda al Concentrador ──
+        // Solo viaja lo que cambió. La plataforma va ADENTRO de cada item, nunca a nivel
+        // de mensaje. Ni stock ni señales aparecen en ningún campo: son presentación pura.
+        function buildRequest(cells) {
+            const bySku = {};
+            cells.forEach(c => {
+                if (!bySku[c.prod.sku]) {
+                    bySku[c.prod.sku] = { sku: c.prod.sku, name: c.prod.name, type: c.prod.type, platforms: [] };
+                }
+                bySku[c.prod.sku].platforms.push({ platformId: c.platformId, available: c.st.draft });
+            });
+            // El requestId se genera EN EL MOMENTO DE MANDAR, uno por envío: si el
+            // colaborador descarta o sigue editando, no queda ningún id colgado.
+            return { requestId: crypto.randomUUID(), branchId: BRANCH_ID, items: Object.values(bySku) };
+        }
+
+        // ── §3 — lo que el Concentrador le contesta al POS ──
+        // Es el ÚNICO cuerpo que el POS lee, y sobre él aplica la Ley 1. `results` viene
+        // plano: un renglón por sku + platformId. El `message` solo aparece cuando
+        // success es false, y viene prefijado con el local que falló.
+        function buildResponse(cells, request) {
+            const results = cells.map(c => {
+                const row = {
+                    sku: c.prod.sku,
+                    type: c.prod.type,
+                    platformId: c.platformId,
+                    available: c.attempted,
+                    success: !c.failed
+                };
+                if (c.failed) {
+                    // Cada plataforma explica el fallo a su manera. PediGrido prefija el
+                    // local que lo rechazó; PedidosYa ni siquiera dice qué producto fue.
+                    row.message = c.platformId === 7
+                        ? 'local ' + BRANCH_REFERENCES[0] + ': ' + FAIL_REASON
+                        : PEYA_FAIL_REASON;
+                }
+                return row;
+            });
+
+            const okCount = results.filter(r => r.success).length;
+            const status = okCount === results.length ? 'SUCCESS'
+                : okCount === 0 ? 'FAILED'
+                    : 'PARTIAL_SUCCESS';
+
+            return {
+                requestId: request.requestId,   // vuelve idéntico: es lo que empareja envío y respuesta
+                branchId: BRANCH_ID,
+                status,
+                processedAt: new Date().toISOString(),
+                results
+            };
+        }
+
+        // ── LEY 1 — nunca asumir éxito ──
+        // Todo lo que no sea una confirmación explícita se trata como NO aplicado y el
+        // switch vuelve solo al último valor confirmado.
+        function applyResponse(cells, request, response) {
+            // Sin cuerpo, cuerpo ilegible, requestId que no coincide o status FAILED:
+            // revierte el lote entero. Un 200 ilegible significa que algo se rompió,
+            // no que todo anduvo.
+            const wholeBatchFailed = !response ||
+                response.requestId !== request.requestId ||
+                response.status === 'FAILED';
+
+            cells.forEach(c => {
+                c.st.sending = false;
+                const result = response
+                    ? response.results.find(r => r.sku === c.prod.sku && r.platformId === c.platformId)
+                    : null;
+
+                // "No volver en results[]" no es lo mismo que "salió bien": también revierte.
+                const confirmed = !wholeBatchFailed && result && result.success === true;
+
+                if (confirmed) {
+                    c.st.synced = c.attempted;
+                    c.st.error = null;
+                } else {
+                    c.st.draft = c.st.synced;   // vuelve solo al último confirmado
+                    c.st.error = (result && result.message) ||
+                        'No se pudo confirmar el cambio con la plataforma.';
+                }
+            });
+
+            // Solo se persiste lo confirmado, y solo acá.
+            persistToStorage();
+        }
+
+        function notifyResult(response) {
+            const failed = response.results.filter(r => !r.success);
+            const ok = response.results.length - failed.length;
+
+            if (response.status === 'SUCCESS') {
+                showToast(ok + ' cambio' + (ok > 1 ? 's' : '') + ' guardado' + (ok > 1 ? 's' : '') + ' ✓', 'success');
+            } else if (response.status === 'PARTIAL_SUCCESS') {
+                showToast(ok + ' guardado' + (ok > 1 ? 's' : '') + ', ' + failed.length + ' sin aplicar. ' +
+                    'Los que fallaron volvieron a su estado anterior.', 'warning');
+            } else {
+                showToast('No se pudo guardar ningún cambio. Todo volvió a su estado anterior.', 'danger');
+            }
+        }
+
+        // ═══════════════════ TRAMO SmartPedidos → PLATAFORMAS ═══════════════════
+        // El POS no ve nada de esto: lo resuelve el Concentrador. Se muestra en el modal
+        // porque es lo que explica de dónde sale cada `message` que sí le llega al POS.
+        //
+        // Las dos plataformas son independientes: distinto login, distinta API, distinto
+        // identificador de la sucursal. El fallo de una no afecta a la otra.
+
+        function buildPediGridoRequest(cells) {
+            return {
+                branch: Number(BRANCH_REFERENCES[0]),   // el branchReference, NO el branchId
+                articles: cells.map(c => ({ id: c.prod.sku, name: c.prod.name, status: c.attempted }))
+            };
+        }
+
+        // PediGrido responde 200 con success:true INCLUSO cuando rechaza artículos:
+        // lo que falló viene adentro de data.errores. Por eso el Concentrador tiene que
+        // leer el cuerpo y no quedarse con el código HTTP.
+        function buildPediGridoResponse(cells) {
+            const updated = [], outdated = [], errores = [];
+            cells.forEach(c => {
+                if (c.failed) {
+                    errores.push({ id: c.prod.sku, name: c.prod.name, message: FAIL_REASON });
+                } else {
+                    // el id que vuelve es el interno de PediGrido, no el SKU
+                    updated.push({ id: c.prod.pgId, name: c.prod.name, status: c.attempted ? 'on' : 'off' });
+                }
+            });
+            return {
+                success: true,
+                message: 'Actualización de estados completada',
+                // `outdated` = "ya estaba en ese estado". Cuenta como éxito. Acá queda
+                // vacío siempre porque el POS solo manda celdas que cambiaron.
+                data: { updated, outdated, errores }
+            };
+        }
+
+        // ── PedidosYa ──
+        // Dos diferencias con PediGrido que es fácil pasar por alto:
+        //   · el identificador de la sucursal es el `posVendorId` alfanumérico, que sale
+        //     del campo `branchName` — NO de `branchReference`, que es el de PediGrido;
+        //   · una llamada lleva UN SOLO `isAvailable`, así que apagar unos y prender otros
+        //     obliga a partir el lote en dos PUT, uno por polaridad.
+        function buildPeyaCalls(pyCells) {
+            const calls = [];
+            [true, false].forEach(polarity => {
+                const group = pyCells.filter(c => c.attempted === polarity);
+                if (!group.length) return;
+                calls.push({
+                    requestBody: {
+                        // ⚠️ NUNCA null: rompe el validador con un 400. Se manda siempre
+                        // "PY_AR", el valor para Argentina. El `name` del producto no viaja:
+                        // PedidosYa no lo pide.
+                        globalEntityId: 'PY_AR',
+                        items: group.map(c => c.prod.sku),
+                        type: 'ITEM',
+                        isAvailable: polarity
+                    },
+                    // Es todo o nada por llamada: si esta se cae, se caen sus celdas juntas.
+                    failed: group.some(c => c.failed)
+                });
+            });
+            return calls;
+        }
+
+        // ── El log de transacción que guarda SmartPedidos ──
+        // Un documento por envío en `itemavailabilitylogs`, escrito de una sola vez y
+        // aunque la operación haya fallado. Se indexa por requestId. NO es un estado
+        // consultable: el Concentrador no guarda "qué está apagado hoy".
+        function buildTransactionLog(cells, request, response) {
+            const pg = cells.filter(c => c.platformId === 7);
+            const py = cells.filter(c => c.platformId === 1);
+
+            const platforms = [];
+            const platformCalls = [];
+            const error = [];
+
+            if (pg.length) {
+                platforms.push({
+                    platformId: 7,
+                    name: 'PediGrido',
+                    refField: 'branchReference',
+                    branchReferences: BRANCH_REFERENCES
+                });
+                // PediGrido contesta 200 incluso cuando rechaza artículos: lo que falló
+                // viene en data.errores, así que la llamada nunca "se cae" por eso.
+                platformCalls.push({
+                    platformId: 7,
+                    url: PEDIGRIDO_STOCK_URL,
+                    method: 'put',
+                    requestBody: buildPediGridoRequest(pg),
+                    retried: false,
+                    httpStatus: 200,
+                    responseBody: buildPediGridoResponse(pg),
+                    durationMs: 200 + Math.floor(Math.random() * 90)
+                });
+            }
+
+            if (py.length) {
+                const calls = buildPeyaCalls(py);
+                const peyaDied = calls.some(c => c.failed);
+
+                const entry = {
+                    platformId: 1,
+                    name: 'PedidosYa',
+                    refField: 'branchName',              // 🔑 NO branchReference
+                    branchReferences: [POS_VENDOR_ID]
+                };
+                if (peyaDied) {
+                    entry.fatalKind = 'UPSTREAM';
+                    entry.fatalMessage = PEYA_FAIL_REASON;
+                    error.push({ platformId: 1, kind: 'UPSTREAM', message: PEYA_FAIL_REASON });
+                }
+                platforms.push(entry);
+
+                calls.forEach(call => {
+                    if (call.failed) {
+                        // El 502 suele ser transitorio, así que se reintenta una vez. Cuando
+                        // el reintento también falla quedan las dos llamadas en el log, la
+                        // segunda marcada con retried: true. Nunca se asume éxito.
+                        [false, true].forEach(retried => platformCalls.push({
+                            platformId: 1,
+                            url: PEYA_AVAILABILITY_URL,
+                            method: 'put',
+                            requestBody: call.requestBody,
+                            retried,
+                            httpStatus: 502,
+                            responseBody: { code: 'external-service-error', message: PEYA_FAIL_REASON },
+                            durationMs: 700 + Math.floor(Math.random() * 200)
+                        }));
+                    } else {
+                        platformCalls.push({
+                            platformId: 1,
+                            url: PEYA_AVAILABILITY_URL,
+                            method: 'put',
+                            requestBody: call.requestBody,
+                            retried: false,
+                            httpStatus: 204,        // 🔑 204 = éxito TOTAL, sin fallas
+                            responseBody: null,     // el 204 no trae cuerpo
+                            durationMs: 400 + Math.floor(Math.random() * 250)
+                        });
+                    }
+                });
+            }
+
+            const log = {
+                requestId: request.requestId,
+                branchId: BRANCH_ID,
+                operation: 'UPDATE',
+                status: response.status,
+                platforms,
+                // Unión plana de las referencias de todas las plataformas. Los tipos van
+                // mezclados a propósito: cada plataforma nombra la sucursal a su manera.
+                branchReferences: platforms.reduce((acc, p) => acc.concat(p.branchReferences), []),
+                request: request,                 // el body de SmartCloud, verbatim
+                results: response.results,
+                platformCalls,
+                error,                            // un renglón por plataforma caída
+                processedAt: response.processedAt,
+                durationMs: 420 + Math.floor(Math.random() * 200)
+            };
+            if (error.length) log.fatalKind = 'UPSTREAM';
+            return log;
+        }
+
+        // ═══════════════════ MODAL ═══════════════════
+        function highlightJson(str) {
+            return str
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+                .replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>')
+                .replace(/: (-?\d+(\.\d+)?)/g, ': <span class="n">$1</span>')
+                .replace(/: (true|false|null)/g, ': <span class="b">$1</span>');
+        }
+
+        function routeLine(verb, url) {
+            return '<div class="payload-route"><span class="verb">' + verb + '</span>' + url + '</div>';
+        }
+
+        function codeSection(label, routeHtml, obj, opts) {
+            opts = opts || {};
+            return '<div class="payload-section-lbl' + (opts.key ? ' key' : '') + '">' + label + '</div>' +
+                (routeHtml || '') +
+                '<div class="payload-code' + (opts.key ? ' key' : '') + '">' +
+                highlightJson(JSON.stringify(obj, null, 2)) + '</div>' +
+                (opts.note ? '<p class="payload-note">' + opts.note + '</p>' : '');
+        }
+
+        // Preview del lote pendiente, antes de enviar.
+        function showBatchPayload() {
+            const cells = getDirtyCells();
+            document.getElementById('payload-status').style.display = 'none';
+            document.getElementById('payload-title').textContent = 'Payload del lote';
+            document.getElementById('payload-sub').textContent =
+                cells.length ? cells.length + ' cambio' + (cells.length > 1 ? 's' : '') + ' sin guardar'
+                    : 'Sin cambios pendientes';
+
+            if (!cells.length) {
+                document.getElementById('payload-body').innerHTML = window.__lastExchange ||
+                    '<div class="payload-empty">No hay cambios sin guardar todavía. ' +
+                    'Tocá algún switch para armar un lote.</div>';
+                document.getElementById('payload-overlay').classList.add('show');
+                return;
+            }
+
+            cells.forEach(c => { c.attempted = c.st.draft; });
+            document.getElementById('payload-body').innerHTML =
+                codeSection('Esto es lo que sale al tocar "Guardar cambios"',
+                    routeLine('POST', ENDPOINT_UPDATE), buildRequest(cells),
+                    {
+                        note: 'El <b>requestId</b> de arriba es de muestra: el real se genera recién en el ' +
+                            'momento del envío. Todavía no hay respuesta que mostrar.'
+                    });
+            document.getElementById('payload-overlay').classList.add('show');
+        }
+
+        // Lo que hay que mirar en cada tramo. Es donde se ve que las dos plataformas
+        // no se parecen en nada más allá del contrato §2/§3.
+        function platformRequestNote(call) {
+            if (call.platformId === 7) {
+                return '<b>branch</b> es el <b>branchReference</b> (' + BRANCH_REFERENCES[0] +
+                    '), no el branchId (' + BRANCH_ID + '). Si la sucursal mapeara a varios locales de ' +
+                    'PediGrido, saldría una llamada por cada uno.';
+            }
+            return 'La sucursal viaja en la URL como <b>posVendorId</b> (<b>' + POS_VENDOR_ID +
+                '</b>), alfanumérico, y sale del campo <b>branchName</b> — <b>no</b> de ' +
+                '<b>branchReference</b>, que es el de PediGrido. El <b>name</b> del producto no viaja: ' +
+                'PedidosYa no lo pide. <b>globalEntityId</b> nunca puede ir en <b>null</b> (rompe el ' +
+                'validador con un 400) y una llamada lleva un solo <b>isAvailable</b>: apagar unos y ' +
+                'prender otros parte el lote en dos PUT.';
+        }
+
+        function platformResponseNote(call) {
+            if (call.platformId === 7) {
+                return 'PediGrido devuelve <b>200</b> y <b>success: true</b> incluso cuando rechaza ' +
+                    'artículos: lo que falló viene en <b>data.errores</b>, por artículo. Por eso hay que leer ' +
+                    'el cuerpo y no quedarse con el código HTTP. <b>outdated</b> serían los que ya estaban en ' +
+                    'ese estado, y cuentan como éxito.';
+            }
+            if (call.httpStatus === 204) {
+                return '<b>204 = éxito total</b>, y no trae cuerpo. Es el mejor desenlace. Ojo que un ' +
+                    '<b>200</b> de PedidosYa <b>no</b> es éxito: trae <b>{ status, details }</b> y hay que leerlo.';
+            }
+            return '<b>502 external-service-error</b>: pasó auth, schema y routing, pero PedidosYa falló ' +
+                'por detrás. <b>No dice qué producto</b>, así que se caen juntas todas las celdas de esta ' +
+                'llamada — es la diferencia de granularidad con PediGrido. Suele ser transitorio: se ' +
+                'reintenta una vez y, si vuelve a fallar, se corta. Nunca se asume éxito.';
+        }
+
+        // El intercambio completo de un envío, en orden cronológico.
+        function showExchange(cells, request, response, log, loginShown) {
+            const okCount = response.results.filter(r => r.success).length;
+            const failCount = response.results.length - okCount;
+
+            document.getElementById('payload-title').textContent = 'Resultado del envío';
+            document.getElementById('payload-sub').textContent =
+                'Sucursal ' + BRANCH_ID + ' · ' + log.platforms.map(pl => pl.name).join(' + ') + ' · ' +
+                okCount + ' confirmada' + (okCount === 1 ? '' : 's') + ' · ' +
+                failCount + ' revertida' + (failCount === 1 ? '' : 's');
+
+            const pill = document.getElementById('payload-status');
+            pill.style.display = '';
+            pill.className = 'status-pill ' + response.status;
+            pill.textContent = response.status;
+
+            let html = '';
+
+            if (loginShown) {
+                html += codeSection('0 · SmartCloud → SmartPedidos · login (una sola vez)',
+                    routeLine('POST', ENDPOINT_LOGIN),
+                    { branchId: BRANCH_ID, branchSecret: '••••••••' },
+                    {
+                        note: 'Misma dupla que ya usa el heartbeat, sacada de la integración SMTP del punto de venta. ' +
+                            'De la respuesta se usa <b>accessToken</b> y se ignora <b>data</b>. El token dura ~83 días, ' +
+                            'vive solo en memoria y se renueva de forma reactiva ante un 401 — nunca por reloj, ' +
+                            'y nunca se loguea.'
+                    });
+            }
+
+            html += codeSection('1 · SmartCloud → SmartPedidos',
+                routeLine('POST', ENDPOINT_UPDATE), request,
+                {
+                    note: 'Header <b>Authorization: Bearer &lt;jwt&gt;</b>. Fijate que no viaja <b>stock</b>, ni ' +
+                        '<b>itemId</b>, ni nada de las señales: son presentación pura. Y nada de PediGrido ' +
+                        'tampoco — el POS habla de productos, el Concentrador habla de plataformas.'
+                });
+
+            // Un par de secciones por cada llamada del Concentrador a una plataforma. Son
+            // independientes entre sí: distinta API, distinto identificador de sucursal y
+            // distinto desenlace.
+            let step = 2;
+            log.platformCalls.forEach(call => {
+                const name = PLATFORM_NAMES[call.platformId];
+
+                html += codeSection(
+                    step++ + ' · SmartPedidos → ' + name + (call.retried ? ' · reintento' : ''),
+                    routeLine('PUT', call.url), call.requestBody, { note: platformRequestNote(call) });
+
+                html += codeSection(step++ + ' · ' + name + ' → SmartPedidos',
+                    '<div class="payload-route"><span class="verb">' + call.httpStatus + '</span>' +
+                    (call.responseBody === null ? 'sin cuerpo' : 'con cuerpo') +
+                    ' · ' + call.durationMs + ' ms</div>',
+                    call.responseBody, { note: platformResponseNote(call) });
+            });
+
+            html += codeSection(step++ + ' · SmartPedidos → SmartCloud — ⟵ lo único que el POS lee',
+                '<div class="payload-route"><span class="verb">200</span>respuesta del POST del paso 1</div>',
+                response,
+                {
+                    key: true,
+                    note: 'Sobre este cuerpo se aplica la Ley 1, celda por celda: <b>success: true</b> confirma; ' +
+                        'todo lo demás —<b>success: false</b>, no venir en <b>results[]</b>, <b>status: FAILED</b>, ' +
+                        'un <b>requestId</b> distinto o un cuerpo ilegible— revierte el switch al último valor ' +
+                        'confirmado. <b>results</b> viene plano: un renglón por <b>sku + platformId</b>, así que el ' +
+                        'mismo producto puede salir confirmado en una plataforma y revertido en la otra — que se ' +
+                        'caiga PedidosYa no toca el switch que PediGrido ya confirmó.'
+                });
+
+            html += '<details class="log-box"><summary>' + step++ + ' · Lo que SmartPedidos guarda en ' +
+                '<code>itemavailabilitylogs</code> (no lo ve el POS)</summary><div class="inner">' +
+                '<p class="payload-note" style="margin:0 0 8px">Un documento por envío, escrito de una sola vez y ' +
+                'aunque la operación haya fallado. Se indexa por <b>requestId</b>, que es lo que permite contestar ' +
+                'después "¿esto se aplicó o no?" sin cruzar sucursal, producto y hora a ojo. Es trazabilidad: ' +
+                'el Concentrador <b>no</b> guarda qué está apagado hoy. Mirá <b>platforms[].refField</b>: si ' +
+                'PedidosYa dijera <b>branchReference</b> en vez de <b>branchName</b>, ahí hay un bug.</p>' +
+                '<div class="payload-code">' + highlightJson(JSON.stringify(log, null, 2)) + '</div>' +
+                '</div></details>';
+
+            html += '<details class="log-box"><summary>' + step++ + ' · Registro local del POS · clave <code>' + STORAGE_KEY +
+                '</code></summary><div class="inner">' +
+                '<p class="payload-note" style="margin:0 0 8px">Solo lo apagado: lo que no está acá, está ' +
+                'disponible. Se escribe únicamente con lo que la plataforma confirmó, y es lo que rehidrata la ' +
+                'pantalla después de un F5. Hoy vive en el <b>localStorage</b> del navegador — por eso dos cajas ' +
+                'del mismo local todavía no comparten estado.</p>' +
+                '<div class="payload-code">' +
+                highlightJson(JSON.stringify(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'), null, 2)) +
+                '</div></div></details>';
+
+            window.__lastExchange = html;
+            document.getElementById('payload-body').innerHTML = html;
+            document.getElementById('payload-overlay').classList.add('show');
+        }
+
+        function closePayload() {
+            document.getElementById('payload-overlay').classList.remove('show');
+        }
+
+        document.getElementById('payload-overlay').addEventListener('click', function (e) {
+            if (e.target === this) closePayload();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closePayload();
+        });
+
+        // ═══════════════════ CHROME DEL POS ═══════════════════
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.body.classList.toggle('sidebar-collapsed');
+        }
+
+        function toggleGroup(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+
+        function goTo(url) {
+            const pending = getDirtyCells().length;
+            if (pending && !confirm('Tenés ' + pending + ' cambio' + (pending > 1 ? 's' : '') +
+                ' sin guardar. Si salís de la pantalla se pierden.\n\n¿Salir igual?')) return;
+            window.location.href = url;
+        }
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (type ? ' ' + type : '');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(function () { t.className = 'toast'; }, 3200);
+        }
+
+        // ── INIT ──
+        hydrateFromStorage();
+        renderList();
+    </script>
+</body>
+
+</html>

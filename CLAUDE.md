@@ -73,6 +73,12 @@ Cada módulo (segundo segmento del nombre de archivo) se mapea a una sección de
 Si se agrega un módulo nuevo no listado acá, crear una sección nueva siguiendo el patrón
 `Mockups [Nombre del Módulo Capitalizado]` e insertarla en orden alfabético.
 
+### Excepción: Disponibilidad Stock
+
+El archivo `mockup_pos_disponibilidad_delivery_conPeya.html` se clasifica en la sección
+**MockUps Disponibilidad Stock**, con el nombre de link **Disponibilidad Stock - itemavailability**,
+aunque tenga el prefijo `mockup_pos_`.
+
 ### Excepciones: Simuladores
 
 Los archivos que son simuladores interactivos (no prototipos visuales) usan el prefijo
@@ -156,6 +162,9 @@ Las secciones (`<details>`) se ordenan **alfabéticamente** de arriba a abajo.
 - `mockup_comanda_cocina.html` → Cocina
 - `mockup_comanda_pedidos.html` → Pedidos
 - `mockup_comanda_seleccion_beeper.html` → Selección Beeper
+
+### MockUps Disponibilidad Stock
+- `mockup_pos_disponibilidad_delivery_conPeya.html` → Disponibilidad Stock - itemavailability
 
 ### MockUps Extras
 - `mockup_extras_admin.html` → Admin
