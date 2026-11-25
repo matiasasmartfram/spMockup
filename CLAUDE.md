@@ -144,9 +144,11 @@ Las secciones (`<details>`) se ordenan **alfabéticamente** de arriba a abajo.
 ### MockUps Backoffice
 - `mockup_backoffice_checkin-schedule.html` → Check-in Schedule
 - `mockup_backoffice_openCloseLogsStatus.html` → Open Close Logs Status
+- `mockup_backoffice_openclose_sucursal.html` → Open Close Sucursal
 - `mockup_backoffice_order.detaisl.html` → Order Details *(typo en el nombre del archivo)*
 - `mockup_backoffice_ordertimes.html` → Order Times
 - `mockup_backoffice_popup_exportacionplataformas.html` → Popup Exportación Plataformas
+- `mockup_backoffice_rejectedmessages.html` → Rejected Messages
 - `mockup_backoffice_status.html` → Status
 
 ### MockUps Canal
